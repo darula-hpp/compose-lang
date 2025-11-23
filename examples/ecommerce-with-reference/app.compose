@@ -1,0 +1,68 @@
+# E-commerce Example with Reference Code
+
+Shows how to use @reference for complex business logic.
+
+# ══════════════════════════════════════
+# MODELS
+# ══════════════════════════════════════
+
+model Item:
+  id: number
+  name: text
+  price: number
+  quantity: number
+
+model User:
+  id: number
+  email: text
+  loyaltyTier: "bronze" | "silver" | "gold"
+  state: text
+
+model Order:
+  id: number
+  items: list of Item
+  user: User
+  subtotal: number
+  discount: number
+  tax: number
+  total: number
+
+# ══════════════════════════════════════
+# FEATURES
+# ══════════════════════════════════════
+
+feature "Shopping Cart":
+  - Add items to cart
+  - Update quantities
+  - Remove items
+  - View cart total
+
+feature "Checkout":
+  - Calculate order total with discounts and tax
+  - Apply loyalty tier discounts
+  - Process payment
+  - Send confirmation email
+
+# ══════════════════════════════════════
+# GUIDES (with @ references)
+# ══════════════════════════════════════
+
+guide "Price Calculation":
+  - Reference implementation: @reference/pricing.py
+  - Uses calculate_total() and apply_discount() functions
+  - Translate this exact logic to target language
+  - Preserve all business rules:
+    * Volume discounts (10+ items = 10% off)
+    * Loyalty tier bonuses (bronze 5%, silver 10%, gold 15%)
+    * State tax rates (CA 8%, others 5%)
+
+guide "Discount Rules":
+  - Reference: @reference/pricing.py::apply_discount
+  - Apply discounts before tax calculation
+  - Round to 2 decimal places
+  - Minimum order $10 after discounts
+
+guide "Tax Calculation":
+  - Use tax rates from @reference/pricing.py
+  - Calculate on (subtotal - discount)
+  - Store tax separately for reporting

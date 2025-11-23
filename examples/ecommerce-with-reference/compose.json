@@ -1,0 +1,19 @@
+{
+    "name": "ecommerce-with-reference",
+    "version": "1.0.0",
+    "targets": {
+        "web": {
+            "framework": "nextjs",
+            "language": "typescript",
+            "styling": "tailwindcss",
+            "output": "./generated/web"
+        }
+    },
+    "llm": {
+        "provider": "gemini",
+        "model": "gemini-2.5-flash",
+        "apiKey": "${GEMINI_API_KEY}",
+        "temperature": 0.2,
+        "maxTokens": 8192
+    }
+}

@@ -71,6 +71,46 @@ feature "Theme":
 
 ---
 
+### `@` Operator - Reference External Code
+
+Use `@` to reference external code files that contain complex business logic. The LLM will translate this code to your target language.
+
+**In `feature`:**
+```compose
+feature "Pricing":
+  - Calculate totals using logic from @reference/pricing.py
+```
+
+**In `guide`:**
+```compose
+guide "Price Calculation":
+  - Reference implementation: @reference/pricing.py
+  - Translate calculate_total() function to target language
+  - Preserve all business rules (volume discounts, loyalty tiers, taxes)
+  - Do NOT import - rewrite natively in target language
+```
+
+**Benefits:**
+- Write complex logic in any language (Python, SQL, JavaScript)
+- LLM translates to your target (TypeScript, Rust, Go, etc.)
+- Same logic works across all frameworks
+- Business logic version controlled separately
+- Non-technical team members can write Python pseudo-code
+
+**Example reference file (reference/pricing.py):**
+```python
+def calculate_total(items, tax_rate=0.08):
+    subtotal = sum(item['price'] * item['quantity'] for item in items)
+    tax = subtotal * tax_rate
+    return {
+        'subtotal': subtotal,
+        'tax': tax,
+        'total': subtotal + tax
+    }
+```
+
+---
+
 ## File Organization
 
 ### `.compose` Files - Business Logic

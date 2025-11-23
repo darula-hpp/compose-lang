@@ -31,6 +31,12 @@ feature "Todo Management":
 feature "Theme":
   - Clean, modern design
   - Blue color scheme
+
+# Implementation guides (added as you develop)
+guide "Performance":
+  - Cache todo list for 5 minutes
+  - Debounce filter input (300ms)
+  - Paginate at 50 items
 ```
 
 ### `compose.json` - Technical Decisions
@@ -180,12 +186,13 @@ Watch mode with automatic rebuilds
 ```bash
 ## Features
 
-✅ **Two Keywords** — `model` (data) and `feature` (behavior). That's the whole language.  
+✅ **Three Keywords** — `model` (data), `feature` (behavior), `guide` (implementation). That's the entire language.  
+✅ **@ References** — Link to external code in any language; LLM translates to your target  
 ✅ **Multi-Target** — Generate web, mobile, and API from one specification  
 ✅ **Plain English** — Describe features naturally, LLM handles implementation  
 ✅ **Framework-Agnostic** — Regenerate for Next.js, Vue, Svelte anytime  
 ✅ **Deterministic** — Cached LLM responses ensure reproducible builds  
-✅ **Version Controlled** — Track architectural changes in Git  
+✅ **Version Controlled** — Track architectural changes in Git    
 
 ---
 
@@ -243,6 +250,11 @@ feature "Blog":
 feature "Theme":
   - Modern, clean design
   - Purple/pink gradient colors
+
+# Add guides as you develop
+guide "Performance":
+  - Cache blog posts for 10 minutes
+  - Use static generation for post pages
 ```
 
 **2. Create `compose.json`:**

@@ -181,6 +181,9 @@ export async function init(args) {
         console.log('   ✓ Created example files\n');
     }
 
+    // Create reference directory
+    createReferenceDirectory();
+
     // Print next steps
     console.log('✨ Initialization complete!\n');
     console.log('Next steps:');
@@ -318,4 +321,103 @@ backend.create-api "DeleteTodo"
   accepts id as number
   returns void
 `);
+}
+
+/**
+ * Create reference directory with README and example
+ */
+function createReferenceDirectory() {
+    const referenceDir = './reference';
+
+    if (!existsSync(referenceDir)) {
+        mkdirSync(referenceDir, { recursive: true });
+        console.log('\n📚 Created reference/ directory');
+    }
+
+    // Create README
+    const readme = `# Reference Implementations
+
+This directory contains reference code that guides LLM code generation.
+
+## Purpose
+- Write complex business logic in any language (Python, SQL, JavaScript, etc.)
+- Reference it in your .compose files using @reference/filename
+- The LLM translates this logic to your target language
+
+## Example
+
+**reference/pricing.py:**
+\`\`\`python
+def calculate_discount(amount, tier):
+    discounts = {'bronze': 0.05, 'silver': 0.10, 'gold': 0.15}
+    return amount * discounts.get(tier, 0)
+\`\`\`
+
+**app.compose:**
+\`\`\`compose
+guide "Pricing Logic":
+  - Reference implementation: @reference/pricing.py
+  - Translate calculate_discount to target language
+\`\`\`
+
+## Best Practices
+- Use Python for business logic (readable, easy to validate)
+- Use SQL for complex queries
+- Keep files focused (one concern per file)
+- Comment extensively (LLM reads comments)
+- Version control this directory
+
+## Framework-Agnostic
+Reference code is NOT imported - it's translated to your target language.
+Same logic works for React, Vue, Next.js, Express, etc.
+`;
+
+    writeFileSync(join(referenceDir, 'README.md'), readme);
+
+    // Create example Python file
+    const examplePython = `# Example: Simple calculation logic
+# This shows how to write reference implementations
+
+def calculate_total(items, tax_rate=0.08):
+    """
+    Calculate order total with tax.
+    
+    Args:
+        items: List of {price: number, quantity: number}
+        tax_rate: Tax rate as decimal (default 0.08 = 8%)
+    
+    Returns:
+        Dictionary with subtotal, tax, and total
+    """
+    subtotal = sum(item['price'] * item['quantity'] for item in items)
+    tax = subtotal * tax_rate
+    total = subtotal + tax
+    
+    return {
+        'subtotal': subtotal,
+        'tax': tax,
+        'total': total
+    }
+
+
+def apply_discount(amount, discount_percent):
+    """
+    Apply percentage discount to amount.
+    
+    Args:
+        amount: Original amount
+        discount_percent: Discount as percentage (e.g. 10 for 10%)
+    
+    Returns:
+        Discounted amount
+    """
+    discount = amount * (discount_percent / 100)
+    return amount - discount
+`;
+
+    writeFileSync(join(referenceDir, 'example.py'), examplePython);
+    console.log('   ├── README.md');
+    console.log('   └── example.py');
+}
+
 }
