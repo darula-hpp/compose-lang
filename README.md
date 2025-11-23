@@ -41,7 +41,7 @@ define function calculateRevenue
 ✅ **Pure English Functions** — Describe behavior without writing code  
 ✅ **Multi-file Projects** — Import and modularize your application  
 ✅ **Context Comments** — Guide the LLM with additional context  
-✅ **Target Configuration** — Control output via `targets.json`
+✅ **Target Configuration** — Control output via `compose.json`
 
 ## Project Structure
 
@@ -110,7 +110,7 @@ Compose can compile to:
 - **Mobile**: React Native (planned)
 - **Desktop**: Electron (planned)
 
-Configure targets in `targets.json`:
+Configure targets in `compose.json`:
 
 ```json
 {

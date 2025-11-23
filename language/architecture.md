@@ -212,11 +212,11 @@ DEDENT
 
 **Location**: `compiler/emitter/`
 
-**Input**: ComposeIR + targets.json  
+**Input**: ComposeIR + compose.json  
 **Output**: Real source code (JS, Python, Rust, etc.)
 
 **Responsibilities**:
-- Read target specifications from `targets.json`
+- Read target specifications from `compose.json`
 - Send IR + target info to LLM
 - Receive generated code from LLM
 - Write code to output directories
@@ -291,7 +291,7 @@ Shared utilities:
 - `error-reporter.js` — Pretty error messages
 - `file-reader.js` — Read .compose files
 - `logger.js` — Debug logging
-- `config-loader.js` — Load targets.json
+- `config-loader.js` — Load compose.json
 
 ---
 

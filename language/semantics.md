@@ -269,7 +269,7 @@ Each file's IR is stored separately enabling incremental code regeneration.
 
 ---
 
-## 10. targets.json
+## 10. compose.json
 
 Controls code generation output.
 
@@ -370,7 +370,7 @@ Compose v1 provides:
 * Pages, components, themes
 * Backend APIs, queries, env, fs, sockets
 * imports
-* `targets.json` for codegen control
+* `compose.json` for codegen control
 * Clear IR separation
 
 It is designed to be **the best structured language for LLM code generation**, supporting large multi-file applications.

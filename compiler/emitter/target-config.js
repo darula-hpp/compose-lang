@@ -1,6 +1,6 @@
 /**
  * Target Configuration Loader
- * Loads and validates targets.json configuration
+ * Loads and validates compose.json configuration
  */
 
 import { readFileSync } from 'fs';
