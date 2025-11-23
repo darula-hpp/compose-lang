@@ -184,6 +184,9 @@ export async function init(args) {
     // Create reference directory
     createReferenceDirectory();
 
+    // Create assets directory
+    createAssetsDirectory();
+
     // Print next steps
     console.log('✨ Initialization complete!\n');
     console.log('Next steps:');
@@ -420,4 +423,77 @@ def apply_discount(amount, discount_percent):
     console.log('   └── example.py');
 }
 
+/**
+ * Create assets directory with README and placeholder files
+ */
+function createAssetsDirectory() {
+    const assetsDir = './assets';
+
+    if (!existsSync(assetsDir)) {
+        mkdirSync(assetsDir, { recursive: true });
+        console.log('\n🎨 Created assets/ directory');
+    }
+
+    // Create README
+    const readme = `# Static Assets
+
+This directory contains static assets like images, icons, fonts, etc.
+
+## Purpose
+- Store logos, favicons, images, fonts, and other static files
+- Assets are copied to framework output during build
+- Framework-agnostic (same assets work for web, mobile, etc.)
+
+## Usage
+
+**In your .compose files:**
+\`\`\`compose
+feature "Branding":
+  - Use logo from assets folder
+  - Favicon for browser tab
+
+guide "Static Assets":
+  - Logo: assets/logo.svg (navbar, footer)
+  - Favicon: assets/favicon.ico (browser tab)
+\`\`\`
+
+**In compose.json:**
+\`\`\`json
+{
+  "assets": {
+    "source": "./assets",
+    "copy": true
+  }
+}
+\`\`\`
+
+## Directory Structure
+
+Organize assets by type:
+\`\`\`
+assets/
+├── logo.svg          # App logo
+├── favicon.ico       # Browser icon
+├── images/           # Product images, screenshots
+├── icons/            # UI icons
+└── fonts/            # Custom fonts
+\`\`\`
+
+## Framework Output
+
+Assets are automatically copied to the appropriate location:
+- **Next.js**: \`public/\`
+- **Vite**: \`public/\`
+- **React Native**: \`assets/\`
+
+The LLM generates correct import paths for each framework.
+`;
+
+    writeFileSync(join(assetsDir, 'README.md'), readme);
+
+    // Create .gitkeep to ensure directory is tracked
+    writeFileSync(join(assetsDir, '.gitkeep'), '# Assets directory\n');
+
+    console.log('   ├── README.md');
+    console.log('   └── .gitkeep');
 }

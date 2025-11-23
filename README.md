@@ -1,70 +1,62 @@
 # Compose-Lang
 
-**Define architecture. AI builds the code.**
+> **Vibe Engineering Language** — Describe intent, ship code.
 
-Compose is an **architecture specification language** with just two keywords: `model` and `feature`. Describe what you want in plain English, and an LLM compiler generates production code for any framework.
+Compose is an architecture specification language that lets you describe what your application should do in plain English. An LLM translates your spec into production code for any framework.
 
-## Why Compose?
+**Think of it as executable documentation.** The `.compose` file is the source of truth. Generated code is just the compiled artifact.
 
-- **Minimal** — Two keywords: `model` (data) and `feature` (behavior)
-- **Multi-target** — One spec → React, Next.js, Vue, Express, React Native, etc.
+## The Paradigm Shift
+
+**Traditional:**
+- Code = Source of truth
+- Comments = Explanation (often outdated)
+- Developers read thousands of lines to understand the system
+
+**With Compose:**
+- `.compose` files = Source of truth (always current, they generate the code)
+- Generated code = Disposable artifact
+- Developers read 50 lines to understand the entire system.
 - **Framework-agnostic** — No lock-in. Regenerate for new frameworks anytime.
 - **Deterministic** — Cached builds ensure reproducibility
 - **Team-friendly** — Version control architecture, not implementation
 
 ## Quick Example
 
-### `app.compose` - Your Architecture
+## Three Keywords. That's It.
+
 ```compose
-# Data
-model Todo:
-  title: text
-  completed: bool
-  dueDate: date?
+# 1. model - Data structures
+model User:
+  email: text
+  role: "admin" | "member"
 
-# Features  
-feature "Todo Management":
-  - Create todos
-  - Mark as complete
-  - Delete todos
+# 2. feature - What users can do  
+feature "Authentication":
+  - Email/password signup
+  - Password reset
 
-feature "Theme":
-  - Clean, modern design
-  - Blue color scheme
-
-# Implementation guides (added as you develop)
-guide "Performance":
-  - Cache todo list for 5 minutes
-  - Debounce filter input (300ms)
-  - Paginate at 50 items
+# 3. guide - Implementation details (added as you develop)
+guide "Security":
+  - Rate limit login: 5 attempts per 15 min
+  - Use bcrypt cost factor 12
+  - Store sessions in Redis
 ```
 
-### `compose.json` - Technical Decisions
-```json
-{
-  "targets": {
-    "web": { "framework": "nextjs" },
-    "mobile": { "framework": "react-native" },
-    "api": { "framework": "express" }
-  }
-}
-```
+**That's the entire language.** No classes, no functions, no syntax complexity.
 
-### Build
-```bash
-compose build
-# Generates Next.js, React Native, and Express from the same spec
-```
+---
 
-**→ Complete, runnable applications**? ✅ ([Compose Ingest](docs/compose-ingest.md))
+## Features
 
-### Key Benefits
-- 🎯 **Natural language** - Write architecture in structured English
-- 🤖 **LLM-powered** - Leverages GPT-4, Gemini, Claude for code generation
-- 🔄 **Deterministic** - Caching ensures same input = same output
-- 🚀 **Framework-agnostic** - Works with Vite, Next.js, Express, and more
-- 📦 **Official scaffolding** - Uses `create-vite`, `create-next-app`, etc.
-- 🧩 **Modular** - Multi-file projects with imports
+✅ **Three Keywords** — `model` (data), `feature` (behavior), `guide` (implementation). That's the entire language.  
+✅ **@ References** — Link to external code in any language; LLM translates to your target  
+✅ **Vibe Engineering** — Describe intent naturally, LLM handles implementation  
+✅ **Multi-Target** — Generate web, mobile, and API from one specification  
+✅ **Framework-Agnostic** — Regenerate for Next.js, Vue, Svelte, Rust anytime  
+✅ **Deterministic** — Cached LLM responses ensure reproducible builds  
+✅ **Version Controlled** — Track architectural changes in Git  
+✅ **Living Documentation** — .compose files can't be outdated (they generate the code)
 
 ---
 
@@ -178,6 +170,111 @@ compose build
 # Detects framework in generated/
 # Generates code with LLM
 # Merges intelligently into framework structure
+```
+
+**Result:** Production-ready Next.js app in `./generated/web/`
+
+---
+
+## Advanced Features
+
+### Reference Code (@ Operator)
+
+For complex business logic, write it in any language and reference it:
+
+```python
+# reference/pricing.py (easy to read, test, audit)
+def calculate_discount(user_tier, amount):
+    discounts = {'bronze': 0.05, 'silver': 0.10, 'gold': 0.15}
+    return amount * discounts.get(user_tier, 0)
+```
+
+```compose
+# app.compose
+guide "Pricing Logic":
+  - Reference: @reference/pricing.py::calculate_discount
+  - LLM translates to target language
+  - Preserves exact business rules
+```
+
+**Same logic works for TypeScript, Rust, Go, Swift** — LLM translates!
+
+### Static Assets
+
+```
+my-app/
+├── assets/          # Framework-agnostic
+│   ├── logo.svg
+│   └── images/
+└── generated/
+    └── web/
+        └── public/  # Assets copied here
+```
+
+**Assets automatically copied to framework output during build.**
+
+---
+
+## Philosophy: Vibe Engineering
+
+**Traditional development:**
+```
+Senior Dev → Writes React code
+           → Reviews PRs
+           → Fixes bugs in generated code
+```
+
+**With Compose:**
+```
+Senior Dev → Writes .compose files
+           → Reviews architecture specs
+           → Fixes bugs by updating guides
+```
+
+**The shift:** From implementation → architecture. From code review → spec review.
+
+### Your Cursor Workflow, Codified
+
+Compose takes your typical Cursor/AI agent workflow and makes it reproducible:
+
+```
+Cursor Workflow:
+You: "Add authentication"
+AI: *generates code*
+You: "Make it secure"  
+AI: *adds rate limiting*
+You: "Handle edge case"
+AI: *updates code*
+```
+
+```compose
+Compose (Same Vibe, Reproducible):
+feature "Authentication"
+
+guide "Security":
+  - Rate limit to 5 attempts per 15 min
+  
+guide "Edge Cases":
+  - Handle expired tokens
+  - Refresh on 401
+```
+
+**The .compose file IS the conversation history.** Rebuild anytime, same result.
+
+---
+
+## Project Structure
+
+```
+my-app/
+├── app.compose       # Architecture spec (source of truth)
+├── compose.json      # Framework/deployment config
+├── reference/        # Business logic (Python, SQL, etc.)
+│   └── pricing.py
+├── assets/           # Static files (logos, images)
+└── generated/        # LLM-generated code (don't edit!)
+    ├── web/          # Next.js app
+    └── mobile/       # React Native app
 ```
 
 ### `compose dev`
@@ -456,9 +553,14 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 📚 Documentation
 
-- [Language Specification](language/semantics.md)
-- [Grammar Reference](language/grammar.ebnf)
-- [Architecture Overview](language/architecture.md)
+- **[SYNTAX.md](SYNTAX.md)** - Complete language reference
+- **[docs/reference-code.md](docs/reference-code.md)** - Using @ operator and reference code
+- **[docs/compose-json.md](docs/compose-json.md)** - Configuration options
+- **[examples/](examples/)** - Real-world examples
+  - `todo-simple/` - Minimal example
+  - `projectflow/` - Complex SaaS app
+  - `ecommerce-with-reference/` - Shows @ operator usage
+  - `payment-system-evolution.md` - How guides grow over time
 - [LLM Integration](docs/llm-integration.md)
 - [Compose Ingest (Future)](docs/compose-ingest.md)
 - [Contributing Guide](CONTRIBUTING.md)

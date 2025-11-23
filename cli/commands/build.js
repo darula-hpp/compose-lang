@@ -11,6 +11,7 @@ import { emitCode } from '../../compiler/emitter/code-emitter.js';
 import { writeOutput } from '../../compiler/emitter/output-writer.js';
 import { detectFramework } from '../../compiler/emitter/framework-analyzer.js';
 import { mergeCode } from '../../compiler/emitter/code-merger.js';
+import { copyAssets } from '../../compiler/emitter/asset-copier.js';
 
 export async function build(args) {
     console.log('🔨 Building Compose project...\n');
@@ -111,6 +112,9 @@ export async function build(args) {
                 });
             }
         }
+
+        // Copy assets (if assets directory exists)
+        copyAssets(baseDir, target);
     }
 
     console.log('\n✨ Build complete!\n');
