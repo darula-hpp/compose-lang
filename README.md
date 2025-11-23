@@ -180,6 +180,21 @@ compose eject
 
 ⚠️ **Warning:** Eject is permanent. You can't use `compose build` after ejecting.
 
+### `compose clean`
+Remove generated code and build cache
+
+```bash
+compose clean
+# Removes:
+#  - generated/ directory (or target-specific output dirs)
+#  - .compose/ cache
+```
+
+Useful for:
+- Fresh rebuild
+- Troubleshooting build issues
+- Freeing disk space
+
 ---
 
 ## ⚙️ Configuration

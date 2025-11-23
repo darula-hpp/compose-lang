@@ -69,13 +69,11 @@ function mergeViteCode(generatedFiles, frameworkInfo, targetDir) {
  * Inject routes into Vite App.jsx
  */
 function injectViteRoutes(appFilePath, pages) {
-    let appContent = readFileSync(appFilePath, 'utf8');
-
     // Generate import statements
     const imports = pages.map(page => {
         const name = page.path.split('/').pop().replace('.js', '').replace('.jsx', '');
         const path = `./pages/${name}`;
-        return `import ${name} from '${path}'`;
+        return `import ${name} from '${path}';`;
     }).join('\n');
 
     // Generate route definitions
@@ -85,11 +83,9 @@ function injectViteRoutes(appFilePath, pages) {
         return `        <Route path="${routePath}" element={<${name} />} />`;
     }).join('\n');
 
-    // Check if React Router is already set up
-    if (!appContent.includes('BrowserRouter')) {
-        // Add React Router setup
-        appContent = `import React from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+    // Always create a fresh App.jsx with React Router
+    const appContent = `import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 ${imports}
 
 function App() {
@@ -99,24 +95,11 @@ function App() {
 ${routes}
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;
 `;
-    } else {
-        // Add imports at top
-        const importInsertPoint = appContent.indexOf('import');
-        if (importInsertPoint !== -1) {
-            const endOfImports = appContent.indexOf('\n\n', importInsertPoint);
-            appContent = appContent.slice(0, endOfImports) + '\n' + imports + appContent.slice(endOfImports);
-        }
-
-        // Add routes
-        if (appContent.includes('<Routes>')) {
-            appContent = appContent.replace('</Routes>', routes + '\n      </Routes>');
-        }
-    }
 
     writeFileSync(appFilePath, appContent);
 }
