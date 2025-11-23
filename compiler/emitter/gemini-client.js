@@ -6,11 +6,13 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export class GeminiClient {
-    constructor(config) {
-        this.model = config.model || 'gemini-pro';
+    constructor(config, cacheManager = null) {
+        this.config = config;
         this.apiKey = this.resolveApiKey(config.apiKey);
-        this.temperature = config.temperature || 0.2;
+        this.model = config.model || 'gemini-pro';
+        this.temperature = config.temperature ?? 0.7;
         this.maxTokens = config.maxTokens || 2048;
+        this.cacheManager = cacheManager;
 
         if (!this.apiKey) {
             throw new Error('Gemini API key is required. Set GEMINI_API_KEY environment variable.');
@@ -55,8 +57,19 @@ export class GeminiClient {
             const response = await result.response;
             const text = response.text();
 
-            // Strip markdown code fences if present
-            return this.stripMarkdown(text);
+            // Clean up the response
+            const cleanedCode = this.stripMarkdown(text);
+
+            // Store in cache
+            if (this.cacheManager) {
+                const cacheKey = this.cacheManager.generateKey(fullPrompt, {
+                    model: this.model,
+                    temperature: this.temperature,
+                });
+                this.cacheManager.set(cacheKey, cleanedCode);
+            }
+
+            return cleanedCode;
         } catch (error) {
             if (error.message?.includes('API_KEY')) {
                 throw new Error('Invalid Gemini API key. Please check your configuration.');

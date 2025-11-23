@@ -1,27 +1,17 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-/**
- * TodoItem component displays a single todo item with a checkbox and a delete button.
- * It allows users to toggle the completion status and delete the todo.
- *
- * @param {object} props - The component props.
- * @param {object} props.todo - The todo object containing id, text, and completed status.
- * @param {function} props.onToggleComplete - Callback function to toggle the completion status of the todo.
- * @param {function} props.onDelete - Callback function to delete the todo item.
- */
 const TodoItem = ({ todo, onToggleComplete, onDelete }) => {
+  // Destructure properties from the todo object for easier access.
+  const { id, text, completed } = todo;
+
   /**
    * Handles the change event for the checkbox.
-   * Calls the onToggleComplete prop function with the todo's ID.
+   * Calls the onToggleComplete prop function with the todo's ID and its new completion status.
    */
   const handleToggle = () => {
-    // Ensure onToggleComplete is a function before calling
-    if (typeof onToggleComplete === 'function') {
-      onToggleComplete(todo.id);
-    } else {
-      console.error('onToggleComplete prop is not a function.');
-    }
+    // Invert the current completed status and pass it to the parent handler.
+    onToggleComplete(id, !completed);
   };
 
   /**
@@ -29,47 +19,42 @@ const TodoItem = ({ todo, onToggleComplete, onDelete }) => {
    * Calls the onDelete prop function with the todo's ID.
    */
   const handleDeleteClick = () => {
-    // Ensure onDelete is a function before calling
-    if (typeof onDelete === 'function') {
-      onDelete(todo.id);
-    } else {
-      console.error('onDelete prop is not a function.');
-    }
+    onDelete(id);
   };
 
   return (
-    <div className={`todo-item ${todo.completed ? 'completed' : ''}`}>
+    <li className={`todo-item ${completed ? 'completed' : ''}`}>
       <input
         type="checkbox"
-        checked={todo.completed}
+        checked={completed}
         onChange={handleToggle}
-        // Add accessibility label for screen readers
-        aria-label={`Mark "${todo.text}" as ${todo.completed ? 'incomplete' : 'complete'}`}
+        aria-label={`Mark "${text}" as ${completed ? 'incomplete' : 'complete'}`}
       />
-      <span className="todo-text">{todo.text}</span>
+      <span className="todo-text">{text}</span>
       <button
         onClick={handleDeleteClick}
         className="delete-button"
-        // Add accessibility label for screen readers
-        aria-label={`Delete "${todo.text}"`}
+        aria-label={`Delete "${text}"`}
       >
         Delete
       </button>
-    </div>
+    </li>
   );
 };
 
-/**
- * Prop type validation for the TodoItem component.
- * Ensures that required props are provided and are of the correct type.
- */
+// Prop validation to ensure the component receives the correct data types.
 TodoItem.propTypes = {
+  // The 'todo' object containing details about a single todo item.
   todo: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    text: PropTypes.string.isRequired,
-    completed: PropTypes.bool.isRequired,
+    id: PropTypes.string.isRequired, // Unique identifier for the todo.
+    text: PropTypes.string.isRequired, // The description of the todo.
+    completed: PropTypes.bool.isRequired, // The completion status of the todo.
   }).isRequired,
+  // Function to call when the todo's completion status changes.
+  // It receives the todo's ID and the new completion status.
   onToggleComplete: PropTypes.func.isRequired,
+  // Function to call when the todo is to be deleted.
+  // It receives the todo's ID.
   onDelete: PropTypes.func.isRequired,
 };
 

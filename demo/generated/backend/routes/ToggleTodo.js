@@ -1,79 +1,107 @@
 const express = require('express');
 const router = express.Router();
 
-// In a real application, this would be a database model or service.
-// For demonstration purposes, we'll use a simple in-memory array to simulate data.
-const todos = [
-    { id: '1', title: 'Learn Express', completed: false },
-    { id: '2', title: 'Build API', completed: true },
-    { id: '3', title: 'Deploy App', completed: false },
+// Mock database for demonstration purposes
+// In a real application, this would interact with a database (e.g., MongoDB, PostgreSQL)
+let todos = [
+    { id: 1, title: 'Learn Node.js', completed: false },
+    { id: 2, title: 'Build an Express API', completed: true },
+    { id: 3, title: 'Deploy to production', completed: false }
 ];
 
 /**
- * PATCH /todos/:todoId
- * Toggles the 'completed' status of a specific todo item.
- *
- * This endpoint allows clients to flip the `completed` status of a todo item
- * identified by `todoId`. It follows REST API best practices for partial updates
- * where the server determines the new state based on the current state.
- *
- * @param {object} req - The Express request object, containing `todoId` in `req.params`.
- * @param {object} res - The Express response object.
- * @returns {Promise<void>} - A Promise that resolves when the response is sent.
+ * @swagger
+ * /todos/{id}/toggle:
+ *   patch:
+ *     summary: Toggle todo completed status
+ *     description: Toggles the 'completed' status of a specific todo item by its ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Numeric ID of the todo item to toggle.
+ *     responses:
+ *       200:
+ *         description: Todo status toggled successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Todo status toggled successfully.
+ *                 todo:
+ *                   type: object
+ *                   properties:
+ *                     id: { type: integer, example: 1 }
+ *                     title: { type: string, example: "Learn Node.js" }
+ *                     completed: { type: boolean, example: true }
+ *       400:
+ *         description: Invalid todo ID provided.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid todo ID provided.
+ *       404:
+ *         description: Todo not found.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Todo with ID 999 not found.
+ *       500:
+ *         description: An unexpected error occurred.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: An unexpected error occurred while toggling todo status.
  */
-router.patch('/todos/:todoId', async (req, res) => {
+router.patch('/todos/:id/toggle', (req, res) => {
     try {
-        const { todoId } = req.params;
+        const { id } = req.params;
 
-        // 1. Input Validation:
-        // Ensure `todoId` is provided, is a string, and is not empty.
-        if (!todoId || typeof todoId !== 'string' || todoId.trim() === '') {
-            // Respond with a 400 Bad Request for invalid input.
-            return res.status(400).json({ message: 'Invalid todo ID provided. todoId must be a non-empty string.' });
+        // Input validation: Ensure ID is a valid positive integer
+        const todoId = parseInt(id, 10);
+        if (isNaN(todoId) || todoId <= 0) {
+            return res.status(400).json({ message: 'Invalid todo ID provided. ID must be a positive integer.' });
         }
 
-        // In a production application, you might validate `todoId` against a specific format
-        // (e.g., UUID regex, MongoDB ObjectId regex) if your IDs follow a specific pattern.
-        // Example for UUID validation:
-        // const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        // if (!uuidRegex.test(todoId)) {
-        //     return res.status(400).json({ message: 'Invalid todo ID format. Must be a valid UUID.' });
-        // }
-
-        // 2. Business Logic - Find and Toggle:
-        // Find the todo item by its ID in the mock data store.
-        // In a real application, this would be a database query (e.g., `Todo.findById(todoId)`).
+        // Find the todo item by ID in the mock database
         const todoIndex = todos.findIndex(todo => todo.id === todoId);
 
-        // If the todo item is not found, respond with a 404 Not Found.
+        // If todo not found, return 404 Not Found
         if (todoIndex === -1) {
-            return res.status(404).json({ message: `Todo with ID '${todoId}' not found.` });
+            return res.status(404).json({ message: `Todo with ID ${todoId} not found.` });
         }
 
-        // Toggle the 'completed' status of the found todo item.
-        // We create a new object using the spread operator to ensure immutability best practices,
-        // although direct mutation of the object in the array would also work for this in-memory example.
-        const updatedTodo = {
-            ...todos[todoIndex],
-            completed: !todos[todoIndex].completed, // Flip the boolean status (true to false, false to true)
-        };
+        // Toggle the 'completed' status of the found todo item
+        todos[todoIndex].completed = !todos[todoIndex].completed;
 
-        // Update the mock data store with the toggled todo item.
-        todos[todoIndex] = updatedTodo;
-
-        // 3. Respond with Success:
-        // Respond with the updated todo item and a 200 OK status.
-        res.status(200).json(updatedTodo);
+        // Return a 200 OK response with the updated todo item
+        res.status(200).json({
+            message: 'Todo status toggled successfully.',
+            todo: todos[todoIndex]
+        });
 
     } catch (error) {
-        // 4. Error Handling:
-        // Log the error for debugging purposes. In a production environment, use a dedicated logger
-        // (e.g., Winston, Pino) instead of `console.error`.
-        console.error(`Error toggling todo status for ID ${req.params.todoId}:`, error);
-
-        // Respond with a 500 Internal Server Error for any unexpected issues that occur
-        // during the request processing.
-        res.status(500).json({ message: 'An unexpected error occurred while toggling todo status.', error: error.message });
+        // Log the error for debugging purposes in a production environment
+        console.error(`Error toggling todo status for ID ${req.params.id}:`, error);
+        // Return a generic 500 Internal Server Error for unexpected issues
+        res.status(500).json({ message: 'An unexpected error occurred while toggling todo status.' });
     }
 });
 

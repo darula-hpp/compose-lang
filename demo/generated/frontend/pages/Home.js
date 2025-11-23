@@ -3,57 +3,93 @@ import React from 'react';
 /**
  * Home Page Component
  *
- * This component serves as the main landing page for the application.
- * It's designed to display an overview or a primary feature, such as a todo list.
+ * This component serves as the main entry point for the todo list application.
+ * It displays a welcome message and acts as a container for future todo list features.
  *
- * @component
- * @returns {JSX.Element} The rendered Home page.
+ * @returns {JSX.Element} The Home page component.
  */
-const Home = () => {
-  // In a production application, you would typically fetch data here
-  // using `useEffect` or manage state for the todo list items.
-  // For this example, we'll keep it simple with static content and placeholders.
+function Home() {
+  // State can be added here for managing data specific to the Home page,
+  // e.g., a list of todos, loading states, etc.
+  // const [todos, setTodos] = React.useState([]);
+  // const [isLoading, setIsLoading] = React.useState(true);
+
+  // Effects can be used here for data fetching or side effects.
+  // React.useEffect(() => {
+  //   // Example: Fetch todos when the component mounts
+  //   const fetchTodos = async () => {
+  //     try {
+  //       // Simulate API call
+  //       // const response = await fetch('/api/todos');
+  //       // const data = await response.json();
+  //       // setTodos(data);
+  //       console.log('Fetching todos...');
+  //       setTimeout(() => {
+  //         // setTodos([{ id: 1, text: 'Learn React', completed: false }]);
+  //         // setIsLoading(false);
+  //         console.log('Todos fetched (simulated).');
+  //       }, 1000);
+  //     } catch (error) {
+  //       console.error('Failed to fetch todos:', error);
+  //       // setIsLoading(false);
+  //       // Implement proper error display to the user
+  //     }
+  //   };
+  //   fetchTodos();
+  // }, []); // Empty dependency array ensures this runs only once on mount
 
   return (
     <div className="home-page">
-      {/* Page Title */}
-      <h1>Welcome to Your Todo List App!</h1>
+      {/* Page Header */}
+      <header className="home-header">
+        <h1>Welcome to Your Todo List!</h1>
+        <p>This is your main todo list page where you can manage all your tasks.</p>
+      </header>
 
-      {/* Page Description */}
-      <p>
-        This is your main hub for managing all your tasks.
-        Get organized and stay productive by adding and tracking your todos.
-      </p>
-
-      {/* Placeholder for the Todo List section */}
-      <section className="todo-list-section">
-        <h2>Your Current Tasks</h2>
+      {/* Main Content Area for Todo List */}
+      <main className="home-content">
         {/*
-          In a real application, this section would render a dynamic list
-          of todo items, possibly fetched from an API, managed with React state
-          (e.g., `useState`), and allowing for interactions like adding,
-          editing, or deleting todos.
-        */}
-        <p>
-          No tasks found. Start by adding a new todo item to get organized!
-        </p>
-        {/* Example: A button to navigate to an "Add Todo" page or open a modal */}
-        {/* <button className="add-todo-button" onClick={() => console.log('Navigate to Add Todo')}>
-          Add New Todo
-        </button> */}
-      </section>
+          * This section will eventually house the main todo list functionality.
+          * For now, it serves as a placeholder.
+          *
+          * Future features might include:
+          * - A form to add new todos
+          * - A list component to display existing todos
+          * - Filtering and sorting options
+          * - Individual todo item components with edit/delete functionality
+          */}
+        <section className="todo-list-section">
+          <h2>Your Tasks</h2>
+          {/* Example of conditional rendering for loading state */}
+          {/* {isLoading ? (
+            <p>Loading todos...</p>
+          ) : todos.length === 0 ? (
+            <p>No todos yet! Start by adding a new task.</p>
+          ) : (
+            <ul>
+              {todos.map(todo => (
+                <li key={todo.id}>{todo.text}</li>
+              ))}
+            </ul>
+          )} */}
+          <p>This is where your list of todos will appear.</p>
+          <p>Stay organized and productive!</p>
+        </section>
 
-      {/*
-        Routing Setup Comment:
-        This `Home` component is intended to be rendered by a router
-        (e.g., `react-router-dom`) at the application's root path ("/").
-        Example of how it would be used in a router configuration:
-        <Route path="/" element={<Home />} />
-        Since this page is not protected, it does not require any authentication
-        checks before rendering.
-      */}
+        {/* Optional: Add a quick action section */}
+        <section className="quick-actions">
+          <h3>Quick Actions</h3>
+          <button onClick={() => console.log('Add new todo clicked!')}>Add New Todo</button>
+          {/* More buttons or links for common actions */}
+        </section>
+      </main>
+
+      {/* Page Footer (optional) */}
+      <footer className="home-footer">
+        <p>&copy; {new Date().getFullYear()} My Todo App</p>
+      </footer>
     </div>
   );
-};
+}
 
 export default Home;

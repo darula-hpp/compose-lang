@@ -6,11 +6,13 @@
 import OpenAI from 'openai';
 
 export class OpenAIClient {
-    constructor(config) {
-        this.model = config.model || 'gpt-4';
+    constructor(config, cacheManager = null) {
+        this.config = config;
         this.apiKey = this.resolveApiKey(config.apiKey);
-        this.temperature = config.temperature || 0.2;
+        this.model = config.model || 'gpt-4';
+        this.temperature = config.temperature ?? 0.7;
         this.maxTokens = config.maxTokens || 2048;
+        this.cacheManager = cacheManager;
 
         if (!this.apiKey) {
             throw new Error('OpenAI API key is required. Set OPENAI_API_KEY environment variable.');
@@ -42,6 +44,20 @@ export class OpenAIClient {
      * @returns {Promise<string>} - Generated code
      */
     async generate(systemPrompt, userPrompt, options = {}) {
+        // Check cache first
+        if (this.cacheManager) {
+            const cacheKey = this.cacheManager.generateKey({ systemPrompt, userPrompt }, {
+                model: this.model,
+                temperature: this.temperature,
+                ...options
+            });
+
+            const cached = this.cacheManager.get(cacheKey);
+            if (cached) {
+                return cached;
+            }
+        }
+
         try {
             const response = await this.client.chat.completions.create({
                 model: this.model,
@@ -56,8 +72,20 @@ export class OpenAIClient {
 
             const text = response.choices[0].message.content;
 
-            // Strip markdown code fences if present
-            return this.stripMarkdown(text);
+            // Clean up the response
+            const cleanedCode = this.stripMarkdown(text);
+
+            // Store in cache
+            if (this.cacheManager) {
+                const cacheKey = this.cacheManager.generateKey({ systemPrompt, userPrompt }, {
+                    model: this.model,
+                    temperature: this.temperature,
+                    ...options
+                });
+                this.cacheManager.set(cacheKey, cleanedCode);
+            }
+
+            return cleanedCode;
         } catch (error) {
             if (error.status === 429) {
                 throw new Error('OpenAI API rate limit exceeded. Please try again later.');

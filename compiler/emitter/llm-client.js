@@ -5,7 +5,8 @@
  */
 
 export class MockLLMClient {
-  constructor() {
+  constructor(cacheManager = null) {
+    this.cacheManager = cacheManager;
     this.responses = new Map();
   }
 
@@ -148,39 +149,52 @@ export function ${name}(...args) {
 }
 
 /**
+ * LLM Client Factory
+ * Creates appropriate LLM client based on configuration
+ */
+
+import { createCacheManager } from './cache-manager.js';
+
+/**
  * Create LLM client
+ * Create an LLM client based on configuration
  * @param {object} config - LLM configuration from compose.json
  * @returns {MockLLMClient|OpenAIClient|GeminiClient} - LLM client instance
  */
 export async function createLLMClient(config = {}) {
+  // Create cache manager (shared across all clients)
+  const cacheManager = createCacheManager(config.cache);
+
   // If no config or explicitly mock, return mock client
-  if (!config || config.mock) {
-    return new MockLLMClient();
+  if (!config || config.mock || !config.provider) {
+    return new MockLLMClient(cacheManager);
   }
 
   // Create real client based on provider
   try {
-    switch (config.provider) {
+    const provider = config.provider.toLowerCase();
+
+    switch (provider) {
       case 'openai': {
         const { OpenAIClient } = await import('./openai-client.js');
-        return new OpenAIClient(config);
+        return new OpenAIClient(config, cacheManager);
       }
       case 'gemini': {
         const { GeminiClient } = await import('./gemini-client.js');
-        return new GeminiClient(config);
+        return new GeminiClient(config, cacheManager);
       }
       case 'anthropic': {
         // TODO: Implement Anthropic client
         console.warn('Anthropic not yet implemented, using mock');
-        return new MockLLMClient();
+        return new MockLLMClient(cacheManager);
       }
       default:
         console.warn(`Unknown provider "${config.provider}", using mock`);
-        return new MockLLMClient();
+        return new MockLLMClient(cacheManager);
     }
   } catch (error) {
     console.error(`Failed to create ${config.provider} client: ${error.message}`);
     console.warn('Falling back to mock LLM client');
-    return new MockLLMClient();
+    return new MockLLMClient(cacheManager);
   }
 }
