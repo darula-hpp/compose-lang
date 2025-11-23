@@ -1,6 +1,6 @@
 {
     "name": "compose-lang",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "description": "An English-based, structured programming language designed for LLM-assisted code generation",
     "type": "module",
     "main": "compiler/index.js",
@@ -26,6 +26,26 @@
     ],
     "author": "",
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/darula-hpp/compose-lang.git"
+    },
+    "bugs": {
+        "url": "https://github.com/darula-hpp/compose-lang/issues"
+    },
+    "homepage": "https://github.com/darula-hpp/compose-lang#readme",
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "files": [
+        "cli/",
+        "compiler/",
+        "language/",
+        "docs/",
+        "README.md",
+        "LICENSE",
+        "CONTRIBUTING.md"
+    ],
     "dependencies": {
         "@google/generative-ai": "^0.24.1",
         "openai": "^6.9.1"

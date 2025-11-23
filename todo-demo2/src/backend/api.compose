@@ -1,0 +1,13 @@
+import "../types/todo.compose"
+
+backend.create_api "GetTodos"
+  description: "Fetch all todos from database"
+
+backend.create_api "CreateTodo"
+  description: "Create a new todo item"
+
+backend.create_api "ToggleTodo"
+  description: "Toggle todo completed status"
+
+backend.create_api "DeleteTodo"
+  description: "Delete a todo by ID"

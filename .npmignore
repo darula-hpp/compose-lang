@@ -1,0 +1,14 @@
+tests/
+examples/
+.github/
+*.test.js
+.env
+.DS_Store
+todo-demo*/
+demo/
+playground/
+node_modules/
+.compose/
+generated/
+*.md.backup
+.vscode/
