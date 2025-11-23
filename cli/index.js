@@ -57,6 +57,11 @@ try {
             await run(args.slice(1));
             break;
 
+        case 'eject':
+            const { eject } = await import('./commands/eject.js');
+            await eject(args.slice(1));
+            break;
+
         default:
             console.error(`Unknown command: ${command}`);
             console.error('Run "compose --help" for usage information.');
@@ -82,6 +87,7 @@ Commands:
   build                   Compile .compose files to target code
   dev                     Watch and rebuild on file changes  
   run [target]            Start the generated application
+  eject                   Eject from Compose and take full ownership of code
   project <name>          Create project with examples (deprecated, use init)
 
 Examples:
@@ -89,6 +95,7 @@ Examples:
   compose build           Build current project
   compose dev             Start development mode
   compose run frontend    Run generated frontend
+  compose eject           Graduate from Compose management
 
 Options:
   --help, -h              Show this help message

@@ -1,164 +1,378 @@
-# Compose Language
+# Compose-Lang
 
-**An English-based, structured programming language designed for LLM-assisted code generation.**
+**Write architecture in English. Get production code.**
 
-Compose is not a conventional programming language — it's a **high-level, deterministic instruction layer** that describes application intent in structured English. An LLM compiler translates Compose code into real source code for multiple targets (React, Node.js, Python, Django, mobile, etc.).
-
-## Why Compose?
-
-- **Human-readable but structured** — Natural English with enforced syntax for predictable parsing
-- **LLM-native** — Designed specifically for AI-assisted code generation
-- **Unopinionated** — Describes *what* your app does, not *how* to build it
-- **Target-agnostic** — One `.compose` file → multiple output formats
-- **Modular** — Incremental compilation for fast iteration
-
-## Quick Example
+Compose-Lang is a revolutionary **architecture definition language** that lets you describe applications in natural, structured English and generate real, runnable code for any tech stack using LLMs.
 
 ```compose
-define structure Customer
-  has id as number
-  has name as text
-  has email as text
-
-frontend.page "Dashboard"
-  is protected
-  description: "Shows customer metrics and analytics"
-
-backend.create_api "GetCustomer"
-  description: "Fetch a single customer by ID"
-
-define function calculateRevenue
-  inputs: sales as list of Sale
-  returns: number
-  description: "Sum all sale amounts and return total revenue"
+frontend.page "Home"
+  description: "A todo app with add, complete, and delete"
+  
+backend.create-api "GetTodos"
+  description: "Fetch all todo items"
+  returns list of Todo
 ```
 
-## Features
+**→ Generates complete React + Express apps with one command**
 
-✅ **Data Structures** — Define types, variables, and arrays  
-✅ **Frontend DSL** — Pages, components, state, themes, rendering  
-✅ **Backend DSL** — APIs, queries, file I/O, environment variables, sockets  
-✅ **Pure English Functions** — Describe behavior without writing code  
-✅ **Multi-file Projects** — Import and modularize your application  
-✅ **Context Comments** — Guide the LLM with additional context  
-✅ **Target Configuration** — Control output via `compose.json`
+---
 
-## Project Structure
+## ✨ Why Compose?
 
-```
-compose-lang/
-├── compiler/           # Lexer, parser, IR, code emitter
-├── runtime/            # Runtime libraries (JS, Node, WASM)
-├── stdlib/             # Built-in packages (UI, data, fs, net)
-├── cli/                # The `compose` CLI tool
-├── language/           # Language specification & grammar
-├── playground/         # Online playground
-├── examples/           # Example Compose projects
-├── docs/               # Documentation site
-└── packages/           # VS Code extension, formatters, etc.
-```
+### The Problem
+Traditional code generation is brittle and opinionated. You get locked into specific frameworks, patterns, and outdated templates.
 
-## Getting Started
+### The Solution
+Compose is **framework-agnostic**. Describe your architecture once, generate for any stack:
+- Want Vite today, Next.js tomorrow? ✅
+- Need to port web app to mobile? ✅
+- Migrate Java monolith to Node.js? ✅ ([Compose Ingest](docs/compose-ingest.md))
+
+### Key Benefits
+- 🎯 **Natural language** - Write architecture in structured English
+- 🤖 **LLM-powered** - Leverages GPT-4, Gemini, Claude for code generation
+- 🔄 **Deterministic** - Caching ensures same input = same output
+- 🚀 **Framework-agnostic** - Works with Vite, Next.js, Express, and more
+- 📦 **Official scaffolding** - Uses `create-vite`, `create-next-app`, etc.
+- 🧩 **Modular** - Multi-file projects with imports
+
+---
+
+## 🚀 Quick Start
 
 ### Installation
 
 ```bash
-npm install -g compose-lang
+git clone https://github.com/darula-hpp/compose-lang.git
+cd compose-lang
+npm install
+npm link
 ```
 
-### Create a New Project
+### Create Your First Project
 
 ```bash
-compose new my-app
-cd my-app
-```
+compose init
+# Choose: Vite + React, Express
+# Include example files: Yes
 
-### Build Your App
-
-```bash
+cd my-compose-app
 compose build
 ```
 
-### Development Mode
+### Run the Generated Apps
+
+```bash
+# Frontend
+cd generated/frontend
+npm install
+npm run dev
+
+# Backend (separate terminal)
+cd generated/backend
+npm install
+npm run dev
+```
+
+---
+
+## 📝 The Compose Language
+
+### Data Structures
+```compose
+define structure Todo
+  has id as number
+  has title as text
+  has completed as boolean
+```
+
+### Frontend - Pages & Components
+```compose
+frontend.page "Dashboard"
+  description: "Admin dashboard with charts and tables"
+
+frontend.component "TodoForm"
+  description: "Form to add new todo items"
+  accepts todo as Todo
+```
+
+### Backend - APIs
+```compose
+backend.create-api "CreateTodo"
+  description: "Create a new todo item"
+  accepts title as text
+  returns Todo
+
+backend.create-api "GetTodos"
+  description: "Get all todos"
+  returns list of Todo
+```
+
+### Multi-File Projects
+```compose
+// src/types/todo.compose
+define structure Todo
+  has id as number
+  has title as text
+
+// src/backend/api.compose
+import "../types/todo.compose"
+
+backend.create-api "GetTodos"
+  returns list of Todo
+```
+
+See [Language Specification](language/semantics.md) for full syntax.
+
+---
+
+## 🛠️ CLI Commands
+
+### `compose init`
+Initialize a new project with framework scaffolding
+
+```bash
+compose init
+# Prompts for:
+#  - Project name
+#  - Frontend framework (Vite, Next.js, Remix, Skip)
+#  - Backend framework (Express, Fastify, Skip)
+#  - Include example .compose files? (Y/n)
+```
+
+### `compose build`
+Compile .compose files to target code
+
+```bash
+compose build
+# Detects framework in generated/
+# Generates code with LLM
+# Merges intelligently into framework structure
+```
+
+### `compose dev`
+Watch mode with automatic rebuilds
 
 ```bash
 compose dev
+# Watches .compose files
+# Rebuilds on changes
 ```
 
-## Documentation
+### `compose run [target]`
+Start generated applications
 
-- [Language Specification](./language/semantics.md)
-- [Grammar Reference](./language/grammar.ebnf)
-- [Architecture Overview](./language/architecture.md)
-- [Token Reference](./language/tokens.md)
+```bash
+compose run frontend  # Start Vite dev server
+compose run backend   # Start Express server
+```
 
-## Examples
+### `compose eject`
+Graduate from Compose and take full ownership
 
-Explore real-world Compose applications:
+```bash
+compose eject
+# Copies generated/ → permanent locations (frontend/, backend/)
+# Archives .compose files
+# Removes Compose configuration
+# You maintain code manually from here
+```
 
-- [Todo App](./examples/todo-app/)
-- [Airline Booking System](./examples/airline-booking/)
-- [Real-time Chat](./examples/realtime-chat/)
-- [E-commerce Platform](./examples/ecommerce/)
+⚠️ **Warning:** Eject is permanent. You can't use `compose build` after ejecting.
 
-## Targets
+---
 
-Compose can compile to:
+## ⚙️ Configuration
 
-- **Frontend**: React, Vue, Svelte, vanilla JS
-- **Backend**: Node.js, Python (Django/Flask), Rust
-- **Mobile**: React Native (planned)
-- **Desktop**: Electron (planned)
-
-Configure targets in `compose.json`:
+Create `compose.json` in your project root:
 
 ```json
 {
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-2.5-flash",
+    "apiKey": "${GEMINI_API_KEY}",
+    "temperature": 0.2,
+    "maxTokens": 8192
+  },
   "targets": {
     "frontend": {
+      "entry": "./src/frontend/app.compose",
       "type": "react",
+      "framework": "vite",
       "output": "./generated/frontend"
     },
     "backend": {
+      "entry": "./src/backend/api.compose",
       "type": "node",
+      "framework": "express",
       "output": "./generated/backend"
     }
   }
 }
 ```
 
-## Philosophy
+### Supported LLM Providers
+- **Gemini** (Google) - Recommended, fast and cheap
+- **OpenAI** (GPT-4, GPT-4o)
+- **Anthropic** (Coming soon)
+- **Local models** (Planned)
 
-Compose is designed for:
+Set your API key:
+```bash
+export GEMINI_API_KEY="your-api-key"
+# or
+export OPENAI_API_KEY="your-api-key"
+```
 
-- Developers who want to prototype faster
-- Non-developers building real applications
-- AI-first builders leveraging LLM capabilities
-- Teams building internal tools at scale
+### Supported Frameworks
 
-## Roadmap
+**Frontend:**
+- Vite + React ✅
+- Next.js ✅
+- Remix ✅
+- Astro (Planned)
+- SolidJS (Planned)
 
-**v1.0** (Current)
-- ✅ Core language features
-- ✅ Frontend & backend DSLs
-- ✅ Multi-file projects
-- ✅ IR generation
-
-**Future**
-- OOP (classes, inheritance, methods)
-- Async workflows
-- Built-in auth macros
-- Plugin system
-- Compose Studio (GUI composer)
-
-## Contributing
-
-Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
-
-## License
-
-MIT License — See [LICENSE](./LICENSE) for details.
+**Backend:**
+- Express ✅
+- Fastify (Planned)
+- NestJS (Planned)
+- Hono (Planned)
 
 ---
 
-Built with ❤️ for the LLM-native future of software development.
+## 🎯 How It Works
+
+### 1. Write Architecture
+```compose
+frontend.page "Home"
+  description: "Todo app with CRUD operations"
+```
+
+### 2. Compile to IR
+```
+Lexer → Parser → Analyzer → Intermediate Representation
+```
+
+### 3. Generate Code (LLM)
+```
+IR + Framework Context → LLM → Production Code
+```
+
+### 4. Merge Intelligently
+```
+Framework Detection → Injection Strategy → Merged Output
+```
+
+**Result:** Complete, runnable applications with proper framework structure.
+
+---
+
+## 🔥 Key Features
+
+### LLM Response Caching
+Same input always produces same output. Builds are deterministic and fast.
+
+```bash
+# First build: calls LLM
+compose build  # 10 seconds
+
+# Second build: uses cache
+compose build  # 0.5 seconds
+```
+
+### Framework-Agnostic Init
+Delegates to official tools instead of maintaining templates:
+
+```bash
+compose init
+# Runs: npm create vite@latest
+# Then: merges your generated code in
+```
+
+No outdated templates. Always fresh scaffolding.
+
+### Intelligent Code Merging
+Compose understands framework conventions:
+
+- **Vite**: Injects routes into `App.jsx`
+- **Next.js**: Uses file-based routing
+- **Express**: Registers routes in `server.js`
+
+### Multi-File Projects
+```
+src/
+├── types/
+│   └── todo.compose
+├── frontend/
+│   └── app.compose
+└── backend/
+    └── api.compose
+```
+
+Import and modularize your architecture.
+
+---
+
+## 🚀 Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for the full vision.
+
+### Near Term (2025)
+- VS Code extension
+- More framework adapters
+- Testing support
+- Type generation
+
+### Game Changer (2026)
+- **Compose Ingest** - Reverse compiler that turns existing code into `.compose` files
+- Legacy modernization tool
+- Cross-platform migration
+- Architecture documentation
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+**Good first issues:**
+- Add framework adapters
+- Improve error messages
+- Add examples
+- Write documentation
+
+---
+
+## 📚 Documentation
+
+- [Language Specification](language/semantics.md)
+- [Grammar Reference](language/grammar.ebnf)
+- [Architecture Overview](language/architecture.md)
+- [LLM Integration](docs/llm-integration.md)
+- [Compose Ingest (Future)](docs/compose-ingest.md)
+- [Contributing Guide](CONTRIBUTING.md)
+- [Project Roadmap](ROADMAP.md)
+
+---
+
+## 🌟 Philosophy
+
+Compose is:
+- **Prompt-first** - The `.compose` file is your source of truth
+- **Framework-agnostic** - One description, many targets
+- **LLM-native** - Built for the AI era
+- **Developer-friendly** - Natural language with structure
+
+---
+
+## 📄 License
+
+MIT License - See [LICENSE](LICENSE)
+
+---
+
+**Built with ❤️ for the AI-native future of software development**
+
+[GitHub](https://github.com/darula-hpp/compose-lang) • [Documentation](docs/) • [Contributing](CONTRIBUTING.md)
