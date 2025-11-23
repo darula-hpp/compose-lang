@@ -3,22 +3,30 @@ import PropTypes from 'prop-types';
 
 /**
  * TodoItem Component
- * Displays a single todo item with a checkbox to toggle completion
+ * Displays a single todo item with a checkbox to toggle its completion status
  * and a button to delete the todo.
  *
  * @param {object} props - The component props.
- * @param {object} props.todo - The todo object containing id, text, and completed status.
- * @param {function} props.onToggleComplete - Callback function to toggle the completion status of the todo.
- * @param {function} props.onDelete - Callback function to delete the todo.
+ * @param {object} props.todo - The todo object containing its unique `id`, `text` content, and `completed` status.
+ * @param {function} props.onToggleComplete - Callback function to be invoked when the checkbox is toggled.
+ *                                          It receives the `id` of the todo item.
+ * @param {function} props.onDelete - Callback function to be invoked when the delete button is clicked.
+ *                                  It receives the `id` of the todo item.
  */
 const TodoItem = ({ todo, onToggleComplete, onDelete }) => {
-  // Destructure properties from the todo object for cleaner access
+  // Defensive check: Ensure the 'todo' prop is provided and is an object.
+  // In a production environment, this helps prevent runtime errors if data is missing.
+  if (!todo || typeof todo !== 'object') {
+    console.error('TodoItem: Invalid or missing "todo" prop.', todo);
+    // Render nothing or a placeholder to avoid crashing the application.
+    return null;
+  }
+
   const { id, text, completed } = todo;
 
   /**
    * Handles the change event for the checkbox.
-   * Calls the `onToggleComplete` prop function, passing the todo's ID,
-   * to update its completion status in the parent component.
+   * Calls the `onToggleComplete` prop function, passing the todo's ID.
    */
   const handleToggle = () => {
     onToggleComplete(id);
@@ -26,8 +34,7 @@ const TodoItem = ({ todo, onToggleComplete, onDelete }) => {
 
   /**
    * Handles the click event for the delete button.
-   * Calls the `onDelete` prop function, passing the todo's ID,
-   * to remove the todo from the list in the parent component.
+   * Calls the `onDelete` prop function, passing the todo's ID.
    */
   const handleDeleteClick = () => {
     onDelete(id);
@@ -39,7 +46,7 @@ const TodoItem = ({ todo, onToggleComplete, onDelete }) => {
         type="checkbox"
         checked={completed}
         onChange={handleToggle}
-        // Add accessibility label for screen readers
+        // Add ARIA label for improved accessibility
         aria-label={`Mark "${text}" as ${completed ? 'incomplete' : 'complete'}`}
       />
       <span
@@ -52,7 +59,7 @@ const TodoItem = ({ todo, onToggleComplete, onDelete }) => {
       <button
         onClick={handleDeleteClick}
         className="delete-button"
-        // Add accessibility label for screen readers
+        // Add ARIA label for improved accessibility
         aria-label={`Delete "${text}"`}
       >
         Delete
@@ -61,17 +68,9 @@ const TodoItem = ({ todo, onToggleComplete, onDelete }) => {
   );
 };
 
-// Prop validation to ensure the component receives the correct data types and structure.
-// This helps catch bugs early and improves component reliability.
+// Prop validation using PropTypes for type safety and to catch common errors during development.
 TodoItem.propTypes = {
-  /**
-   * The todo object to display.
-   * It must contain an `id` (string or number), `text` (string), and `completed` (boolean).
-   */
   todo: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    text: PropTypes.string.isRequired,
-    completed: PropTypes.bool.isRequired,
-  }).isRequired,
-  /**
-   * Callback function to be called when
+    id: PropTypes.string.isRequired, // Unique identifier for the todo item
+    text: PropTypes.string.isRequired, // The description/text of the todo
+    completed: PropTypes.bool.isRequired, // Boolean indicating if the todo

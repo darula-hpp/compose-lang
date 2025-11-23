@@ -1,66 +1,85 @@
 import React, { useState } from 'react';
-// import PropTypes from 'prop-types'; // PropTypes are not needed as this component does not accept any props.
+// No PropTypes needed as the component does not accept any props.
+// import PropTypes from 'prop-types'; // Uncomment if props are added later.
 
 /**
  * TodoForm Component
- * A functional component that provides a form to add new todo items.
- * It manages its own input state and handles form submission.
+ * A functional React component that provides a form to add new todo items.
+ * It manages its own state for the new todo input.
+ *
+ * @returns {JSX.Element} The TodoForm component.
  */
 function TodoForm() {
-  // State to hold the current value of the todo input field.
+  // State to hold the current value of the new todo input field.
   // The initial state is an empty string.
-  const [todoText, setTodoText] = useState('');
+  const [newTodo, setNewTodo] = useState('');
 
   /**
-   * Handles changes to the todo input field.
-   * This function is called every time the input value changes,
-   * ensuring the component's state is always in sync with the input field.
-   * @param {Object} e - The event object from the input change.
+   * Handles changes to the input field.
+   * Updates the 'newTodo' state with the current value of the input.
+   * This makes the input a controlled component.
+   *
+   * @param {Object} event - The change event object from the input field.
    */
-  const handleInputChange = (e) => {
-    setTodoText(e.target.value);
+  const handleInputChange = (event) => {
+    setNewTodo(event.target.value);
   };
 
   /**
-   * Handles the form submission event.
-   * Prevents the default browser form submission behavior.
-   * Performs basic validation, logs the todo text, and clears the input.
-   * In a production application, this would typically involve:
-   * 1. Calling a prop function passed from a parent component to add the todo.
-   * 2. Dispatching an action to a global state management system (e.g., Redux, Context API).
-   * 3. Sending the todo item to a backend API.
-   * @param {Object} e - The event object from the form submission.
+   * Handles the form submission.
+   * Prevents the default form submission behavior (page reload).
+   * Performs basic validation: if the input is not empty, it logs the new todo
+   * and then clears the input field.
+   * In a real application, this would typically dispatch an action to add the todo
+   * to a global state management system (e.g., Redux, Context API) or make an API call.
+   *
+   * @param {Object} event - The submit event object from the form.
    */
-  const handleSubmit = (e) => {
-    e.preventDefault(); // Prevent the default form submission behavior (page reload)
+  const handleSubmit = (event) => {
+    event.preventDefault(); // Prevent default form submission behavior
 
-    // Basic client-side validation: check if the input is empty or just whitespace.
-    if (todoText.trim() === '') {
-      // Provide user feedback for empty input.
-      // In a more complex app, this might be a visual error message on the form.
-      alert('Please enter a todo item before adding.');
-      return; // Stop the submission process if validation fails.
+    // Basic validation: ensure the input is not empty or just whitespace
+    if (newTodo.trim()) {
+      // In a real application, you would pass this 'newTodo' value
+      // to a parent component via a prop function, or dispatch an action.
+      // For this example, we'll just log it to the console.
+      console.log('New Todo Added:', newTodo.trim());
+
+      // Clear the input field after submission
+      setNewTodo('');
+    } else {
+      // Optionally, provide user feedback for empty input
+      console.warn('Todo item cannot be empty.');
+      // You might set an error state here to display a message to the user
     }
-
-    // Simulate adding a todo item.
-    // In a real application, replace this console.log with actual logic
-    // to add the todo to your application's state or a backend.
-    console.log('New Todo Added:', todoText);
-
-    // Clear the input field after successful submission.
-    setTodoText('');
   };
 
   return (
     <form className="todo-form" onSubmit={handleSubmit}>
-      {/* Input field for entering the todo description */}
-      <input
-        type="text"
-        className="todo-input"
-        placeholder="What needs to be done?"
-        value={todoText} // Makes this a controlled component, value is driven by state
-        onChange={handleInputChange} // Updates state on every input change
-        aria-label="New todo item description" // Provides accessibility for screen readers
-      />
-      {/* Button to submit the form and add the todo */}
-      <button type="submit" className="todo-button">
+      <h2 className="todo-form__title">Add New Todo</h2>
+      <div className="todo-form__group">
+        <label htmlFor="new-todo-input" className="todo-form__label">
+          Todo Description:
+        </label>
+        <input
+          type="text"
+          id="new-todo-input"
+          className="todo-form__input"
+          value={newTodo} // Controlled component: input value is tied to state
+          onChange={handleInputChange} // Update state on every change
+          placeholder="e.g., Buy groceries"
+          aria-label="New todo description"
+          required // HTML5 validation: input is required
+        />
+      </div>
+      <button type="submit" className="todo-form__button">
+        Add Todo
+      </button>
+    </form>
+  );
+}
+
+// No PropTypes definition needed as there are no props.
+// TodoForm.propTypes = {}; // Uncomment and define if props are added.
+
+export default TodoForm;

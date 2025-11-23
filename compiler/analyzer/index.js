@@ -64,7 +64,6 @@ export class SemanticAnalyzer {
 
         // Get modules in dependency order (dependencies first)
         const orderedModules = moduleLoader.getTopologicalOrder();
-        console.log('Ordered modules:', orderedModules.map(m => m.path));
 
         // Register all modules with scope resolver
         for (const module of orderedModules) {
@@ -101,11 +100,9 @@ export class SemanticAnalyzer {
     importSymbolsFrom(sourceTable) {
         if (!sourceTable) return;
 
-        console.log('Importing symbols...');
         // Import types (if types map exists)
         if (sourceTable.types && sourceTable.types.entries) {
             for (const [name, typeDef] of sourceTable.types.entries()) {
-                console.log(`  Importing type: ${name}`);
                 if (!this.symbolTable.types.has(name)) {
                     this.symbolTable.types.set(name, typeDef);
                 }
@@ -116,7 +113,6 @@ export class SemanticAnalyzer {
         if (sourceTable.symbols && sourceTable.symbols.entries) {
             for (const [name, symbol] of sourceTable.symbols.entries()) {
                 if (symbol.kind === 'structure' && !this.symbolTable.symbols.has(name)) {
-                    console.log(`  Importing symbol: ${name}`);
                     this.symbolTable.symbols.set(name, symbol);
                 }
             }

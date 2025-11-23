@@ -39,9 +39,10 @@ export class ModuleLoader {
 
         try {
             // Load and compile module (WITHOUT loading imports to prevent recursion)
-            console.log(`Loading module: ${resolvedPath}`);
+            // We also SKIP analysis here because we only need the AST to find imports.
+            // Full analysis happens later in the SemanticAnalyzer with all symbols loaded.
             const source = this.readModule(resolvedPath);
-            const result = compile(source, resolvedPath, { loadImports: false });
+            const result = compile(source, resolvedPath, { loadImports: false, skipAnalysis: true });
 
             if (!result.success) {
                 const errors = result.errors.map(e => `${e.type}: ${e.message}`).join('\n');
@@ -49,7 +50,6 @@ export class ModuleLoader {
             }
 
             // Extract dependencies (imports)
-            console.log('AST Statements:', result.ast.statements.map(s => s.type));
             const dependencies = this.extractDependencies(result.ast);
 
             // Store in cache
@@ -122,7 +122,6 @@ export class ModuleLoader {
 
         for (const statement of ast.statements) {
             if (statement.type === 'ImportStatement') {
-                console.log(`Found dependency: ${statement.path}`);
                 dependencies.push(statement.path);
             }
         }
