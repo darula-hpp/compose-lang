@@ -1,32 +1,56 @@
 # Compose-Lang
 
-**Write architecture in English. Get production code.**
+**Define architecture. AI builds the code.**
 
-Compose-Lang is a revolutionary **architecture definition language** that lets you describe applications in natural, structured English and generate real, runnable code for any tech stack using LLMs.
+Compose is an **architecture specification language** with just two keywords: `model` and `feature`. Describe what you want in plain English, and an LLM compiler generates production code for any framework.
 
+## Why Compose?
+
+- **Minimal** — Two keywords: `model` (data) and `feature` (behavior)
+- **Multi-target** — One spec → React, Next.js, Vue, Express, React Native, etc.
+- **Framework-agnostic** — No lock-in. Regenerate for new frameworks anytime.
+- **Deterministic** — Cached builds ensure reproducibility
+- **Team-friendly** — Version control architecture, not implementation
+
+## Quick Example
+
+### `app.compose` - Your Architecture
 ```compose
-frontend.page "Home"
-  description: "A todo app with add, complete, and delete"
-  
-backend.create-api "GetTodos"
-  description: "Fetch all todo items"
-  returns list of Todo
+# Data
+model Todo:
+  title: text
+  completed: bool
+  dueDate: date?
+
+# Features  
+feature "Todo Management":
+  - Create todos
+  - Mark as complete
+  - Delete todos
+
+feature "Theme":
+  - Clean, modern design
+  - Blue color scheme
 ```
 
-**→ Generates complete React + Express apps with one command**
+### `compose.json` - Technical Decisions
+```json
+{
+  "targets": {
+    "web": { "framework": "nextjs" },
+    "mobile": { "framework": "react-native" },
+    "api": { "framework": "express" }
+  }
+}
+```
 
----
+### Build
+```bash
+compose build
+# Generates Next.js, React Native, and Express from the same spec
+```
 
-## ✨ Why Compose?
-
-### The Problem
-Traditional code generation is brittle and opinionated. You get locked into specific frameworks, patterns, and outdated templates.
-
-### The Solution
-Compose is **framework-agnostic**. Describe your architecture once, generate for any stack:
-- Want Vite today, Next.js tomorrow? ✅
-- Need to port web app to mobile? ✅
-- Migrate Java monolith to Node.js? ✅ ([Compose Ingest](docs/compose-ingest.md))
+**→ Complete, runnable applications**? ✅ ([Compose Ingest](docs/compose-ingest.md))
 
 ### Key Benefits
 - 🎯 **Natural language** - Write architecture in structured English
@@ -154,42 +178,100 @@ compose build
 Watch mode with automatic rebuilds
 
 ```bash
-compose dev
-# Watches .compose files
-# Rebuilds on changes
-```
+## Features
 
-### `compose run [target]`
-Start generated applications
+✅ **Two Keywords** — `model` (data) and `feature` (behavior). That's the whole language.  
+✅ **Multi-Target** — Generate web, mobile, and API from one specification  
+✅ **Plain English** — Describe features naturally, LLM handles implementation  
+✅ **Framework-Agnostic** — Regenerate for Next.js, Vue, Svelte anytime  
+✅ **Deterministic** — Cached LLM responses ensure reproducible builds  
+✅ **Version Controlled** — Track architectural changes in Git  
 
-```bash
-compose run frontend  # Start Vite dev server
-compose run backend   # Start Express server
-```
+---
 
-### `compose eject`
-Graduate from Compose and take full ownership
+## 🚀 Getting Started
 
-```bash
-compose eject
-# Copies generated/ → permanent locations (frontend/, backend/)
-# Archives .compose files
-# Removes Compose configuration
-# You maintain code manually from here
-```
-
-⚠️ **Warning:** Eject is permanent. You can't use `compose build` after ejecting.
-
-### `compose clean`
-Remove generated code and build cache
+### Installation
 
 ```bash
-compose clean
-# Removes:
-#  - generated/ directory (or target-specific output dirs)
-#  - .compose/ cache
+git clone https://github.com/darula-hpp/compose-lang.git
+cd compose-lang
+npm install
+npm link
 ```
 
+### Create Your First App
+
+```bash
+# Initialize project
+compose init
+# Choose frameworks and include examples
+
+# Build
+cd my-project
+compose build
+
+# Run generated code
+cd generated/web
+npm install
+npm run dev
+```
+
+### Or Start from Scratch
+
+**1. Create `app.compose`:**
+```compose
+model User:
+  name: text
+  email: text (unique)
+
+model Post:
+  title: text
+  content: markdown
+  author: User
+
+feature "User Management":
+  - Sign up with email
+  - Login
+  - View profile
+
+feature "Blog":
+  - Create posts with markdown
+  - List all posts
+  - View single post
+
+feature "Theme":
+  - Modern, clean design
+  - Purple/pink gradient colors
+```
+
+**2. Create `compose.json`:**
+```json
+{
+  "targets": {
+    "web": {
+      "framework": "nextjs",
+      "styling": "tailwindcss",
+      "output": "./web"
+    },
+    "api": {
+      "framework": "express",
+      "database": "postgresql",
+      "output": "./api"
+    }
+  },
+  "llm": {
+    "provider": "gemini",
+    "apiKey": "${GEMINI_API_KEY}"
+  }
+}
+```
+
+**3. Build:**
+```bash
+export GEMINI_API_KEY="your-key"
+compose build
+```
 Useful for:
 - Fresh rebuild
 - Troubleshooting build issues

@@ -1,0 +1,57 @@
+# Todo App with Implementation Guides
+
+# ══════════════════════════════════════
+# DATA
+# ══════════════════════════════════════
+
+model Todo:
+  title: text
+  completed: bool
+  dueDate: date?
+
+# ══════════════════════════════════════
+# FEATURES
+# ══════════════════════════════════════
+
+feature "Todo Management":
+  - Create new todos with title and optional due date
+  - Mark todos as complete/incomplete
+  - Delete todos
+  - Filter by all/active/completed status
+
+feature "Data Persistence":
+  - Save todos to database
+  - Load todos on app start
+
+feature "Theme":
+  - Clean, minimal design
+  - Blue/indigo color scheme
+  - Card-based layout with subtle shadows
+
+# ══════════════════════════════════════
+# IMPLEMENTATION GUIDES
+# ══════════════════════════════════════
+
+guide "Database Schema":
+  - Use UUID primary keys instead of auto-increment integers
+  - Add createdAt and updatedAt timestamps automatically
+  - Use soft deletes (deletedAt field) instead of hard deletes
+  - Add index on userId and dueDate for query performance
+
+guide "Input Validation":
+  - Todo title must be 1-200 characters
+  - Trim whitespace from title before saving
+  - Due date must be today or in the future
+  - Validate on both frontend and backend
+
+guide "Performance":
+  - Use debounce (300ms) for filter changes
+  - Implement pagination (50 todos per page)
+  - Cache completed todos in localStorage for offline access
+  - Lazy load todo details on expand
+
+guide "Accessibility":
+  - Support keyboard navigation (Tab, Enter, Escape)
+  - Add ARIA labels for screen readers
+  - Color contrast ratio must be at least 4.5:1
+  - Focus indicators on all interactive elements

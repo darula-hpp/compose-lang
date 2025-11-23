@@ -1,0 +1,170 @@
+# ProjectFlow - Project Management SaaS
+
+A complete example showing Compose at scale.
+
+## Architecture
+
+```compose
+# ════════════════════════════════════════════════════════
+# DATA MODELS
+# ════════════════════════════════════════════════════════
+
+model User:
+  email: text (unique)
+  name: text
+  avatar: image
+  role: "admin" | "member" | "guest"
+
+model Organization:
+  name: text
+  slug: text (unique)
+  plan: "free" | "pro" | "enterprise"
+  members: list of User
+
+model Project:
+  name: text
+  description: text
+  organization: Organization
+  owner: User
+  status: "active" | "archived"
+
+model Task:
+  title: text
+  description: markdown
+  project: Project
+  assignee: User?
+  status: "backlog" | "todo" | "in-progress" | "done"
+  priority: "low" | "medium" | "high" | "urgent"
+  dueDate: date?
+  tags: list of text
+
+model Comment:
+  content: markdown
+  author: User
+  task: Task
+
+# ════════════════════════════════════════════════════════
+# FEATURES
+# ════════════════════════════════════════════════════════
+
+feature "Authentication":
+  - Email/password signup with verification
+  - Social login (Google, GitHub)
+  - Password reset via email
+  - Two-factor authentication
+  - Session management
+
+feature "Organization Management":
+  - Create and manage organizations
+  - Invite members with role assignment
+  - Billing and subscription management
+  - Organization settings and branding
+  - Transfer ownership
+
+feature "Project Management":
+  - Create, edit, and archive projects
+  - Project dashboard with key metrics
+  - Add/remove team members
+  - Project visibility controls
+  - Custom project fields
+
+feature "Task Management":
+  - Create tasks with rich markdown descriptions
+  - Assign tasks to team members
+  - Set priority levels and due dates
+  - Tag system for organization
+  - File attachments (up to 50MB)
+  - Drag-and-drop status updates
+  - Bulk operations on tasks
+
+feature "Collaboration":
+  - Real-time commenting on tasks
+  - @mentions with notifications
+  - Activity feed per project
+  - Real-time presence indicators
+  - File sharing and previews
+
+feature "Views & Filters":
+  - Board view (Kanban style)
+  - List view (table format)
+  - Calendar view
+  - Timeline view (Gantt chart)
+  - Advanced filtering by assignee, status, tags, dates
+  - Save and share custom views
+
+feature "Notifications":
+  - In-app notification center
+  - Daily/weekly email digests
+  - Slack integration for team updates
+  - Push notifications for mobile
+  - Granular notification preferences
+
+feature "Search":
+  - Full-text search across all tasks
+  - Search within comments
+  - Filter results by project, assignee, dates
+  - Recent searches
+  - Search suggestions
+
+feature "Analytics":
+  - Task completion metrics
+  - Team velocity tracking
+  - Burndown and burnup charts
+  - Time tracking and reporting
+  - Custom reports and exports
+  - Project health dashboards
+
+feature "Integrations":
+  - Slack (notifications, commands, status updates)
+  - Google Drive (file imports and exports)
+  - GitHub (issue synchronization)
+  - Zapier webhooks for automation
+  - Calendar sync (Google Calendar, Outlook)
+
+feature "Theme":
+  - Clean, modern SaaS aesthetic
+  - Professional color scheme (blue/indigo)
+  - Dark mode support
+  - Consistent spacing and typography
+  - Smooth animations and transitions
+  - Responsive design for all devices
+```
+
+## Technical Configuration
+
+See `compose.json` for complete technical setup including:
+- Clean architecture pattern
+- Domain-driven design principles
+- Event sourcing for activity logs
+- PostgreSQL + Redis + Elasticsearch stack
+- Next.js frontend with TypeScript
+- NestJS backend with GraphQL
+- React Native mobile apps
+- Comprehensive monitoring and logging
+
+## Multi-Target Build
+
+```bash
+# Build all targets
+compose build
+
+# Build specific targets
+compose build --target web
+compose build --target api
+compose build --target mobile
+```
+
+## Generated Output
+
+From this ~150 line specification, Compose generates:
+- Complete Next.js application (~50 pages/components)
+- NestJS API with ~40 endpoints
+- GraphQL schema with full resolvers
+- Database migrations and schemas
+- React Native iOS/Android apps
+- Authentication flows
+- Real-time WebSocket handlers
+- Email templates
+- Deployment configurations
+
+**One specification. Multiple production applications.**

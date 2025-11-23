@@ -1,0 +1,11 @@
+
+
+
+frontend.component "HelloWorld"
+  accepts name as text
+  description: "A simple hello world component"
+
+
+frontend.page "Home"
+  description: "Main page"
+  render: HelloWorld(name: "World")
