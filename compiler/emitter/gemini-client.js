@@ -40,12 +40,12 @@ export class GeminiClient {
     }
 
     /**
-     * Generate code from prompt
-     * @param {string} systemPrompt - System prompt
-     * @param {string} userPrompt - User prompt
-     * @param {object} options - Generation options
-     * @returns {Promise<string>} - Generated code
-     */
+   * Generate code from prompt
+   * @param {string} systemPrompt - System prompt
+   * @param {string} userPrompt - User prompt
+   * @param {object} options - Generation options
+   * @returns {Promise<string>} - Generated code
+   */
     async generate(systemPrompt, userPrompt, options = {}) {
         try {
             // Gemini uses a combined prompt
@@ -53,7 +53,10 @@ export class GeminiClient {
 
             const result = await this.generativeModel.generateContent(fullPrompt);
             const response = await result.response;
-            return response.text();
+            const text = response.text();
+
+            // Strip markdown code fences if present
+            return this.stripMarkdown(text);
         } catch (error) {
             if (error.message?.includes('API_KEY')) {
                 throw new Error('Invalid Gemini API key. Please check your configuration.');
@@ -65,6 +68,18 @@ export class GeminiClient {
         }
     }
 
+    /**
+     * Strip markdown code fences from LLM output
+     */
+    stripMarkdown(text) {
+        // Remove ```language and ``` fences
+        return text
+            .replace(/^```[\w]*\n/gm, '')
+            .replace(/\n```$/gm, '')
+            .replace(/^```\n/gm, '')
+            .replace(/\n```\n/gm, '\n')
+            .trim();
+    }
     /**
      * Get model name
      */

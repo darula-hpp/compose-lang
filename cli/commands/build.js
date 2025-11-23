@@ -24,27 +24,32 @@ export async function build(args) {
     console.log(`📋 Configuration: ${configPath}`);
     console.log(`🤖 LLM: ${config.llm?.provider || 'mock'} (${config.llm?.model || 'mock'})`);
 
-    // Find all .compose files
-    const composeFiles = findComposeFiles('./');
-
-    if (composeFiles.length === 0) {
-        throw new Error('No .compose files found in current directory');
-    }
-
-    console.log(`\n📁 Found ${composeFiles.length} .compose file(s):`);
-    composeFiles.forEach(file => console.log(`   - ${file}`));
-
-    // Compile each file with module loading
+    // Compile entry points for each target
     console.log('\n⚙️  Compiling...');
-    const results = [];
+    const results = {};
     const baseDir = process.cwd();
+    const targetNames = Object.keys(config.targets);
 
-    for (const file of composeFiles) {
-        const source = readFileSync(file, 'utf8');
-        const result = compile(source, file, { baseDir, loadImports: true });
+    for (const targetName of targetNames) {
+        const target = config.targets[targetName];
+
+        if (!target.entry) {
+            console.warn(`⚠️  No entry point defined for target '${targetName}', skipping...`);
+            continue;
+        }
+
+        const entryPath = join(baseDir, target.entry);
+        if (!existsSync(entryPath)) {
+            throw new Error(`Entry file not found for target '${targetName}': ${target.entry}`);
+        }
+
+        console.log(`   Target: ${targetName} -> ${target.entry}`);
+
+        const source = readFileSync(entryPath, 'utf8');
+        const result = compile(source, entryPath, { baseDir, loadImports: true });
 
         if (!result.success) {
-            console.error(`\n❌ Compilation failed for ${file}:`);
+            console.error(`\n❌ Compilation failed for ${target.entry}:`);
             result.errors.forEach(err => {
                 console.error(`   ${err.type}: ${err.message}`);
                 console.error(`   at ${err.location.file}:${err.location.line}:${err.location.column}`);
@@ -52,20 +57,22 @@ export async function build(args) {
             process.exit(1);
         }
 
-        results.push({ file, ...result });
-        console.log(`   ✓ ${file}`);
+        results[targetName] = result;
+        console.log(`   ✓ Compiled successfully`);
     }
 
     // Generate code for each target
     console.log('\n🎨 Generating code...');
-    const targetNames = Object.keys(config.targets);
 
     for (const targetName of targetNames) {
         const target = config.targets[targetName];
         console.log(`\n   Target: ${targetName} (${target.type})`);
 
-        // Combine all IRs (in real app, would handle imports properly)
-        const combinedIR = results[0].ir; // Simplified for now
+        // Get IR for this target
+        const result = results[targetName];
+        if (!result) continue;
+
+        const combinedIR = result.ir;
 
         // Generate code with LLM config
         const output = await emitCode(combinedIR, target, {

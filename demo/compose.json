@@ -1,13 +1,14 @@
 {
     "llm": {
-        "provider": "openai",
-        "model": "gpt-4",
-        "apiKey": "${OPENAI_API_KEY}",
+        "provider": "gemini",
+        "model": "gemini-2.5-flash",
+        "apiKey": "${GEMINI_API_KEY}",
         "temperature": 0.2,
         "maxTokens": 2048
     },
     "targets": {
         "frontend": {
+            "entry": "./src/frontend/app.compose",
             "type": "react",
             "framework": "vite",
             "language": "javascript",
@@ -19,6 +20,7 @@
             ]
         },
         "backend": {
+            "entry": "./src/backend/api.compose",
             "type": "node",
             "framework": "express",
             "language": "javascript",

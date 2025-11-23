@@ -54,7 +54,10 @@ export class OpenAIClient {
                 ...options
             });
 
-            return response.choices[0].message.content;
+            const text = response.choices[0].message.content;
+
+            // Strip markdown code fences if present
+            return this.stripMarkdown(text);
         } catch (error) {
             if (error.status === 429) {
                 throw new Error('OpenAI API rate limit exceeded. Please try again later.');
@@ -64,6 +67,19 @@ export class OpenAIClient {
                 throw new Error(`OpenAI API error: ${error.message}`);
             }
         }
+    }
+
+    /**
+     * Strip markdown code fences from LLM output
+     */
+    stripMarkdown(text) {
+        // Remove ```language and ``` fences
+        return text
+            .replace(/^```[\w]*\n/gm, '')
+            .replace(/\n```$/gm, '')
+            .replace(/^```\n/gm, '')
+            .replace(/\n```\n/gm, '\n')
+            .trim();
     }
 
     /**

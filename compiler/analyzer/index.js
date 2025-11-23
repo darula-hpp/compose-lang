@@ -64,13 +64,27 @@ export class SemanticAnalyzer {
 
         // Get modules in dependency order (dependencies first)
         const orderedModules = moduleLoader.getTopologicalOrder();
+        console.log('Ordered modules:', orderedModules.map(m => m.path));
 
         // Register all modules with scope resolver
         for (const module of orderedModules) {
             this.scopeResolver.registerModule(module.path, module.ast);
         }
 
-        // Import symbols from all dependency modules (not the main module)
+        // Analyze dependencies first to populate their symbol tables
+        for (const module of orderedModules) {
+            if (module.path !== modulePath) {
+                // Create a temporary analyzer to build the dependency's symbol table
+                const depAnalyzer = new SemanticAnalyzer({
+                    baseDir: this.baseDir,
+                    loadImports: false
+                });
+                depAnalyzer.buildSymbolTable(module.ast);
+                module.symbolTable = depAnalyzer.symbolTable;
+            }
+        }
+
+        // Import symbols from all dependency modules
         for (const module of orderedModules) {
             if (module.path !== modulePath && module.symbolTable) {
                 this.importSymbolsFrom(module.symbolTable);
@@ -87,9 +101,11 @@ export class SemanticAnalyzer {
     importSymbolsFrom(sourceTable) {
         if (!sourceTable) return;
 
+        console.log('Importing symbols...');
         // Import types (if types map exists)
         if (sourceTable.types && sourceTable.types.entries) {
             for (const [name, typeDef] of sourceTable.types.entries()) {
+                console.log(`  Importing type: ${name}`);
                 if (!this.symbolTable.types.has(name)) {
                     this.symbolTable.types.set(name, typeDef);
                 }
@@ -100,6 +116,7 @@ export class SemanticAnalyzer {
         if (sourceTable.symbols && sourceTable.symbols.entries) {
             for (const [name, symbol] of sourceTable.symbols.entries()) {
                 if (symbol.kind === 'structure' && !this.symbolTable.symbols.has(name)) {
+                    console.log(`  Importing symbol: ${name}`);
                     this.symbolTable.symbols.set(name, symbol);
                 }
             }
