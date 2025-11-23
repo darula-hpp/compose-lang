@@ -1,116 +1,81 @@
 const express = require('express');
 const router = express.Router();
 
-// In-memory mock database for demonstration purposes.
-// In a real application, this would interact with a persistent database.
+// In a real application, this would be a database client or ORM.
+// For demonstration, we'll use a simple in-memory array to simulate storage.
 const todos = [];
 let nextTodoId = 1;
 
 /**
- * @swagger
- * /todos:
- *   post:
- *     summary: Create a new todo item
- *     description: Creates a new todo item with a title, optional description, and completion status.
- *     tags:
- *       - Todos
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - title
- *             properties:
- *               title:
- *                 type: string
- *                 description: The title of the todo item.
- *                 example: Buy groceries
- *               description:
- *                 type: string
- *                 description: An optional detailed description of the todo item.
- *                 example: Milk, eggs, bread, and cheese
- *               completed:
- *                 type: boolean
- *                 description: The completion status of the todo item. Defaults to false.
- *                 example: false
- *     responses:
- *       201:
- *         description: Todo item created successfully.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: number
- *                   example: 1
- *                 title:
- *                   type: string
- *                   example: Buy groceries
- *                 description:
- *                   type: string
- *                   nullable: true
- *                   example: Milk, eggs, bread, and cheese
- *                 completed:
- *                   type: boolean
- *                   example: false
- *                 createdAt:
- *                   type: string
- *                   format: date-time
- *                   example: 2023-10-27T10:00:00.000Z
- *                 updatedAt:
- *                   type: string
- *                   format: date-time
- *                   example: 2023-10-27T10:00:00.000Z
- *       400:
- *         description: Invalid input provided.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Title is required and must be a non-empty string.
- *       500:
- *         description: Internal server error.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Internal server error while creating todo.
+ * @api {post} / CreateTodo
+ * @apiDescription Create a new todo item.
+ * @apiGroup Todos
+ * @apiBody {String} title The title of the todo item. Must be a non-empty string.
+ * @apiBody {String} [description] The optional description of the todo item. Must be a string if provided.
+ * @apiSuccess {String} id The unique identifier of the created todo item.
+ * @apiSuccess {String} title The title of the todo item.
+ * @apiSuccess {String} [description] The description of the todo item (if provided).
+ * @apiSuccess {Boolean} completed The completion status of the todo item (defaults to `false`).
+ * @apiSuccess {String} createdAt The ISO 8601 timestamp when the todo item was created.
+ * @apiSuccessExample {json} Success-Response (201 Created):
+ *     HTTP/1.1 201 Created
+ *     {
+ *       "id": "1",
+ *       "title": "Buy groceries",
+ *       "description": "Milk, eggs, bread",
+ *       "completed": false,
+ *       "createdAt": "2023-10-27T10:00:00.000Z"
+ *     }
+ * @apiError (400 Bad Request) BadRequest Invalid input data provided.
+ * @apiErrorExample {json} Error-Response (400 Bad Request):
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "message": "Title is required and must be a non-empty string."
+ *     }
+ * @apiError (500 Internal Server Error) InternalServerError An unexpected server error occurred.
+ * @apiErrorExample {json} Error-Response (500 Internal Server Error):
+ *     HTTP/1.1 500 Internal Server Error
+ *     {
+ *       "message": "Internal Server Error"
+ *     }
  */
 router.post('/', (req, res) => {
-    // Destructure and sanitize input from the request body
-    const { title, description, completed } = req.body;
+  try {
+    const { title, description } = req.body;
 
-    // --- Input Validation ---
-    // Validate 'title': It is required, must be a string, and cannot be empty.
-    if (!title || typeof title !== 'string' || title.trim() === '') {
-        return res.status(400).json({ message: 'Title is required and must be a non-empty string.' });
+    // 1. Input Validation
+    // Ensure title is present, is a string, and not empty after trimming whitespace.
+    if (!title || typeof title !== 'string' || title.trim().length === 0) {
+      return res.status(400).json({ message: 'Title is required and must be a non-empty string.' });
     }
 
-    // Validate 'description': If provided, it must be a string.
+    // If description is provided, ensure it is a string.
     if (description !== undefined && typeof description !== 'string') {
-        return res.status(400).json({ message: 'Description must be a string if provided.' });
+      return res.status(400).json({ message: 'Description must be a string if provided.' });
     }
 
-    // Validate 'completed': If provided, it must be a boolean.
-    if (completed !== undefined && typeof completed !== 'boolean') {
-        return res.status(400).json({ message: 'Completed status must be a boolean if provided.' });
-    }
+    // 2. Simulate creating a new todo item
+    // In a real application, this would involve interacting with a database.
+    const newTodo = {
+      id: String(nextTodoId++), // Generate a simple unique ID for the mock
+      title: title.trim(),
+      description: description ? description.trim() : undefined, // Store description only if provided
+      completed: false, // New todos are not completed by default
+      createdAt: new Date().toISOString(), // Record creation timestamp in ISO 8601 format
+    };
 
-    try {
-        // --- Business Logic ---
-        // Create a new todo object with a unique ID and default values
-        const newTodo = {
-            id: nextTodoId++, // Assign a unique ID and increment for the next item
-            title: title.trim(), // Trim whitespace from the title
-            description: description ? description.trim() : null, // Trim description or set to null if not provided
-            completed: completed !== undefined ? completed : false, // Default to false if not provided
-            createdAt: new Date().
+    // Add the new todo to our mock storage
+    todos.push(newTodo);
+
+    // 3. Respond with the created resource
+    // Use status 201 Created for successful resource creation as per REST best practices.
+    res.status(201).json(newTodo);
+
+  } catch (error) {
+    // 4. General Error Handling for unexpected server issues
+    console.error('Error creating todo item:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+module.exports = router;

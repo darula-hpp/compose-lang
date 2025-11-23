@@ -1,61 +1,79 @@
 const express = require('express');
 const router = express.Router();
 
-// --- Mock Database (In-memory array for demonstration purposes) ---
-// In a real application, this would interact with a database (e.g., PostgreSQL, MongoDB).
-let todos = [
-    { id: 1, title: 'Learn Node.js', completed: false },
-    { id: 2, title: 'Build an Express API', completed: true },
-    { id: 3, title: 'Deploy to production', completed: false }
-];
-// -----------------------------------------------------------------
+// In a real application, todoService would be imported from a separate module,
+// e.g., const todoService = require('../services/todoService');
+// For demonstration, a mock service is assumed to exist and provide `deleteTodo` and `getTodoById` methods.
+// Example mock service structure:
+/*
+const todoService = {
+    // A simple in-memory store for demonstration
+    _todos: [
+        { id: 1, title: 'Learn Node.js', completed: false },
+        { id: 2, title: 'Build an Express API', completed: true },
+        { id: 3, title: 'Deploy to production', completed: false },
+    ],
+
+    async deleteTodo(id) {
+        const initialLength = this._todos.length;
+        this._todos = this._todos.filter(todo => todo.id !== id);
+        return this._todos.length < initialLength; // Returns true if an item was removed
+    },
+
+    async getTodoById(id) {
+        return this._todos.find(todo => todo.id === id);
+    }
+};
+*/
 
 /**
  * DELETE /api/todos/:id
- * Description: Delete a todo item by its unique ID.
  *
- * Request Parameters:
- *   - id (path parameter): The unique identifier of the todo item to delete.
- *     Expected type: integer (positive)
+ * Deletes a todo item by its unique ID.
  *
- * Responses:
- *   - 204 No Content: Todo successfully deleted.
- *   - 400 Bad Request: Invalid ID format or missing ID.
- *   - 404 Not Found: Todo with the specified ID does not exist.
- *   - 500 Internal Server Error: An unexpected error occurred on the server.
+ * @param {object} req - The Express request object.
+ * @param {object} res - The Express response object.
+ * @returns {void}
  */
-router.delete('/todos/:id', (req, res) => {
-    // 1. Input Validation: Extract and validate the todo ID from request parameters.
-    const todoId = parseInt(req.params.id, 10);
-
-    // Check if the ID is a valid positive integer.
-    if (isNaN(todoId) || todoId <= 0) {
-        // Respond with 400 Bad Request if the ID is invalid.
-        return res.status(400).json({ message: 'Invalid todo ID. ID must be a positive integer.' });
-    }
-
+router.delete('/todos/:id', async (req, res) => {
     try {
-        // 2. Business Logic: Attempt to find and delete the todo item.
-        // In a real application, this would involve a database query (e.g., `DELETE FROM todos WHERE id = ?`).
+        const { id } = req.params;
 
-        const initialTodosLength = todos.length;
-        // Filter out the todo with the matching ID.
-        todos = todos.filter(todo => todo.id !== todoId);
+        // 1. Input Validation: Validate the ID from request parameters.
+        // Ensure the ID is a valid integer.
+        const todoId = parseInt(id, 10);
+        if (isNaN(todoId) || todoId.toString() !== id) {
+            // If parseInt results in NaN or if the original string contains non-numeric characters
+            // (e.g., "123abc" would parse to 123, but "123" !== "123abc"), it's an invalid ID.
+            return res.status(400).json({ message: 'Invalid todo ID format. ID must be an integer.' });
+        }
 
-        // Check if the length of the todos array changed, indicating a deletion.
-        if (todos.length === initialTodosLength) {
-            // If no todo was deleted (length is the same), it means the todo was not found.
+        // 2. Check if the todo exists before attempting to delete.
+        // This provides a more specific 404 Not Found error if the todo doesn't exist,
+        // which is better than a generic deletion failure.
+        const existingTodo = await todoService.getTodoById(todoId);
+        if (!existingTodo) {
             return res.status(404).json({ message: `Todo with ID ${todoId} not found.` });
         }
 
-        // 3. Success Response: Send a 204 No Content status for a successful deletion.
-        // This is a standard REST practice for DELETE operations that don't return a body.
-        res.status(204).send();
+        // 3. Business Logic: Attempt to delete the todo item.
+        const isDeleted = await todoService.deleteTodo(todoId);
+
+        if (isDeleted) {
+            // 4. Success Response: 204 No Content is the standard response for a successful
+            // DELETE request where no content is returned to the client.
+            res.status(204).send();
+        } else {
+            // This case should ideally be prevented by the `existingTodo` check.
+            // It acts as a fallback for potential race conditions or unexpected service issues.
+            console.error(`Failed to delete todo with ID ${todoId} after it was found.`);
+            res.status(500).json({ message: 'Failed to delete todo due to an unexpected issue.' });
+        }
 
     } catch (error) {
-        // 4. Error Handling: Catch any unexpected errors during the process.
-        console.error(`Error deleting todo with ID ${todoId}:`, error);
-        // Respond with 500 Internal Server Error.
+        // 5. Error Handling: Catch any unexpected errors that occur during the process.
+        console.error(`Error deleting todo with ID ${req.params.id}:`, error);
+        // Respond with a 500 Internal Server Error for unhandled exceptions.
         res.status(500).json({ message: 'An unexpected error occurred while deleting the todo.' });
     }
 });

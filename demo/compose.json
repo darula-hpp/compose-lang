@@ -4,7 +4,7 @@
         "model": "gemini-2.5-flash",
         "apiKey": "${GEMINI_API_KEY}",
         "temperature": 0.2,
-        "maxTokens": 2048
+        "maxTokens": 8192
     },
     "targets": {
         "frontend": {
