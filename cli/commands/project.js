@@ -1,86 +1,90 @@
 /**
  * Project Command
- * Creates a new Compose project
+ * Creates a new Compose project with example files
+ * 
+ * @deprecated Use `compose init` instead for a better experience
  */
 
 import { mkdirSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 export async function project(args) {
-    const projectName = args[0];
+  console.log('⚠️  Warning: `compose project` is deprecated. Use `compose init` instead.\n');
 
-    if (!projectName) {
-        throw new Error('Project name is required. Usage: compose project <name>');
+  const projectName = args[0];
+
+  if (!projectName) {
+    throw new Error('Project name is required. Usage: compose project <name>');
+  }
+
+  if (existsSync(projectName)) {
+    throw new Error(`Directory "${projectName}" already exists`);
+  }
+
+  console.log(`🚀 Creating new Compose project: ${projectName}\n`);
+
+  // Create directory structure
+  const dirs = [
+    projectName,
+    join(projectName, 'src'),
+    join(projectName, 'src/frontend'),
+    join(projectName, 'src/backend'),
+    join(projectName, 'src/shared'),
+  ];
+
+  dirs.forEach(dir => {
+    mkdirSync(dir, { recursive: true });
+    console.log(`   ✓ ${dir}/`);
+  });
+
+  // Create compose.json
+  const composeJson = {
+    llm: {
+      provider: "openai",
+      model: "gpt-4",
+      apiKey: "${OPENAI_API_KEY}",
+      temperature: 0.2,
+      maxTokens: 2048
+    },
+    targets: {
+      frontend: {
+        type: "react",
+        framework: "vite",
+        language: "javascript",
+        output: "./generated/frontend",
+        styling: "css",
+        dependencies: [
+          "react",
+          "react-dom",
+          "react-router-dom"
+        ]
+      },
+      backend: {
+        type: "node",
+        framework: "express",
+        language: "javascript",
+        output: "./generated/backend",
+        dependencies: [
+          "express",
+          "cors"
+        ]
+      }
+    },
+    global: {
+      packageManager: "npm",
+      nodeVersion: "20",
+      moduleSystem: "esm"
     }
+  };
 
-    if (existsSync(projectName)) {
-        throw new Error(`Directory "${projectName}" already exists`);
-    }
+  writeFileSync(
+    join(projectName, 'compose.json'),
+    JSON.stringify(composeJson, null, 2)
+  );
+  console.log(`   ✓ compose.json`);
 
-    console.log(`🚀 Creating new Compose project: ${projectName}\n`);
-
-    // Create directory structure
-    const dirs = [
-        projectName,
-        join(projectName, 'src'),
-        join(projectName, 'src/frontend'),
-        join(projectName, 'src/backend'),
-        join(projectName, 'src/shared'),
-    ];
-
-    dirs.forEach(dir => {
-        mkdirSync(dir, { recursive: true });
-        console.log(`   ✓ ${dir}/`);
-    });
-
-    // Create compose.json
-    const composeJson = {
-        llm: {
-            provider: "openai",
-            model: "gpt-4",
-            apiKey: "${OPENAI_API_KEY}",
-            temperature: 0.2,
-            maxTokens: 2048
-        },
-        targets: {
-            frontend: {
-                type: "react",
-                framework: "vite",
-                language: "javascript",
-                output: "./generated/frontend",
-                styling: "css",
-                dependencies: [
-                    "react",
-                    "react-dom",
-                    "react-router-dom"
-                ]
-            },
-            backend: {
-                type: "node",
-                framework: "express",
-                language: "javascript",
-                output: "./generated/backend",
-                dependencies: [
-                    "express",
-                    "cors"
-                ]
-            }
-        },
-        global: {
-            packageManager: "npm",
-            nodeVersion: "20",
-            moduleSystem: "esm"
-        }
-    };
-
-    writeFileSync(
-        join(projectName, 'compose.json'),
-        JSON.stringify(composeJson, null, 2)
-    );
-    console.log(`   ✓ compose.json`);
-
-    // Create example .compose files
-    const sharedTypes = `## Shared data types ##
+  // Create example .compose files
+  const sharedTypes = `## Shared data types ##
 
 define structure User
   has id as number
@@ -95,10 +99,10 @@ define structure Product
   has description as text
 `;
 
-    writeFileSync(join(projectName, 'src/shared/types.compose'), sharedTypes);
-    console.log(`   ✓ src/shared/types.compose`);
+  writeFileSync(join(projectName, 'src/shared/types.compose'), sharedTypes);
+  console.log(`   ✓ src/shared/types.compose`);
 
-    const frontendExample = `import "shared/types.compose"
+  const frontendExample = `import "shared/types.compose"
 
 ## Frontend application ##
 
@@ -120,10 +124,10 @@ frontend.theme "main"
   backgroundColor: "#FFFFFF"
 `;
 
-    writeFileSync(join(projectName, 'src/frontend/app.compose'), frontendExample);
-    console.log(`   ✓ src/frontend/app.compose`);
+  writeFileSync(join(projectName, 'src/frontend/app.compose'), frontendExample);
+  console.log(`   ✓ src/frontend/app.compose`);
 
-    const backendExample = `import "shared/types.compose"
+  const backendExample = `import "shared/types.compose"
 
 ## Backend API ##
 
@@ -148,11 +152,11 @@ define function validateEmail
   description: "Validate email format using regex"
 `;
 
-    writeFileSync(join(projectName, 'src/backend/api.compose'), backendExample);
-    console.log(`   ✓ src/backend/api.compose`);
+  writeFileSync(join(projectName, 'src/backend/api.compose'), backendExample);
+  console.log(`   ✓ src/backend/api.compose`);
 
-    // Create README
-    const readme = `# ${projectName}
+  // Create README
+  const readme = `# ${projectName}
 
 A Compose Language project.
 
@@ -204,24 +208,24 @@ ${projectName}/
 MIT
 `;
 
-    writeFileSync(join(projectName, 'README.md'), readme);
-    console.log(`   ✓ README.md`);
+  writeFileSync(join(projectName, 'README.md'), readme);
+  console.log(`   ✓ README.md`);
 
-    // Create .gitignore
-    const gitignore = `node_modules/
+  // Create .gitignore
+  const gitignore = `node_modules/
 generated/
 .env
 .DS_Store
 *.log
 `;
 
-    writeFileSync(join(projectName, '.gitignore'), gitignore);
-    console.log(`   ✓ .gitignore`);
+  writeFileSync(join(projectName, '.gitignore'), gitignore);
+  console.log(`   ✓ .gitignore`);
 
-    // Success message
-    console.log(`\n✨ Project created successfully!\n`);
-    console.log(`Next steps:`);
-    console.log(`  cd ${projectName}`);
-    console.log(`  export OPENAI_API_KEY="your-api-key"`);
-    console.log(`  compose build\n`);
+  // Success message
+  console.log(`\n✨ Project created successfully!\n`);
+  console.log(`Next steps:`);
+  console.log(`  cd ${projectName}`);
+  console.log(`  export OPENAI_API_KEY="your-api-key"`);
+  console.log(`  compose build\n`);
 }

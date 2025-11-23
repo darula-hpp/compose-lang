@@ -9,6 +9,8 @@ import { compile } from '../../compiler/index.js';
 import { loadTargetConfig } from '../../compiler/emitter/target-config.js';
 import { emitCode } from '../../compiler/emitter/code-emitter.js';
 import { writeOutput } from '../../compiler/emitter/output-writer.js';
+import { detectFramework } from '../../compiler/emitter/framework-analyzer.js';
+import { mergeCode } from '../../compiler/emitter/code-merger.js';
 
 export async function build(args) {
     console.log('🔨 Building Compose project...\n');
@@ -74,6 +76,13 @@ export async function build(args) {
 
         const combinedIR = result.ir;
 
+        // Detect framework if output directory exists
+        let frameworkInfo = null;
+        if (existsSync(target.output)) {
+            frameworkInfo = detectFramework(target.output);
+            console.log(`   Detected framework: ${frameworkInfo.framework || 'none'}`);
+        }
+
         // Generate code with LLM config
         const output = await emitCode(combinedIR, target, {
             llm: config.llm
@@ -81,16 +90,26 @@ export async function build(args) {
 
         console.log(`   Generated ${output.files.length} file(s)`);
 
-        // Write output
-        const writeResult = writeOutput(output.files, target.output, target);
-
-        if (writeResult.success) {
-            console.log(`   ✓ Written to ${target.output}`);
+        // Write or merge output intelligently
+        if (frameworkInfo && frameworkInfo.framework !== 'none' && frameworkInfo.framework !== 'unknown') {
+            // Use intelligent merging
+            console.log(`   Merging into ${frameworkInfo.framework} project...`);
+            const mergeResult = mergeCode(output.files, frameworkInfo, target.output);
+            if (mergeResult.success) {
+                console.log(`   ✓ Merged ${mergeResult.files} file(s) into ${target.output}`);
+            }
         } else {
-            console.error(`   ❌ Write errors:`);
-            writeResult.errors.forEach(err => {
-                console.error(`      ${err.path}: ${err.error}`);
-            });
+            // Fallback to simple write
+            const writeResult = writeOutput(output.files, target.output, target);
+
+            if (writeResult.success) {
+                console.log(`   ✓ Written to ${target.output}`);
+            } else {
+                console.error(`   ❌ Write errors:`);
+                writeResult.errors.forEach(err => {
+                    console.error(`      ${err.path}: ${err.error}`);
+                });
+            }
         }
     }
 

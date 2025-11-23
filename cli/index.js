@@ -38,6 +38,10 @@ try {
             await build(args.slice(1));
             break;
 
+        case 'init':
+            (await import('./commands/init.js')).init(args);
+            break;
+
         case 'dev':
             const { dev } = await import('./commands/dev.js');
             await dev(args.slice(1));
@@ -68,28 +72,29 @@ try {
 
 function showHelp() {
     console.log(`
-Compose Language Compiler v${packageJson.version}
+Compose Language Compiler - v1.0.0
 
 Usage:
   compose <command> [options]
 
 Commands:
-  build              Compile .compose files to target code
-  dev                Watch mode with automatic rebuilds
-  project <name>     Create a new Compose project
-  run [target]       Run the generated application
-
-Options:
-  -v, --version      Show version number
-  -h, --help         Show this help message
-  --debug            Enable debug output
+  init                    Initialize a new Compose project (recommended)
+  build                   Compile .compose files to target code
+  dev                     Watch and rebuild on file changes  
+  run [target]            Start the generated application
+  project <name>          Create project with examples (deprecated, use init)
 
 Examples:
-  compose project my-app          Create new project
-  compose build                   Build current project
-  compose dev                     Start development mode
-  compose run frontend            Run generated frontend
+  compose init            Create new project with framework scaffolding
+  compose build           Build current project
+  compose dev             Start development mode
+  compose run frontend    Run generated frontend
+
+Options:
+  --help, -h              Show this help message
+  --version, -v           Show version number
+  --debug                 Enable debug output
 
 Documentation: https://compose-lang.dev
-  `);
+`);
 }
