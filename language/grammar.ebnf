@@ -1,0 +1,211 @@
+# Compose Language Grammar (EBNF)
+
+This document defines the formal grammar for Compose v1 using Extended Backus-Naur Form (EBNF).
+
+---
+
+## Notation
+
+- `::=` — Definition
+- `|` — Alternation (OR)
+- `( )` — Grouping
+- `[ ]` — Optional (0 or 1)
+- `{ }` — Repetition (0 or more)
+- `" "` — Terminal string
+- `< >` — Non-terminal
+
+---
+
+## Grammar Rules
+
+### Program Structure
+
+```ebnf
+<program> ::= { <statement> }
+
+<statement> ::= <import_statement>
+              | <comment>
+              | <context_comment>
+              | <define_statement>
+              | <frontend_statement>
+              | <backend_statement>
+```
+
+### Comments
+
+```ebnf
+<comment> ::= "//" <text> <newline>
+
+<context_comment> ::= "##" <text> "##" <newline>
+```
+
+### Imports
+
+```ebnf
+<import_statement> ::= "import" <string_literal> <newline>
+
+<string_literal> ::= '"' <text> '"'
+```
+
+### Define Statements
+
+```ebnf
+<define_statement> ::= <define_structure>
+                     | <define_variable>
+                     | <define_function>
+
+<define_structure> ::= "define" "structure" <identifier> <newline>
+                       { <field_definition> }
+
+<field_definition> ::= "has" <identifier> "as" <type> <newline>
+
+<define_variable> ::= "define" <identifier> "as" <type_or_description> <newline>
+
+<type_or_description> ::= <type>
+                        | <string_literal>
+
+<define_function> ::= "define" "function" <identifier> <newline>
+                      [ "inputs:" <parameter_list> <newline> ]
+                      [ "returns:" <type> <newline> ]
+                      "description:" <string_literal> <newline>
+
+<parameter_list> ::= <parameter> { "," <parameter> }
+
+<parameter> ::= <identifier> "as" <type>
+```
+
+### Types
+
+```ebnf
+<type> ::= <primitive_type>
+         | <identifier>
+         | "list" "of" <type>
+
+<primitive_type> ::= "number"
+                   | "text"
+                   | "boolean"
+                   | "date"
+                   | "datetime"
+                   | "void"
+```
+
+### Frontend Statements
+
+```ebnf
+<frontend_statement> ::= <frontend_page>
+                       | <frontend_component>
+                       | <frontend_state>
+                       | <frontend_render>
+                       | <frontend_theme>
+
+<frontend_page> ::= "frontend.page" <string_literal> <newline>
+                    { <page_attribute> }
+
+<page_attribute> ::= "is" "protected" <newline>
+                   | "description:" <string_literal> <newline>
+
+<frontend_component> ::= "frontend.component" <string_literal> <newline>
+                         { <component_attribute> }
+
+<component_attribute> ::= "accepts" <identifier> "as" <type> <newline>
+                        | "description:" <string_literal> <newline>
+
+<frontend_state> ::= "frontend.state" <identifier> "as" <string_literal> <newline>
+
+<frontend_render> ::= "frontend.render" <string_literal> <newline>
+                      "description:" <string_literal> <newline>
+
+<frontend_theme> ::= "frontend.theme" <string_literal> <newline>
+                     { <theme_property> }
+
+<theme_property> ::= <identifier> ":" <string_literal> <newline>
+```
+
+### Backend Statements
+
+```ebnf
+<backend_statement> ::= <backend_read_env>
+                      | <backend_file_operation>
+                      | <backend_api>
+                      | <backend_query>
+                      | <backend_connect>
+                      | <backend_socket>
+
+<backend_read_env> ::= "backend.read_env" <identifier> <newline>
+
+<backend_file_operation> ::= "backend.read_file" <string_literal> <newline>
+                           | "backend.save_file" <string_literal> <newline>
+
+<backend_api> ::= "backend.create_api" <string_literal> <newline>
+                  "description:" <string_literal> <newline>
+
+<backend_query> ::= "backend.query" <string_literal> <newline>
+                    "description:" <string_literal> <newline>
+
+<backend_connect> ::= "backend.connect" <string_literal> <newline>
+                      "with" <identifier> ":" <identifier> <newline>
+
+<backend_socket> ::= "backend.emit" <string_literal> <newline>
+                     "description:" <string_literal> <newline>
+```
+
+### Lexical Elements
+
+```ebnf
+<identifier> ::= <letter> { <letter> | <digit> | "_" }
+
+<letter> ::= "a" | "b" | ... | "z" | "A" | "B" | ... | "Z"
+
+<digit> ::= "0" | "1" | ... | "9"
+
+<text> ::= { <any_character> }
+
+<newline> ::= "\n" | "\r\n"
+```
+
+---
+
+## Indentation Rules
+
+Compose uses **significant indentation** (similar to Python):
+
+- Block contents are indented with 2 spaces
+- Parent-child relationships are determined by indentation level
+- Inconsistent indentation is a syntax error
+
+---
+
+## Example
+
+```compose
+import "shared/types.compose"
+
+## Customer management module ##
+
+define structure Customer
+  has id as number
+  has name as text
+  has email as text
+
+frontend.page "Customers"
+  is protected
+  description: "Display and manage customer list"
+
+backend.create_api "GetCustomers"
+  description: "Return all customers from database"
+
+define function validateEmail
+  inputs: email as text
+  returns: boolean
+  description: "Check if email format is valid"
+```
+
+---
+
+## Notes
+
+1. **Case Sensitivity**: Keywords are case-sensitive and lowercase
+2. **Whitespace**: Significant for indentation; otherwise ignored
+3. **String Literals**: Must use double quotes
+4. **Comments**: Single-line only (no multi-line comment blocks)
+5. **Identifiers**: CamelCase recommended but not enforced

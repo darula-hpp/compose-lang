@@ -1,0 +1,258 @@
+{
+  "version": "1.0",
+  "module": "examples/customer.compose",
+  "hash": "3df2e545",
+  "imports": [
+    "shared/types.compose"
+  ],
+  "structures": [
+    {
+      "name": "Customer",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "text"
+        },
+        {
+          "name": "createdAt",
+          "type": "datetime"
+        }
+      ],
+      "location": {
+        "line": 5,
+        "column": 1,
+        "file": "examples/customer.compose"
+      }
+    },
+    {
+      "name": "Order",
+      "fields": [
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "customerId",
+          "type": "number"
+        },
+        {
+          "name": "total",
+          "type": "number"
+        },
+        {
+          "name": "status",
+          "type": "text"
+        }
+      ],
+      "location": {
+        "line": 11,
+        "column": 1,
+        "file": "examples/customer.compose"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "customers",
+      "type": {
+        "kind": "list",
+        "of": "Customer"
+      },
+      "explanation": null,
+      "location": {
+        "line": 17,
+        "column": 1,
+        "file": "examples/customer.compose"
+      }
+    },
+    {
+      "name": "orders",
+      "type": {
+        "kind": "list",
+        "of": "Order"
+      },
+      "explanation": null,
+      "location": {
+        "line": 18,
+        "column": 1,
+        "file": "examples/customer.compose"
+      }
+    }
+  ],
+  "functions": [
+    {
+      "name": "calculateCustomerLifetimeValue",
+      "inputs": [
+        {
+          "name": "customerId",
+          "type": "number"
+        }
+      ],
+      "returns": "number",
+      "description": "Sum all order totals for a customer to calculate their lifetime value",
+      "location": {
+        "line": 47,
+        "column": 1,
+        "file": "examples/customer.compose"
+      }
+    },
+    {
+      "name": "validateEmail",
+      "inputs": [
+        {
+          "name": "email",
+          "type": "text"
+        }
+      ],
+      "returns": "boolean",
+      "description": "Check if email format is valid using regex pattern",
+      "location": {
+        "line": 52,
+        "column": 1,
+        "file": "examples/customer.compose"
+      }
+    },
+    {
+      "name": "formatCustomerName",
+      "inputs": [
+        {
+          "name": "customer",
+          "type": "Customer"
+        }
+      ],
+      "returns": "text",
+      "description": "Format customer name as 'Last, First' for display purposes",
+      "location": {
+        "line": 57,
+        "column": 1,
+        "file": "examples/customer.compose"
+      }
+    }
+  ],
+  "frontend": {
+    "pages": [
+      {
+        "name": "Customers",
+        "protected": true,
+        "description": "Display and manage customer list with search and filters",
+        "location": {
+          "line": 20,
+          "column": 1,
+          "file": "examples/customer.compose"
+        }
+      }
+    ],
+    "components": [
+      {
+        "name": "CustomerCard",
+        "props": [
+          {
+            "name": "customer",
+            "type": "Customer"
+          }
+        ],
+        "description": "Renders a single customer card with details and action buttons",
+        "location": {
+          "line": 24,
+          "column": 1,
+          "file": "examples/customer.compose"
+        }
+      }
+    ],
+    "state": [
+      {
+        "name": "selectedCustomer",
+        "explanation": "stores the currently selected customer for detail view",
+        "location": {
+          "line": 28,
+          "column": 1,
+          "file": "examples/customer.compose"
+        }
+      }
+    ],
+    "renders": [],
+    "themes": [
+      {
+        "name": "main",
+        "properties": {
+          "primaryColor": "#1055FF",
+          "accentColor": "#00A38C",
+          "backgroundColor": "#FAFAFA"
+        },
+        "location": {
+          "line": 30,
+          "column": 1,
+          "file": "examples/customer.compose"
+        }
+      }
+    ]
+  },
+  "backend": {
+    "env": [
+      {
+        "name": "DATABASE_URL",
+        "location": {
+          "line": 35,
+          "column": 1,
+          "file": "examples/customer.compose"
+        }
+      },
+      {
+        "name": "API_KEY",
+        "location": {
+          "line": 36,
+          "column": 1,
+          "file": "examples/customer.compose"
+        }
+      }
+    ],
+    "files": {
+      "reads": [],
+      "writes": []
+    },
+    "apis": [
+      {
+        "name": "GetCustomers",
+        "description": "Fetch all customers from database with pagination support",
+        "location": {
+          "line": 38,
+          "column": 1,
+          "file": "examples/customer.compose"
+        }
+      },
+      {
+        "name": "GetCustomerById",
+        "description": "Fetch a single customer by their ID",
+        "location": {
+          "line": 41,
+          "column": 1,
+          "file": "examples/customer.compose"
+        }
+      }
+    ],
+    "queries": [
+      {
+        "name": "FetchCustomerOrders",
+        "description": "Return all orders for a specific customer",
+        "location": {
+          "line": 44,
+          "column": 1,
+          "file": "examples/customer.compose"
+        }
+      }
+    ],
+    "connections": [],
+    "sockets": []
+  },
+  "context": [
+    "Customer management module"
+  ]
+}

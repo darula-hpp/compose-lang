@@ -1,0 +1,42 @@
+## Simple Todo App Demo ##
+
+define structure Todo
+  has id as number
+  has title as text
+  has completed as boolean
+
+define todos as list of Todo
+
+frontend.page "Home"
+  description: "Main todo list page"
+
+frontend.component "TodoItem"
+  accepts todo as Todo
+  description: "Display a single todo with checkbox and delete button"
+
+frontend.component "TodoForm"
+  description: "Form to add new todos"
+
+frontend.state newTodo as "text input for new todo"
+
+frontend.theme "main"
+  primaryColor: "#4F46E5"
+  accentColor: "#10B981"
+  backgroundColor: "#F9FAFB"
+
+backend.create_api "GetTodos"
+  description: "Fetch all todos from database"
+
+backend.create_api "CreateTodo"
+  description: "Create a new todo item"
+
+backend.create_api "ToggleTodo"
+  description: "Toggle todo completed status"
+
+backend.create_api "DeleteTodo"
+  description: "Delete a todo by ID"
+
+define function validateTodoTitle
+  inputs: title as text
+  returns: boolean
+  description: "Check if todo title is non-empty and under 200 characters"

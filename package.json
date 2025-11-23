@@ -1,0 +1,33 @@
+{
+    "name": "compose-lang",
+    "version": "1.0.0",
+    "description": "An English-based, structured programming language designed for LLM-assisted code generation",
+    "type": "module",
+    "main": "compiler/index.js",
+    "bin": {
+        "compose": "./cli/index.js"
+    },
+    "scripts": {
+        "test": "node tests/compiler/lexer.test.js && node tests/compiler/parser.test.js && node tests/compiler/analyzer.test.js && node tests/compiler/ir.test.js && node tests/compiler/emitter.test.js",
+        "test:lexer": "node tests/compiler/lexer.test.js",
+        "test:parser": "node tests/compiler/parser.test.js",
+        "test:analyzer": "node tests/compiler/analyzer.test.js",
+        "test:ir": "node tests/compiler/ir.test.js",
+        "test:emitter": "node tests/compiler/emitter.test.js",
+        "example": "node -e \"import('./compiler/index.js').then(c => { const fs = require('fs'); const source = fs.readFileSync('./examples/customer.compose', 'utf8'); const ast = c.compile(source, 'customer.compose'); console.log(JSON.stringify(ast, null, 2)); })\""
+    },
+    "keywords": [
+        "compiler",
+        "language",
+        "llm",
+        "code-generation",
+        "dsl",
+        "compose"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "@google/generative-ai": "^0.24.1",
+        "openai": "^6.9.1"
+    }
+}
