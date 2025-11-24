@@ -3,7 +3,7 @@
     "displayName": "Compose Language Support",
     "description": "Language support for Compose - the vibe engineering language",
     "version": "0.1.0",
-    "publisher": "compose-lang",
+    "publisher": "OlebogengMbedzi",
     "icon": "images/icon.png",
     "engines": {
         "vscode": "^1.85.0"
@@ -97,7 +97,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/compose-lang/vscode-compose"
+        "url": "https://github.com/darula-hpp/compose-lang/vscode-compose"
     },
     "license": "MIT"
 }
