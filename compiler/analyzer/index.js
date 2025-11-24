@@ -1,21 +1,15 @@
 /**
  * Semantic Analyzer
- * Main orchestrator for semantic analysis phase
- * Coordinates symbol table, type checking, scope resolution, and validation
+ * Simplified for three-keyword architecture (model, feature, guide)
+ * Handles import resolution and model type checking
  */
 
 import { createGlobalSymbolTable, Symbol } from './symbol-table.js';
-import { TypeChecker } from './type-checker.js';
-import { ScopeResolver } from './scope-resolver.js';
-import { SemanticValidator } from './validator.js';
 import { createModuleLoader } from '../loader/index.js';
 
 export class SemanticAnalyzer {
     constructor(options = {}) {
         this.symbolTable = createGlobalSymbolTable();
-        this.typeChecker = new TypeChecker(this.symbolTable);
-        this.scopeResolver = new ScopeResolver();
-        this.validator = new SemanticValidator(this.symbolTable);
         this.errors = [];
         this.baseDir = options.baseDir || process.cwd();
         this.loadImports = options.loadImports !== false;
@@ -31,8 +25,12 @@ export class SemanticAnalyzer {
         this.errors = [];
 
         try {
-            // If imports should be loaded, use module loader
-            if (this.loadImports && ast.statements.some(s => s.type === 'ImportStatement')) {
+            // Check if there are imports that need resolution
+            const hasImports = ast.models.some(m => m.type === 'ImportDeclaration') ||
+                ast.features.some(f => f.type === 'ImportDeclaration') ||
+                ast.guides.some(g => g.type === 'ImportDeclaration');
+
+            if (this.loadImports && hasImports) {
                 return this.analyzeWithImports(ast, modulePath);
             }
 
@@ -54,8 +52,8 @@ export class SemanticAnalyzer {
     }
 
     /**
-   * Analyze with import resolution
-   */
+     * Analyze with import resolution
+     */
     analyzeWithImports(ast, modulePath) {
         const moduleLoader = createModuleLoader(this.baseDir);
 
@@ -64,11 +62,6 @@ export class SemanticAnalyzer {
 
         // Get modules in dependency order (dependencies first)
         const orderedModules = moduleLoader.getTopologicalOrder();
-
-        // Register all modules with scope resolver
-        for (const module of orderedModules) {
-            this.scopeResolver.registerModule(module.path, module.ast);
-        }
 
         // Analyze dependencies first to populate their symbol tables
         for (const module of orderedModules) {
@@ -95,12 +88,12 @@ export class SemanticAnalyzer {
     }
 
     /**
-   * Import symbols from another module's symbol table
-   */
+     * Import symbols from another module's symbol table
+     */
     importSymbolsFrom(sourceTable) {
         if (!sourceTable) return;
 
-        // Import types (if types map exists)
+        // Import model types
         if (sourceTable.types && sourceTable.types.entries) {
             for (const [name, typeDef] of sourceTable.types.entries()) {
                 if (!this.symbolTable.types.has(name)) {
@@ -109,10 +102,10 @@ export class SemanticAnalyzer {
             }
         }
 
-        // Import structure symbols (if symbols map exists)
+        // Import model symbols
         if (sourceTable.symbols && sourceTable.symbols.entries) {
             for (const [name, symbol] of sourceTable.symbols.entries()) {
-                if (symbol.kind === 'structure' && !this.symbolTable.symbols.has(name)) {
+                if (symbol.kind === 'model' && !this.symbolTable.symbols.has(name)) {
                     this.symbolTable.symbols.set(name, symbol);
                 }
             }
@@ -123,20 +116,14 @@ export class SemanticAnalyzer {
      * Analyze a single file (no imports)
      */
     analyzeSingleFile(ast, modulePath) {
-        // Phase 1: Register module
-        this.scopeResolver.registerModule(modulePath, ast);
-
-        // Phase 2: Build symbol table
+        // Phase 1: Build symbol table (register all models)
         this.buildSymbolTable(ast);
 
-        // Phase 3: Type checking
-        this.performTypeChecking(ast);
+        // Phase 2: Validate model references
+        this.validateModelReferences(ast);
 
-        // Phase 4: Semantic validation
-        this.performValidation(ast);
-
-        // Collect all errors
-        this.collectErrors();
+        // Phase 3: Check for duplicates
+        this.checkDuplicates(ast);
 
         return {
             success: this.errors.length === 0,
@@ -149,28 +136,31 @@ export class SemanticAnalyzer {
      * Build symbol table from AST
      */
     buildSymbolTable(ast) {
-        for (const stmt of ast.statements) {
-            switch (stmt.type) {
-                case 'StructureDefinition':
-                    this.registerStructure(stmt);
-                    break;
-                case 'VariableDefinition':
-                    this.registerVariable(stmt);
-                    break;
-                case 'FunctionDefinition':
-                    this.registerFunction(stmt);
-                    break;
+        // Register all models
+        for (const model of ast.models) {
+            if (model.type === 'ModelDeclaration') {
+                this.registerModel(model);
             }
         }
     }
 
     /**
-     * Register a structure in the symbol table
+     * Register a model in the symbol table
      */
-    registerStructure(node) {
-        // Register the structure type
+    registerModel(node) {
+        // Check if already defined
+        if (this.symbolTable.symbols.has(node.name)) {
+            this.errors.push({
+                message: `Model "${node.name}" is already defined`,
+                location: node.location,
+                type: 'DuplicateDefinition'
+            });
+            return;
+        }
+
+        // Register the model type
         this.symbolTable.defineType(node.name, {
-            kind: 'structure',
+            kind: 'model',
             name: node.name,
             fields: node.fields,
             location: node.location,
@@ -180,84 +170,59 @@ export class SemanticAnalyzer {
         // Also register as a symbol
         this.symbolTable.define(
             node.name,
-            new Symbol(node.name, 'structure', node.name, node.location, node)
+            new Symbol(node.name, 'model', node.name, node.location, node)
         );
     }
 
     /**
-     * Register a variable in the symbol table
+     * Validate that all model references exist
      */
-    registerVariable(node) {
-        let typeName = null;
+    validateModelReferences(ast) {
+        for (const model of ast.models) {
+            if (model.type !== 'ModelDeclaration') continue;
 
-        if (node.varType) {
-            if (node.varType.type === 'ListTypeNode') {
-                typeName = `list of ${node.varType.elementType.name}`;
-            } else {
-                typeName = node.varType.name;
-            }
-        }
+            for (const field of model.fields) {
+                const fieldType = field.fieldType;
 
-        this.symbolTable.define(
-            node.name,
-            new Symbol(node.name, 'variable', typeName, node.location, node)
-        );
-    }
+                // Get the base type (handle list of X)
+                let baseType = fieldType.baseType;
 
-    /**
-     * Register a function in the symbol table
-     */
-    registerFunction(node) {
-        const returnType = node.returnType ? node.returnType.name : 'void';
+                // Skip primitive types
+                const primitiveTypes = ['text', 'number', 'bool', 'date', 'timestamp', 'image', 'file', 'markdown', 'json'];
+                if (primitiveTypes.includes(baseType)) {
+                    continue;
+                }
 
-        this.symbolTable.define(
-            node.name,
-            new Symbol(node.name, 'function', returnType, node.location, node)
-        );
-    }
-
-    /**
-     * Perform type checking on all nodes
-     */
-    performTypeChecking(ast) {
-        for (const stmt of ast.statements) {
-            switch (stmt.type) {
-                case 'StructureDefinition':
-                    this.typeChecker.validateStructure(stmt);
-                    break;
-                case 'VariableDefinition':
-                    this.typeChecker.validateVariable(stmt);
-                    break;
-                case 'FunctionDefinition':
-                    this.typeChecker.validateFunction(stmt);
-                    break;
-                case 'FrontendComponent':
-                    this.typeChecker.validateComponent(stmt);
-                    break;
+                // Check if the referenced model exists
+                if (!this.symbolTable.types.has(baseType)) {
+                    this.errors.push({
+                        message: `Model "${model.name}" references undefined type "${baseType}" in field "${field.name}"`,
+                        location: field.location || model.location,
+                        type: 'UndefinedReference'
+                    });
+                }
             }
         }
     }
 
     /**
-     * Perform semantic validation
+     * Check for duplicate model names
      */
-    performValidation(ast) {
-        this.validator.validateNoDuplicates(ast);
-        this.validator.validateFrontendBackendSeparation(ast);
-        this.validator.validateAllTypesExist(ast);
-        this.validator.validateFunctionDescriptions(ast);
-        this.validator.validateBackendDescriptions(ast);
-    }
+    checkDuplicates(ast) {
+        const seen = new Set();
 
-    /**
-     * Collect all errors from sub-components
-     */
-    collectErrors() {
-        this.errors = [
-            ...this.typeChecker.getErrors(),
-            ...this.scopeResolver.getErrors(),
-            ...this.validator.getErrors()
-        ];
+        for (const model of ast.models) {
+            if (model.type !== 'ModelDeclaration') continue;
+
+            if (seen.has(model.name)) {
+                this.errors.push({
+                    message: `Duplicate model name: "${model.name}"`,
+                    location: model.location,
+                    type: 'DuplicateDefinition'
+                });
+            }
+            seen.add(model.name);
+        }
     }
 }
 

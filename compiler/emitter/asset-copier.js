@@ -1,63 +1,70 @@
 /**
- * Asset copying utilities
- * Handles copying static assets from assets/ to framework output
+ * Asset copying utilities (v0.2.0)
+ * Handles copying target-specific assets defined in compose.json
  */
 
 import { existsSync, mkdirSync, copyFileSync, readdirSync, statSync } from 'fs';
 import { join, dirname } from 'path';
 
 /**
- * Copy assets from source to destination
+ * Copy assets based on target configuration
  * @param {string} projectRoot - Project root directory
- * @param {object} targetConfig - Target configuration
+ * @param {object} targetConfig - Target configuration from compose.json
  */
 export function copyAssets(projectRoot, targetConfig) {
-    const assetsSource = join(projectRoot, 'assets');
-
-    // Check if assets directory exists
-    if (!existsSync(assetsSource)) {
+    // Check if target has assets defined
+    if (!targetConfig.assets || targetConfig.assets.length === 0) {
         return; // No assets to copy
     }
 
-    // Determine public directory based on framework
-    const publicDir = getPublicDir(targetConfig.framework);
-    const assetsOutput = join(targetConfig.output, publicDir);
+    let copiedCount = 0;
 
-    // Create output directory if it doesn't exist
-    if (!existsSync(assetsOutput)) {
-        mkdirSync(assetsOutput, { recursive: true });
+    // Copy each asset mapping: [from, to]
+    for (const [from, to] of targetConfig.assets) {
+        const sourcePath = join(projectRoot, from);
+        const destPath = join(targetConfig.output, to);
+
+        // Check if source exists
+        if (!existsSync(sourcePath)) {
+            console.warn(`   ⚠ Asset source not found: ${from}`);
+            continue;
+        }
+
+        const stat = statSync(sourcePath);
+
+        if (stat.isDirectory()) {
+            // Copy entire directory
+            copyDirectory(sourcePath, destPath);
+            copiedCount++;
+        } else {
+            // Copy single file
+            const destDir = dirname(destPath);
+            if (!existsSync(destDir)) {
+                mkdirSync(destDir, { recursive: true });
+            }
+            copyFileSync(sourcePath, destPath);
+            copiedCount++;
+        }
     }
 
-    // Copy all files from assets/ to output
-    copyDirectory(assetsSource, assetsOutput);
-
-    console.log(`   ✓ Copied assets to ${publicDir}/`);
-}
-
-/**
- * Get public directory path for framework
- */
-function getPublicDir(framework) {
-    const publicDirs = {
-        'next': 'public',
-        'nextjs': 'public',
-        'vite': 'public',
-        'vite-react': 'public',
-        'remix': 'public',
-        'react-native': 'assets',
-        'express': 'public',
-        'fastify': 'public'
-    };
-
-    return publicDirs[framework] || 'public';
+    if (copiedCount > 0) {
+        console.log(`   ✓ Copied ${copiedCount} asset(s)`);
+    }
 }
 
 /**
  * Recursively copy directory contents
+ * @param {string} source - Source directory
+ * @param {string} destination - Destination directory
  */
 function copyDirectory(source, destination) {
-    // Skip README.md and .gitkeep
-    const skipFiles = ['README.md', '.gitkeep'];
+    // Skip common metadata files
+    const skipFiles = ['README.md', '.gitkeep', '.DS_Store', 'Thumbs.db'];
+
+    // Create destination directory
+    if (!existsSync(destination)) {
+        mkdirSync(destination, { recursive: true });
+    }
 
     const files = readdirSync(source);
 
@@ -70,17 +77,10 @@ function copyDirectory(source, destination) {
         const stat = statSync(sourcePath);
 
         if (stat.isDirectory()) {
-            // Create directory and copy contents recursively
-            if (!existsSync(destPath)) {
-                mkdirSync(destPath, { recursive: true });
-            }
+            // Recursively copy subdirectory
             copyDirectory(sourcePath, destPath);
         } else {
             // Copy file
-            const destDir = dirname(destPath);
-            if (!existsSync(destDir)) {
-                mkdirSync(destDir, { recursive: true });
-            }
             copyFileSync(sourcePath, destPath);
         }
     }

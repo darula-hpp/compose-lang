@@ -1,8 +1,9 @@
 /**
- * Type Checker for validating type compatibility and references
+ * Type Checker (Simplified for v0.2.0)
+ * Only validates model field types - features and guides are natural language
  */
 
-import { isPrimitiveType } from './symbol-table.js';
+const PRIMITIVE_TYPES = ['text', 'number', 'bool', 'date', 'timestamp', 'image', 'file', 'markdown', 'json'];
 
 export class TypeChecker {
     constructor(symbolTable) {
@@ -11,69 +12,13 @@ export class TypeChecker {
     }
 
     /**
-     * Validate a type node
-     * @param {TypeNode|ListTypeNode} typeNode - Type AST node
-     * @param {object} location - Location context for errors
-     * @returns {boolean} - true if valid
+     * Validate a model's field types
+     * @param {ModelDeclaration} node
      */
-    validateType(typeNode, location) {
-        if (!typeNode) {
-            return true; // Nullable type (e.g., explained variables)
-        }
-
-        // Handle list types
-        if (typeNode.type === 'ListTypeNode') {
-            return this.validateType(typeNode.elementType, location);
-        }
-
-        // Handle regular types
-        const typeName = typeNode.name;
-
-        // Check if type exists
-        const typeDef = this.symbolTable.lookupType(typeName);
-        if (!typeDef) {
-            this.addError(
-                `Undefined type '${typeName}'`,
-                location
-            );
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Check if two types are compatible
-     * @param {TypeNode} expected - Expected type
-     * @param {TypeNode} actual - Actual type
-     * @returns {boolean} - true if compatible
-     */
-    isCompatible(expected, actual) {
-        if (!expected || !actual) {
-            return true; // If either is null, skip check
-        }
-
-        // Handle list types
-        if (expected.type === 'ListTypeNode' && actual.type === 'ListTypeNode') {
-            return this.isCompatible(expected.elementType, actual.elementType);
-        }
-
-        if (expected.type === 'ListTypeNode' || actual.type === 'ListTypeNode') {
-            return false; // One is list, other is not
-        }
-
-        // Simple name comparison
-        return expected.name === actual.name;
-    }
-
-    /**
-     * Validate a structure definition
-     * @param {StructureDefinition} node
-     */
-    validateStructure(node) {
+    validateModel(node) {
         // Check all field types exist
         for (const field of node.fields) {
-            this.validateType(field.fieldType, field.location);
+            this.validateFieldType(field, node.name);
         }
 
         // Check for duplicate field names
@@ -81,8 +26,8 @@ export class TypeChecker {
         for (const field of node.fields) {
             if (fieldNames.has(field.name)) {
                 this.addError(
-                    `Duplicate field '${field.name}' in structure '${node.name}'`,
-                    field.location
+                    `Duplicate field '${field.name}' in model '${node.name}'`,
+                    field.location || node.location
                 );
             }
             fieldNames.add(field.name);
@@ -90,64 +35,32 @@ export class TypeChecker {
     }
 
     /**
-     * Validate a function definition
-     * @param {FunctionDefinition} node
+     * Validate a field's type
      */
-    validateFunction(node) {
-        // Check parameter types
-        for (const param of node.parameters) {
-            this.validateType(param.paramType, param.location);
+    validateFieldType(field, modelName) {
+        const fieldType = field.fieldType;
+        if (!fieldType) return;
+
+        // Get base type (for list of X, get X)
+        let baseType = fieldType.baseType;
+
+        // Skip validation for enum types (they have enumValues)
+        if (fieldType.enumValues && fieldType.enumValues.length > 0) {
+            return;
         }
 
-        // Check return type
-        if (node.returnType) {
-            this.validateType(node.returnType, node.location);
+        // Skip primitive types
+        if (PRIMITIVE_TYPES.includes(baseType)) {
+            return;
         }
 
-        // Check for duplicate parameter names
-        const paramNames = new Set();
-        for (const param of node.parameters) {
-            if (paramNames.has(param.name)) {
-                this.addError(
-                    `Duplicate parameter '${param.name}' in function '${node.name}'`,
-                    param.location
-                );
-            }
-            paramNames.add(param.name);
-        }
-    }
-
-    /**
-     * Validate a variable definition
-     * @param {VariableDefinition} node
-     */
-    validateVariable(node) {
-        // Only validate if it has a type (not an explained variable)
-        if (node.varType) {
-            this.validateType(node.varType, node.location);
-        }
-    }
-
-    /**
-     * Validate frontend component props
-     * @param {FrontendComponent} node
-     */
-    validateComponent(node) {
-        // Check prop types
-        for (const prop of node.props) {
-            this.validateType(prop.paramType, prop.location);
-        }
-
-        // Check for duplicate prop names
-        const propNames = new Set();
-        for (const prop of node.props) {
-            if (propNames.has(prop.name)) {
-                this.addError(
-                    `Duplicate prop '${prop.name}' in component '${node.name}'`,
-                    prop.location
-                );
-            }
-            propNames.add(prop.name);
+        // Check if the referenced model exists
+        const typeDef = this.symbolTable.lookupType(baseType);
+        if (!typeDef) {
+            this.addError(
+                `Model '${modelName}' field '${field.name}' references undefined type '${baseType}'`,
+                field.location || { line: 0, column: 0 }
+            );
         }
     }
 

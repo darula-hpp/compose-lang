@@ -1,5 +1,6 @@
 /**
- * Scope Resolver for handling imports and module dependencies
+ * Scope Resolver (Simplified for v0.2.0)
+ * Handles module imports - features/guides don't participate in scope
  */
 
 export class ScopeResolver {
@@ -17,10 +18,18 @@ export class ScopeResolver {
     registerModule(modulePath, ast) {
         this.modules.set(modulePath, ast);
 
-        // Extract imports
-        const imports = ast.statements
-            .filter(stmt => stmt.type === 'ImportStatement')
-            .map(stmt => stmt.path);
+        // Extract imports - they can be in models, features, or guides arrays
+        // but typically imports are separate ImportDeclaration nodes
+        const imports = [];
+
+        // Check for import declarations in models array
+        if (ast.models) {
+            for (const item of ast.models) {
+                if (item.type === 'ImportDeclaration') {
+                    imports.push(item.path);
+                }
+            }
+        }
 
         this.dependencies.set(modulePath, new Set(imports));
     }
@@ -64,61 +73,14 @@ export class ScopeResolver {
     }
 
     /**
-     * Validate all modules for circular dependencies
-     * @returns {boolean} - true if valid
+     * Get errors
      */
-    validateNoCycles() {
-        for (const modulePath of this.modules.keys()) {
-            const cycle = this.detectCircularDependency(modulePath);
-            if (cycle) {
-                this.addError(
-                    `Circular dependency detected: ${cycle.join(' -> ')}`,
-                    { file: modulePath, line: 0, column: 0 }
-                );
-                return false;
-            }
-        }
-        return true;
+    getErrors() {
+        return this.errors;
     }
 
     /**
-     * Get dependency order (topological sort)
-     * @returns {string[]} - Modules in dependency order
-     */
-    getDependencyOrder() {
-        const sorted = [];
-        const visited = new Set();
-        const visiting = new Set();
-
-        const visit = (modulePath) => {
-            if (visited.has(modulePath)) return;
-            if (visiting.has(modulePath)) {
-                throw new Error(`Circular dependency involving ${modulePath}`);
-            }
-
-            visiting.add(modulePath);
-
-            const imports = this.getImports(modulePath);
-            for (const importPath of imports) {
-                if (this.modules.has(importPath)) {
-                    visit(importPath);
-                }
-            }
-
-            visiting.delete(modulePath);
-            visited.add(modulePath);
-            sorted.push(modulePath);
-        };
-
-        for (const modulePath of this.modules.keys()) {
-            visit(modulePath);
-        }
-
-        return sorted;
-    }
-
-    /**
-     * Add an error
+     * Add error
      */
     addError(message, location) {
         this.errors.push({
@@ -126,19 +88,5 @@ export class ScopeResolver {
             location,
             type: 'ScopeError'
         });
-    }
-
-    /**
-     * Get all errors
-     */
-    getErrors() {
-        return this.errors;
-    }
-
-    /**
-     * Check if there are errors
-     */
-    hasErrors() {
-        return this.errors.length > 0;
     }
 }

@@ -1,6 +1,6 @@
 /**
  * Symbol Table for tracking defined symbols across scopes
- * Manages structures, variables, functions, and their visibility
+ * Manages models, features, guides, and their visibility
  */
 
 export class SymbolTable {
@@ -118,7 +118,7 @@ export class SymbolTable {
 export class Symbol {
     constructor(name, kind, type, location, node = null) {
         this.name = name;
-        this.kind = kind; // 'structure', 'variable', 'function', 'parameter'
+        this.kind = kind; // 'model', 'feature', 'guide'
         this.type = type; // Type information
         this.location = location; // { file, line, column }
         this.node = node; // Reference to AST node
@@ -129,7 +129,7 @@ export class Symbol {
  * Check if a type name is a primitive type
  */
 export function isPrimitiveType(name) {
-    const primitives = ['number', 'text', 'boolean', 'date', 'datetime', 'void'];
+    const primitives = ['text', 'number', 'bool', 'date', 'timestamp', 'image', 'file', 'markdown', 'json'];
     return primitives.includes(name);
 }
 
@@ -139,11 +139,12 @@ export function isPrimitiveType(name) {
 export function createGlobalSymbolTable() {
     const global = new SymbolTable();
 
-    // Define primitive types
-    const primitives = ['number', 'text', 'boolean', 'date', 'datetime', 'void'];
+    // Define primitive types (v0.2.0)
+    const primitives = ['text', 'number', 'bool', 'date', 'timestamp', 'image', 'file', 'markdown', 'json'];
     primitives.forEach(name => {
         global.defineType(name, { kind: 'primitive', name });
     });
 
     return global;
 }
+
