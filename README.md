@@ -277,6 +277,19 @@ my-app/
     └── mobile/       # React Native app
 ```
 
+**Important:** If using `import` statements, specify `entry` in `compose.json`:
+
+```json
+{
+  "targets": {
+    "web": {
+      "entry": "./app.compose",  // Required with imports
+      "framework": "nextjs"
+    }
+  }
+}
+```
+
 ### `compose dev`
 Watch mode with automatic rebuilds
 

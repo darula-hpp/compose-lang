@@ -4,7 +4,7 @@
  */
 
 import { existsSync, rmSync, readFileSync } from 'fs';
-import { loadTargetConfig } from '../../compiler/emitter/target-config.js';
+import { loadComposeConfig } from '../../compiler/emitter/compose-config.js';
 
 export async function clean(args) {
     console.log('🧹 Cleaning Compose project...\n');
@@ -13,7 +13,7 @@ export async function clean(args) {
 
     // Clean generated directories from compose.json
     if (existsSync('./compose.json')) {
-        const config = loadTargetConfig('./compose.json');
+        const config = loadComposeConfig('./compose.json');
         const targets = config.targets || {};
 
         for (const [targetName, target] of Object.entries(targets)) {

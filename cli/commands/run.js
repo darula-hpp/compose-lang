@@ -6,7 +6,7 @@
 import { spawn } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { loadTargetConfig } from '../../compiler/emitter/target-config.js';
+import { loadComposeConfig } from '../../compiler/emitter/compose-config.js';
 
 export async function run(args) {
     const targetName = args[0] || 'frontend';
@@ -14,7 +14,7 @@ export async function run(args) {
     console.log(`🚀 Running ${targetName}...\n`);
 
     // Load config to find output directory
-    const config = loadTargetConfig('./compose.json');
+    const config = loadComposeConfig('./compose.json');
     const target = config.targets[targetName];
 
     if (!target) {

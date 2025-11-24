@@ -6,7 +6,7 @@
 import { readdirSync, readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { compile } from '../../compiler/index.js';
-import { loadTargetConfig } from '../../compiler/emitter/target-config.js';
+import { loadComposeConfig } from '../../compiler/emitter/compose-config.js';
 import { emitCode } from '../../compiler/emitter/code-emitter.js';
 import { writeOutput } from '../../compiler/emitter/output-writer.js';
 import { detectFramework } from '../../compiler/emitter/framework-analyzer.js';
@@ -23,7 +23,7 @@ export async function build(args) {
         throw new Error(`Configuration file not found: ${configPath}`);
     }
 
-    const config = loadTargetConfig(configPath);
+    const config = loadComposeConfig(configPath);
     console.log(`📋 Configuration: ${configPath}`);
     console.log(`🤖 LLM: ${config.llm?.provider || 'mock'} (${config.llm?.model || 'mock'})`);
 

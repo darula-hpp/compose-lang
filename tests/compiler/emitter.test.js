@@ -2,7 +2,7 @@
  * Test suite for the Compose emitter
  */
 
-import { loadTargetConfig, validateTargetConfig } from '../../compiler/emitter/target-config.js';
+import { loadComposeConfig, validateComposeConfig } from '../../compiler/emitter/compose-config.js';
 import { createLLMClient } from '../../compiler/emitter/llm-client.js';
 import { emitCode } from '../../compiler/emitter/code-emitter.js';
 import { compile } from '../../compiler/index.js';
@@ -35,7 +35,7 @@ function assert(condition, message = 'Assertion failed') {
 // ==================== Tests ====================
 
 test('Emitter: Load target config', () => {
-    const config = loadTargetConfig('./examples/compose.json');
+    const config = loadComposeConfig('./examples/compose.json');
 
     assert(config.targets, 'Should have targets');
     assert(config.targets.frontend, 'Should have frontend target');
@@ -52,7 +52,7 @@ test('Emitter: Validate target config', () => {
         }
     };
 
-    assert(validateTargetConfig(validConfig), 'Should validate correct config');
+    assert(validateComposeConfig(validConfig), 'Should validate correct config');
 });
 
 test('Emitter: Invalid target type throws', () => {
@@ -66,7 +66,7 @@ test('Emitter: Invalid target type throws', () => {
     };
 
     try {
-        validateTargetConfig(invalidConfig);
+        validateComposeConfig(invalidConfig);
         throw new Error('Should have thrown error');
     } catch (error) {
         assert(error.message.includes('invalid type'), 'Should error on invalid type');
@@ -113,7 +113,7 @@ frontend.component "UserCard"
   description: "Display user"`;
 
     const compileResult = compile(source, 'test.compose');
-    const config = loadTargetConfig('./examples/compose.json');
+    const config = loadComposeConfig('./examples/compose.json');
 
     const result = await emitCode(compileResult.ir, config.targets.frontend);
 
@@ -127,7 +127,7 @@ test('Emitter: Generate structure file', async () => {
   has name as text`;
 
     const compileResult = compile(source, 'test.compose');
-    const config = loadTargetConfig('./examples/compose.json');
+    const config = loadComposeConfig('./examples/compose.json');
 
     const result = await emitCode(compileResult.ir, config.targets.frontend);
 
@@ -145,7 +145,7 @@ frontend.component "UserCard"
   description: "Display user"`;
 
     const compileResult = compile(source, 'test.compose');
-    const config = loadTargetConfig('./examples/compose.json');
+    const config = loadComposeConfig('./examples/compose.json');
 
     const result = await emitCode(compileResult.ir, config.targets.frontend);
 
@@ -161,7 +161,7 @@ test('Emitter: Generate page file', async () => {
   description: "Main dashboard"`;
 
     const compileResult = compile(source, 'test.compose');
-    const config = loadTargetConfig('./examples/compose.json');
+    const config = loadComposeConfig('./examples/compose.json');
 
     const result = await emitCode(compileResult.ir, config.targets.frontend);
 
@@ -176,7 +176,7 @@ test('Emitter: Generate API file', async () => {
   description: "Fetch all users"`;
 
     const compileResult = compile(source, 'test.compose');
-    const config = loadTargetConfig('./examples/compose.json');
+    const config = loadComposeConfig('./examples/compose.json');
 
     const result = await emitCode(compileResult.ir, config.targets.backend);
 
@@ -193,7 +193,7 @@ test('Emitter: Generate function file', async () => {
   description: "Sum all items"`;
 
     const compileResult = compile(source, 'test.compose');
-    const config = loadTargetConfig('./examples/compose.json');
+    const config = loadComposeConfig('./examples/compose.json');
 
     const result = await emitCode(compileResult.ir, config.targets.frontend);
 
@@ -210,7 +210,7 @@ backend.create_api "GetData"
   description: "Fetch data"`;
 
     const compileResult = compile(source, 'test.compose');
-    const config = loadTargetConfig('./examples/compose.json');
+    const config = loadComposeConfig('./examples/compose.json');
 
     const result = await emitCode(compileResult.ir, config.targets.frontend);
 
@@ -229,7 +229,7 @@ backend.create_api "GetData"
   description: "Fetch data"`;
 
     const compileResult = compile(source, 'test.compose');
-    const config = loadTargetConfig('./examples/compose.json');
+    const config = loadComposeConfig('./examples/compose.json');
 
     const result = await emitCode(compileResult.ir, config.targets.backend);
 
