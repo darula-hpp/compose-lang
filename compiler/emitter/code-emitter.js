@@ -31,10 +31,56 @@ export class CodeEmitter {
         const prompt = createFullProjectPrompt(ir, this.target);
         const generatedCode = await this.llmClient.generate('', prompt);
 
+        // Parse the output into files
+        const files = this.parseOutput(generatedCode);
+
         return {
-            code: generatedCode,
+            files,
             target: this.target
         };
+    }
+
+    /**
+     * Parse LLM output into files
+     * Format: ### FILE: path/to/file.ext
+     */
+    parseOutput(output) {
+        const files = [];
+        const lines = output.split('\n');
+        let currentFile = null;
+        let currentContent = [];
+
+        for (const line of lines) {
+            if (line.startsWith('### FILE: ')) {
+                // Save previous file
+                if (currentFile) {
+                    files.push({
+                        path: currentFile.trim(),
+                        content: currentContent.join('\n'),
+                        type: 'code'
+                    });
+                }
+
+                // Start new file
+                currentFile = line.substring(10).trim();
+                currentContent = [];
+            } else {
+                if (currentFile) {
+                    currentContent.push(line);
+                }
+            }
+        }
+
+        // Save last file
+        if (currentFile) {
+            files.push({
+                path: currentFile.trim(),
+                content: currentContent.join('\n'),
+                type: 'code'
+            });
+        }
+
+        return files;
     }
 
     /**

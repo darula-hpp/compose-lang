@@ -71,8 +71,12 @@ ${target.extraRules.map(rule => `- ${rule}`).join('\n')}
 
 **Output Format:**
 Provide the complete project structure with all files and their contents.
-Do NOT include markdown code fences, explanations, or commentary - output ONLY the raw code files.
-`);
+Use the following format for each file:
+
+### FILE: path/to/file.ext
+... content ...
+
+Do NOT include markdown code fences, explanations, or commentary - output ONLY the file blocks.`);
 
     return sections.join('\n');
 }

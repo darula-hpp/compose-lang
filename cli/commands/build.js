@@ -89,6 +89,11 @@ export async function build(args) {
             llm: config.llm
         });
 
+        if (!output.files || output.files.length === 0) {
+            console.warn(`   ⚠️  No files generated for target ${targetName}`);
+            continue;
+        }
+
         console.log(`   Generated ${output.files.length} file(s)`);
 
         // Write or merge output intelligently

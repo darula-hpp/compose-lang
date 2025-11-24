@@ -6,7 +6,7 @@
         "model": "gemini-2.5-flash",
         "apiKey": "${GEMINI_API_KEY}",
         "temperature": 0.2,
-        "maxTokens": 8192
+        "maxTokens": 20000
     },
     "targets": {
         "web": {
@@ -14,13 +14,19 @@
             "language": "typescript",
             "output": "./generated/web",
             "framework": "nextjs",
+            "type": "react",
             "dependencies": [
                 "date-fns"
             ],
             "extraRules": [
+                "Use the latest version of nextjs and react",
+                "use nextjs app directory for the frontend",
                 "Use Tailwind CSS for styling",
                 "Add hover effects to interactive elements",
-                "Implement dark mode support"
+                "Implement dark mode support",
+                
+                "add dependencies autoprefixer and postcss",
+                "Add all the other required dependencies to the package.json"
             ]
         }
     }
