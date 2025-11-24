@@ -72,21 +72,20 @@ The Compose compiler is a **multi-stage pipeline** that transforms `.compose` fi
 **Example**:
 
 ```compose
-define structure User
-  has name as text
+model User:
+  name: text
 ```
 
 ↓ Tokenized to:
 
 ```
-DEFINE
-STRUCTURE
+MODEL
 IDENTIFIER("User")
+COLON
 NEWLINE
 INDENT
-HAS
 IDENTIFIER("name")
-AS
+COLON
 TYPE("text")
 NEWLINE
 DEDENT
@@ -110,26 +109,31 @@ DEDENT
 **Key Files**:
 - `parser.js` — Recursive descent parser
 - `ast-nodes.js` — AST node class definitions
-- `grammar-rules.js` — Grammar pattern matchers
 
 **Example AST** (JSON representation):
 
 ```json
 {
   "type": "Program",
-  "body": [
+  "models": [
     {
-      "type": "StructureDefinition",
+      "type": "ModelDeclaration",
       "name": "User",
       "fields": [
         {
-          "type": "FieldDefinition",
+          "type": "FieldDeclaration",
           "name": "name",
-          "fieldType": "text"
+          "fieldType": {
+            "baseType": "text",
+            "isArray": false,
+            "optional": false
+          }
         }
       ]
     }
-  ]
+  ],
+  "features": [],
+  "guides": []
 }
 ```
 
@@ -146,21 +150,19 @@ DEDENT
 - Type checking
 - Scope resolution
 - Detect undefined references
-- Validate function signatures
 - Check for duplicate definitions
-- Ensure frontend/backend separation
+- Resolve imports
 
 **Key Files**:
 - `type-checker.js` — Type validation
 - `scope-resolver.js` — Variable scope tracking
-- `validator.js` — Semantic rules enforcement
 - `symbol-table.js` — Symbol tracking
 
 **Checks**:
 - ✅ All referenced types are defined
-- ✅ Function inputs/returns match usage
 - ✅ No circular imports
-- ✅ Frontend doesn't reference backend internals
+- ✅ Model references exist
+- ✅ No duplicate model names
 
 ---
 
@@ -173,36 +175,52 @@ DEDENT
 
 **Responsibilities**:
 - Transform AST into target-agnostic IR
-- Normalize structures, functions, pages, components
-- Include context comments for LLM guidance
-- Generate module metadata
+- Normalize models, features, guides
+- Include metadata for LLM guidance
+- Generate module information
 
 **Key Files**:
 - `ir-builder.js` — AST → IR transformer
 - `ir-schema.js` — IR format specification
-- `module-registry.js` — Track all modules
 
-**IR Structure**:
+**IR Structure** (Current v0.2.0 Format):
 
 ```json
 {
-  "module": "shared/user.compose",
-  "structures": [...],
-  "functions": [...],
-  "variables": [...],
-  "frontend": {
-    "pages": [...],
-    "components": [...],
-    "state": [...],
-    "themes": [...]
-  },
-  "backend": {
-    "apis": [...],
-    "queries": [...],
-    "connections": [...]
-  },
-  "imports": [...],
-  "context": [...]
+  "models": [
+    {
+      "name": "User",
+      "fields": [
+        {
+          "name": "name",
+          "type": { "baseType": "text", "optional": false, "isArray": false }
+        },
+        {
+          "name": "email",
+          "type": { "baseType": "text", "optional": false, "isArray": false }
+        }
+      ]
+    }
+  ],
+  "features": [
+    {
+      "name": "Authentication",
+      "items": [
+        "Email/password login",
+        "Session management"
+      ]
+    }
+  ],
+  "guides": [
+    {
+      "name": "Security",
+      "hints": [
+        "Use bcrypt cost factor 12",
+        "Rate limit to 5 attempts per 15 minutes"
+      ]
+    }
+  ],
+  "imports": ["models/shared.compose"]
 }
 ```
 

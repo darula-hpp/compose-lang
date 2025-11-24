@@ -1,6 +1,6 @@
 # Compose Language Grammar (EBNF)
 
-This document defines the formal grammar for Compose v1 using Extended Backus-Naur Form (EBNF).
+This document defines the formal grammar for Compose v0.2.0 using Extended Backus-Naur Form (EBNF).
 
 ---
 
@@ -25,18 +25,15 @@ This document defines the formal grammar for Compose v1 using Extended Backus-Na
 
 <statement> ::= <import_statement>
               | <comment>
-              | <context_comment>
-              | <define_statement>
-              | <frontend_statement>
-              | <backend_statement>
+              | <model_declaration>
+              | <feature_declaration>
+              | <guide_declaration>
 ```
 
 ### Comments
 
 ```ebnf
-<comment> ::= "//" <text> <newline>
-
-<context_comment> ::= "##" <text> "##" <newline>
+<comment> ::= "#" <text> <newline>
 ```
 
 ### Imports
@@ -47,106 +44,56 @@ This document defines the formal grammar for Compose v1 using Extended Backus-Na
 <string_literal> ::= '"' <text> '"'
 ```
 
-### Define Statements
+### Model Declarations
 
 ```ebnf
-<define_statement> ::= <define_structure>
-                     | <define_variable>
-                     | <define_function>
+<model_declaration> ::= "model" <identifier> ":" <newline>
+                        <indent> { <field_definition> } <dedent>
 
-<define_structure> ::= "define" "structure" <identifier> <newline>
-                       { <field_definition> }
+<field_definition> ::= <identifier> ":" <field_type> <newline>
 
-<field_definition> ::= "has" <identifier> "as" <type> <newline>
+<field_type> ::= <type> [ <optional_marker> ]
 
-<define_variable> ::= "define" <identifier> "as" <type_or_description> <newline>
+<optional_marker> ::= "?"
 
-<type_or_description> ::= <type>
-                        | <string_literal>
-
-<define_function> ::= "define" "function" <identifier> <newline>
-                      [ "inputs:" <parameter_list> <newline> ]
-                      [ "returns:" <type> <newline> ]
-                      "description:" <string_literal> <newline>
-
-<parameter_list> ::= <parameter> { "," <parameter> }
-
-<parameter> ::= <identifier> "as" <type>
-```
-
-### Types
-
-```ebnf
 <type> ::= <primitive_type>
          | <identifier>
          | "list" "of" <type>
+         | <enum_type>
 
-<primitive_type> ::= "number"
-                   | "text"
-                   | "boolean"
+<primitive_type> ::= "text"
+                   | "number"
+                   | "bool"
                    | "date"
-                   | "datetime"
-                   | "void"
+                   | "timestamp"
+                   | "image"
+                   | "file"
+                   | "markdown"
+                   | "json"
+
+<enum_type> ::= <string_literal> { "|" <string_literal> }
 ```
 
-### Frontend Statements
+### Feature Declarations
 
 ```ebnf
-<frontend_statement> ::= <frontend_page>
-                       | <frontend_component>
-                       | <frontend_state>
-                       | <frontend_render>
-                       | <frontend_theme>
+<feature_declaration> ::= "feature" <string_literal> ":" <newline>
+                          <indent> { <feature_item> } <dedent>
 
-<frontend_page> ::= "frontend.page" <string_literal> <newline>
-                    { <page_attribute> }
+<feature_item> ::= "-" <text> <newline>
+                 | "-" <reference_code> <newline>
 
-<page_attribute> ::= "is" "protected" <newline>
-                   | "description:" <string_literal> <newline>
-
-<frontend_component> ::= "frontend.component" <string_literal> <newline>
-                         { <component_attribute> }
-
-<component_attribute> ::= "accepts" <identifier> "as" <type> <newline>
-                        | "description:" <string_literal> <newline>
-
-<frontend_state> ::= "frontend.state" <identifier> "as" <string_literal> <newline>
-
-<frontend_render> ::= "frontend.render" <string_literal> <newline>
-                      "description:" <string_literal> <newline>
-
-<frontend_theme> ::= "frontend.theme" <string_literal> <newline>
-                     { <theme_property> }
-
-<theme_property> ::= <identifier> ":" <string_literal> <newline>
+<reference_code> ::= "Reference:" "@" <file_path>
 ```
 
-### Backend Statements
+### Guide Declarations
 
 ```ebnf
-<backend_statement> ::= <backend_read_env>
-                      | <backend_file_operation>
-                      | <backend_api>
-                      | <backend_query>
-                      | <backend_connect>
-                      | <backend_socket>
+<guide_declaration> ::= "guide" <string_literal> ":" <newline>
+                        <indent> { <guide_item> } <dedent>
 
-<backend_read_env> ::= "backend.read_env" <identifier> <newline>
-
-<backend_file_operation> ::= "backend.read_file" <string_literal> <newline>
-                           | "backend.save_file" <string_literal> <newline>
-
-<backend_api> ::= "backend.create_api" <string_literal> <newline>
-                  "description:" <string_literal> <newline>
-
-<backend_query> ::= "backend.query" <string_literal> <newline>
-                    "description:" <string_literal> <newline>
-
-<backend_connect> ::= "backend.connect" <string_literal> <newline>
-                      "with" <identifier> ":" <identifier> <newline>
-
-<backend_socket> ::= "backend.emit" <string_literal> <newline>
-                     "description:" <string_literal> <newline>
+<guide_item> ::= "-" <text> <newline>
+               | "-" <reference_code> <newline>
 ```
 
 ### Lexical Elements
@@ -158,54 +105,207 @@ This document defines the formal grammar for Compose v1 using Extended Backus-Na
 
 <digit> ::= "0" | "1" | ... | "9"
 
-<text> ::= { <any_character> }
+<text> ::= { <any_character_except_newline> }
+
+<file_path> ::= <path_segment> { "/" <path_segment> } [ <file_extension> ]
+
+<path_segment> ::= <identifier> | "." | ".."
+
+<file_extension> ::= "." <identifier>
 
 <newline> ::= "\n" | "\r\n"
+
+<indent> ::= <whitespace> { <whitespace> }
+
+<dedent> ::= <end_of_indentation>
 ```
 
 ---
 
 ## Indentation Rules
 
-Compose uses **significant indentation** (similar to Python):
+Compose uses **significant indentation** (Python-style):
 
-- Block contents are indented with 2 spaces
+- Block contents are indented with **2 spaces** (recommended)
 - Parent-child relationships are determined by indentation level
 - Inconsistent indentation is a syntax error
+- Indent/dedent tokens are emitted by the lexer
 
----
-
-## Example
-
+**Valid indentation:**
 ```compose
-import "shared/types.compose"
+model User:
+  name: text      # Indented 2 spaces
+  email: text     # Same level
+```
 
-## Customer management module ##
-
-define structure Customer
-  has id as number
-  has name as text
-  has email as text
-
-frontend.page "Customers"
-  is protected
-  description: "Display and manage customer list"
-
-backend.create_api "GetCustomers"
-  description: "Return all customers from database"
-
-define function validateEmail
-  inputs: email as text
-  returns: boolean
-  description: "Check if email format is valid"
+**Invalid indentation:**
+```compose
+model User:
+   name: text     # 3 spaces - error!
+  email: text     # 2 spaces - inconsistent!
 ```
 
 ---
 
-## Notes
+## Complete Example
 
-1. **Case Sensitivity**: Keywords are case-sensitive and lowercase
-2. **Whitespace**: Significant for indentation; otherwise ignored
-3. **String Literals**: Must use double quotes
-4. **Comments**: Single-line only (no multi-line comment blocks)
-5. **Identifiers**: CamelCase recommended but not enforced
+```compose
+# Import shared models
+import "models/shared.compose"
+
+# Data model
+model Customer:
+  id: number
+  name: text
+  email: text
+  role: "admin" | "member"
+  tags: list of text
+  avatar: image?
+
+# Application behavior
+feature "Customer Management":
+  - Display customer list with search and filters
+  - Create new customers with form validation
+  - Edit existing customer details
+  - Delete customers with confirmation dialog
+  - Export customer list to CSV
+
+# Implementation details
+guide "Data Validation":
+  - Email must match regex pattern
+  - Name required, 2-50 characters
+  - Role defaults to "member"
+
+guide "UI/UX":
+  - Use card layout for customer list
+  - Add loading skeleton during data fetch
+  - Show success/error toasts for actions
+
+guide "Performance":
+  - Paginate customer list (20 per page)
+  - Debounce search input (300ms)
+  - Cache customer data for 5 minutes
+```
+
+---
+
+## Reference Code Syntax
+
+The `@` operator references external code files:
+
+```ebnf
+<reference_syntax> ::= "@" <file_path> [ "::" <function_name> ]
+```
+
+**Examples:**
+
+```compose
+feature "Pricing Calculation":
+  - Reference: @reference/pricing.py
+
+guide "Tax Rules":
+  - Reference: @reference/tax-calculator.py::calculate_tax
+```
+
+The referenced code is **translated** by the LLM into the target language, not directly imported.
+
+---
+
+## Type System
+
+### Primitive Types
+
+| Type | Description | Maps to |
+|------|-------------|---------|
+| `text` | String | string, str, String |
+| `number` | Numeric | number, int/float, i32/f64 |
+| `bool` | Boolean | boolean, bool, bool |
+| `date` | Date only | Date, date, LocalDate |
+| `timestamp` | Date + time | DateTime, datetime, Instant |
+| `image` | Image file | File/URL | string (URL) |
+| `file` | Generic file | File/URL | string (URL) |
+| `markdown` | Markdown text | string | string |
+| `json` | JSON data | object | dict/Map |
+
+### Composite Types
+
+**Lists:**
+```compose
+tags: list of text
+items: list of Product
+```
+
+**Optional:**
+```compose
+avatar: image?
+bio: text?
+```
+
+**Enums:**
+```compose
+status: "pending" | "approved" | "rejected"
+role: "admin" | "member" | "guest"
+```
+
+**Model References:**
+```compose
+userId: User        # Reference to User model
+items: list of Product
+```
+
+---
+
+## Keywords
+
+Reserved keywords (case-sensitive):
+
+- `model` — Define data structure
+- `feature` — Define application behavior
+- `guide` — Define implementation hints
+- `import` — Import other .compose files
+- `list of` — List type modifier
+
+**Type keywords:**
+- `text`, `number`, `bool`, `date`, `timestamp`
+- `image`, `file`, `markdown`, `json`
+
+---
+
+## Operators
+
+| Operator | Meaning | Example |
+|----------|---------|---------|
+| `:` | Type annotation | `name: text` |
+| `?` | Optional marker | `email: text?` |
+| `\|` | Enum separator | `"a" \| "b"` |
+| `@` | Reference code | `@reference/file.py` |
+| `::` | Function reference | `@file.py::func` |
+
+---
+
+## Whitespace Rules
+
+1. **Significant:** Indentation (must be consistent)
+2. **Ignored:** Spaces between tokens (except indentation)
+3. **Line terminators:** `\n` or `\r\n`
+
+---
+
+## Grammar Summary
+
+**Three keywords:**
+- `model` — Data ("WHAT we store")
+- `feature` — Behavior ("WHAT the app does")
+- `guide` — Hints ("HOW to implement")
+
+**File structure:**
+1. Optional imports
+2. Models (data structures)
+3. Features (requirements)
+4. Guides (implementation details)
+
+**Philosophy:**
+- Minimal syntax
+- Natural language descriptions
+- LLM-friendly format
+- Framework-agnostic specifications
