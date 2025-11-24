@@ -187,6 +187,11 @@ export class SemanticAnalyzer {
                 // Get the base type (handle list of X)
                 let baseType = fieldType.baseType;
 
+                // Skip validation for enum types
+                if (fieldType.enumValues && fieldType.enumValues.length > 0) {
+                    continue;
+                }
+
                 // Skip primitive types
                 const primitiveTypes = ['text', 'number', 'bool', 'date', 'timestamp', 'image', 'file', 'markdown', 'json'];
                 if (primitiveTypes.includes(baseType)) {

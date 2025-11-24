@@ -3,6 +3,9 @@
  * Only validates model field types - features and guides are natural language
  */
 
+import { Symbol } from './symbol-table.js';
+import { ModelDeclaration } from '../parser/ast-nodes.js';
+
 const PRIMITIVE_TYPES = ['text', 'number', 'bool', 'date', 'timestamp', 'image', 'file', 'markdown', 'json'];
 
 export class TypeChecker {

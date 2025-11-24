@@ -93,25 +93,51 @@ export class Lexer {
                 this.addToken(TokenType.COMMA, ',');
                 break;
 
+            case '?':
+                this.addToken(TokenType.QUESTION, '?');
+                break;
+
+            case '-':
+                this.addToken(TokenType.DASH, '-');
+                break;
+
+            case '|':
+                this.addToken(TokenType.PIPE, '|');
+                break;
+
+            case '(':
+                this.addToken(TokenType.LPAREN, '(');
+                break;
+
+            case ')':
+                this.addToken(TokenType.RPAREN, ')');
+                break;
+
+            case '[':
+                this.addToken(TokenType.LBRACKET, '[');
+                break;
+
+            case ']':
+                this.addToken(TokenType.RBRACKET, ']');
+                break;
+
             case '"':
                 this.scanString();
+                break;
+
+            case '#':
+                this.scanComment();
                 break;
 
             case '/':
                 if (this.peek() === '/') {
                     this.scanComment();
                 } else {
-                    this.error(`Unexpected character: ${char}`);
+                    this.addToken(TokenType.SLASH, '/');
                 }
                 break;
 
-            case '#':
-                if (this.peek() === '#') {
-                    this.scanContextComment();
-                } else {
-                    this.error(`Unexpected character: ${char}`);
-                }
-                break;
+            case '/':
 
             default:
                 if (this.isDigit(char)) {

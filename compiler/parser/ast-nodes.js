@@ -12,6 +12,7 @@ export class ModelDeclaration {
         this.type = 'ModelDeclaration';
         this.name = name;
         this.fields = fields; // Array of FieldDeclaration
+        this.location = null;
     }
 }
 
@@ -26,6 +27,7 @@ export class FieldDeclaration {
         this.fieldType = fieldType; // TypeAnnotation
         this.optional = optional;
         this.constraints = constraints; // ['unique', 'required']
+        this.location = null;
     }
 }
 
@@ -69,11 +71,12 @@ export class GuideDeclaration {
  * Program Node (Root)
  */
 export class Program {
-    constructor(models = [], features = [], guides = []) {
+    constructor(models = [], features = [], guides = [], imports = []) {
         this.type = 'Program';
         this.models = models;
         this.features = features;
         this.guides = guides;
+        this.imports = imports;
     }
 }
 

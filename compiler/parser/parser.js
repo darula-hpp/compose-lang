@@ -29,7 +29,7 @@ export class Parser {
         while (!this.isAtEnd()) {
             // Skip comments and newlines
             while (this.match(TokenType.COMMENT, TokenType.NEWLINE)) {
-                this.advance();
+                // match() already advanced, no need to advance again
             }
 
             if (this.isAtEnd()) break;
@@ -103,7 +103,7 @@ export class Parser {
      * assignee: User?
      */
     parseField() {
-        const name = this.consume(TokenType.IDENTIFIER).value;
+        const name = this.consumeIdentifier();
         this.consume(TokenType.COLON);
 
         const fieldType = this.parseType();
@@ -145,7 +145,7 @@ export class Parser {
         // Handle list types: list of Todo or Todo[]
         if (this.match(TokenType.LIST)) {
             this.consume(TokenType.OF);
-            const baseType = this.consume(TokenType.IDENTIFIER).value;
+            const baseType = this.consumeIdentifier();
             return new TypeAnnotation(baseType, true);
         }
 
@@ -290,10 +290,8 @@ export class Parser {
 
     check(type) {
         if (this.isAtEnd()) return false;
-        if (typeof type === 'string') {
-            return this.peek().value === type;
-        }
-        return this.peek().type === type;
+        const token = this.peek();
+        return token.type === type || token.value === type;
     }
 
     advance() {
@@ -313,18 +311,33 @@ export class Parser {
         return this.tokens[this.current - 1];
     }
 
-    consume(type) {
-        if (typeof type === 'string') {
-            if (this.peek().value === type) {
-                return this.advance();
-            }
-            throw new Error(`Expected '${type}', got ${this.peek().value}`);
+    consumeIdentifier() {
+        if (this.check(TokenType.IDENTIFIER)) {
+            return this.advance().value;
         }
 
+        // Allow keywords as identifiers
+        const token = this.peek();
+        // Check if it's a keyword (not a symbol/literal/special)
+        const nonIdentifierTypes = [
+            TokenType.COLON, TokenType.DASH, TokenType.PIPE, TokenType.QUESTION,
+            TokenType.LPAREN, TokenType.RPAREN, TokenType.LBRACKET, TokenType.RBRACKET,
+            TokenType.COMMA, TokenType.STRING, TokenType.NEWLINE, TokenType.INDENT,
+            TokenType.DEDENT, TokenType.EOF, TokenType.COMMENT
+        ];
+
+        if (!nonIdentifierTypes.includes(token.type)) {
+            return this.advance().value;
+        }
+
+        throw new Error(`Expected identifier, got ${token.type} ('${token.value}')`);
+    }
+
+    consume(type, message) {
         if (this.check(type)) {
             return this.advance();
         }
-        throw new Error(`Expected ${type}, got ${this.peek().type}`);
+        throw new Error(message || `Expected '${type}', got ${this.peek().value}`);
     }
 
     skipNewlines() {
@@ -332,4 +345,5 @@ export class Parser {
             // skip
         }
     }
+
 }

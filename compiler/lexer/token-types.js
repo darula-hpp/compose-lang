@@ -26,6 +26,7 @@ export const TokenType = {
     COLON: 'COLON',
     DASH: 'DASH',
     PIPE: 'PIPE',
+    SLASH: 'SLASH',
     QUESTION: 'QUESTION',
     LPAREN: 'LPAREN',
     RPAREN: 'RPAREN',
@@ -60,3 +61,20 @@ export const KEYWORDS = {
     'list': TokenType.LIST,
     'of': TokenType.OF,
 };
+
+/**
+ * Token class representing a lexical token
+ */
+export class Token {
+    constructor(type, value, line, column, file = '<input>') {
+        this.type = type;
+        this.value = value;
+        this.line = line;
+        this.column = column;
+        this.file = file;
+    }
+
+    toString() {
+        return `Token(${this.type}, '${this.value}', ${this.file}:${this.line}:${this.column})`;
+    }
+}

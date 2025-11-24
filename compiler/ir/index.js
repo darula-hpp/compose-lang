@@ -2,11 +2,12 @@
  * IR module exports
  */
 
-export { IRBuilder, buildIR } from './ir-builder.js';
+export { buildIR } from './ir-builder.js';
 export {
-    serializeType,
-    serializeLocation,
-    generateHash,
-    createEmptyIR,
-    validateIR
+    createIR,
+    ModelIR,
+    FieldIR,
+    TypeIR,
+    FeatureIR,
+    GuideIR
 } from './ir-schema.js';

@@ -105,7 +105,7 @@ function formatModels(models) {
  */
 function formatFeatures(features) {
     return features.map(feature => {
-        const items = feature.items.map(item => `  - ${item}`).join('\n');
+        const items = feature.description.map(item => `  - ${item}`).join('\n');
         return `${feature.name}:\n${items}`;
     }).join('\n\n');
 }
