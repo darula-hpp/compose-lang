@@ -1,0 +1,98 @@
+{
+    "Model": {
+        "prefix": [
+            "model",
+            "compose-model"
+        ],
+        "body": [
+            "model ${1:Name}:",
+            "  ${2:field}: ${3:text}"
+        ],
+        "description": "Create a new model"
+    },
+    "Model with Multiple Fields": {
+        "prefix": "modelx",
+        "body": [
+            "model ${1:Name}:",
+            "  id: number",
+            "  ${2:field1}: ${3:text}",
+            "  ${4:field2}: ${5:number}",
+            "  createdAt: timestamp"
+        ],
+        "description": "Create model with common fields"
+    },
+    "Feature": {
+        "prefix": [
+            "feature",
+            "compose-feature"
+        ],
+        "body": [
+            "feature \"${1:Name}\":",
+            "  - ${2:description}"
+        ],
+        "description": "Create a new feature"
+    },
+    "Guide": {
+        "prefix": [
+            "guide",
+            "compose-guide"
+        ],
+        "body": [
+            "guide \"${1:Name}\":",
+            "  - ${2:hint}"
+        ],
+        "description": "Create a new guide"
+    },
+    "Import": {
+        "prefix": "import",
+        "body": [
+            "import \"${1:path/to/file.compose}\""
+        ],
+        "description": "Import another .compose file"
+    },
+    "Complete App Template": {
+        "prefix": "compose-app",
+        "body": [
+            "# ${1:App Name}",
+            "",
+            "model ${2:ModelName}:",
+            "  id: number",
+            "  ${3:field}: ${4:text}",
+            "",
+            "feature \"${5:FeatureName}\":",
+            "  - ${6:description}",
+            "",
+            "guide \"${7:GuideName}\":",
+            "  - ${8:hint}"
+        ],
+        "description": "Complete app template"
+    },
+    "Enum Type": {
+        "prefix": "enum",
+        "body": [
+            "\"${1:value1}\" | \"${2:value2}\" | \"${3:value3}\""
+        ],
+        "description": "Enum type definition"
+    },
+    "Optional Field": {
+        "prefix": "optional",
+        "body": [
+            "${1:field}: ${2:text}?"
+        ],
+        "description": "Optional field"
+    },
+    "List Field": {
+        "prefix": "list",
+        "body": [
+            "${1:field}: list of ${2:Type}"
+        ],
+        "description": "List/array field"
+    },
+    "Reference Code": {
+        "prefix": "ref",
+        "body": [
+            "- Reference: @reference/${1:filename}.${2:py}"
+        ],
+        "description": "Reference external code"
+    }
+}

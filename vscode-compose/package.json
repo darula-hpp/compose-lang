@@ -1,0 +1,102 @@
+{
+    "name": "compose-lang",
+    "displayName": "Compose Language Support",
+    "description": "Language support for Compose - the vibe engineering language",
+    "version": "0.1.0",
+    "publisher": "compose-lang",
+    "engines": {
+        "vscode": "^1.85.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Snippets"
+    ],
+    "keywords": [
+        "compose",
+        "architecture",
+        "specification",
+        "llm",
+        "code generation"
+    ],
+    "main": "./src/extension.js",
+    "contributes": {
+        "languages": [
+            {
+                "id": "compose",
+                "aliases": [
+                    "Compose",
+                    "compose"
+                ],
+                "extensions": [
+                    ".compose"
+                ],
+                "configuration": "./language-configuration.json",
+                "icon": {
+                    "light": "./images/compose-file-light.svg",
+                    "dark": "./images/compose-file-dark.svg"
+                }
+            }
+        ],
+        "grammars": [
+            {
+                "language": "compose",
+                "scopeName": "source.compose",
+                "path": "./syntaxes/compose.tmLanguage.json"
+            }
+        ],
+        "snippets": [
+            {
+                "language": "compose",
+                "path": "./snippets/compose.json"
+            }
+        ],
+        "commands": [
+            {
+                "command": "compose.build",
+                "title": "Compose: Build"
+            },
+            {
+                "command": "compose.dev",
+                "title": "Compose: Build (Watch Mode)"
+            },
+            {
+                "command": "compose.init",
+                "title": "Compose: Create New Project"
+            }
+        ],
+        "configuration": {
+            "title": "Compose",
+            "properties": {
+                "compose.buildOnSave": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Automatically build on save"
+                },
+                "compose.validateOnType": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show validation errors while typing"
+                },
+                "compose.formatter.indentSize": {
+                    "type": "number",
+                    "default": 2,
+                    "description": "Number of spaces for indentation"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "test": "echo \"No tests yet\"",
+        "package": "vsce package",
+        "publish": "vsce publish"
+    },
+    "devDependencies": {
+        "@types/vscode": "^1.85.0",
+        "@vscode/vsce": "^2.22.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/compose-lang/vscode-compose"
+    },
+    "license": "MIT"
+}

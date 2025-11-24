@@ -1,0 +1,95 @@
+{
+    "scopeName": "source.compose",
+    "patterns": [
+        {
+            "include": "#comments"
+        },
+        {
+            "include": "#keywords"
+        },
+        {
+            "include": "#strings"
+        },
+        {
+            "include": "#types"
+        },
+        {
+            "include": "#operators"
+        },
+        {
+            "include": "#references"
+        },
+        {
+            "include": "#enums"
+        }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.line.number-sign.compose",
+                    "match": "#.*$"
+                }
+            ]
+        },
+        "keywords": {
+            "patterns": [
+                {
+                    "name": "keyword.control.compose",
+                    "match": "\\b(model|feature|guide|import)\\b"
+                }
+            ]
+        },
+        "types": {
+            "patterns": [
+                {
+                    "name": "support.type.primitive.compose",
+                    "match": "\\b(text|number|bool|date|timestamp|image|file|markdown|json)\\b"
+                },
+                {
+                    "name": "support.type.modifier.compose",
+                    "match": "\\b(list of)\\b"
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.compose",
+                    "begin": "\"",
+                    "end": "\"",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.compose",
+                            "match": "\\\\."
+                        }
+                    ]
+                }
+            ]
+        },
+        "operators": {
+            "patterns": [
+                {
+                    "name": "keyword.operator.compose",
+                    "match": ":|\\?|\\|"
+                }
+            ]
+        },
+        "references": {
+            "patterns": [
+                {
+                    "name": "support.function.reference.compose",
+                    "match": "@[a-zA-Z0-9_/\\-.]+"
+                }
+            ]
+        },
+        "enums": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.enum.compose",
+                    "match": "\"[a-zA-Z0-9_]+\"\\s*(\\||$)"
+                }
+            ]
+        }
+    }
+}

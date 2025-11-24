@@ -55,3 +55,7 @@ guide "Accessibility":
   - Add ARIA labels for screen readers
   - Color contrast ratio must be at least 4.5:1
   - Focus indicators on all interactive elements
+
+guide "Performance":
+  - The app must perform like hell
+  - Lazy load
