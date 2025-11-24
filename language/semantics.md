@@ -1,376 +1,455 @@
-# Compose Language — Specification (v1 Draft)
+# Compose Language Specification
 
-Compose is an English-based, unopinionated, structured programming language designed specifically for LLM-assisted code generation. It is *not* a conventional programming language — instead, it acts as a **high‑level, deterministic instruction layer** that an LLM translates into real source code for multiple targets (frontend, backend, mobile, scripting, etc.).
+> **Version 0.2.0** - Vibe Engineering Language
 
-Compose ensures consistency by providing:
+## Overview
 
-* A minimal, predictable grammar
-* A structured way to describe applications in English
-* Clear macros for frontend, backend, functions, data structures, APIs, components, state, sockets, and IO
-* A target‑agnostic Intermediate Representation (IR)
+Compose is a three-keyword architecture specification language designed for LLM-based code generation. It separates business logic (what) from technical implementation (how).
 
-This document describes the **language features**, **syntax**, and **core semantics** agreed for Compose v1.
+## Core Philosophy
 
----
+**Three keywords. That's it:**
+- `model` - Data structures
+- `feature` - Application behavior
+- `guide` - Implementation details
 
-## 1. Principles of Compose
-
-### 1.1 Human-readable but structured
-
-Compose aims to be natural English, but still enforce structure. LLMs can interpret long descriptions, but the syntax ensures predictable parsing.
-
-### 1.2 LLM-assisted code generation
-
-The compiler outputs IR, but an LLM performs the actual code generation into any target (React, Python, Node.js, Django, etc.).
-
-### 1.3 Unopinionated
-
-Compose does not force architecture patterns. Instead, it describes intent:
-
-* what the app does
-* what data exists
-* what pages/components look like
-* what backend endpoints do
-
-### 1.4 Modular
-
-Files are treated independently. If only one file is updated, only that segment is re-generated.
-
-### 1.5 Expressive
-
-You can describe functions, behaviors, UI, logic, and state using pure English.
+**No classes. No functions. No syntax complexity.**
 
 ---
 
-## 2. File Structure
+## Keywords
 
-Compose projects contain many `.compose` files, each representing a module:
+### 1. `model` - Data Structures
 
-```
-project.compose           # top-level
-frontend/…                # frontend pages & components
-backend/…                 # apis, queries, services
-shared/…                  # structures, functions
-```
-
-Imports are done using:
+Define the shape of your data:
 
 ```compose
-import "shared/customer.compose"
+model User:
+  id: number
+  email: text (unique)
+  name: text
+  role: "admin" | "member"
+  createdAt: timestamp
 ```
+
+**Supported types:**
+- Primitives: `text`, `number`, `bool`, `date`, `timestamp`
+- Rich types: `image`, `file`, `markdown`, `json`
+- References: Other model names (e.g., `User`, `Todo`)
+- Enums: `"value1" | "value2" | "value3"`
+- Arrays: `list of Type` or `Type[]`
+- Optional: `Type?`
+
+**Constraints:**
+- `(unique)` - Unique constraint
+- `(required)` - Not nullable
 
 ---
 
-## 3. Comments
+### 2. `feature` - Application Behavior
 
-Compose supports two types of comments.
-
-### 3.1 Normal comments (ignored entirely)
+Describe what users can do:
 
 ```compose
-// normal comment
+feature "User Authentication":
+  - Email/password signup
+  - Social login (Google, GitHub)
+  - Password reset via email
+  - Session management with JWT
+
+feature "Dashboard":
+  - Show user statistics
+  - Recent activity feed
+  - Quick actions panel
 ```
 
-### 3.2 Context comments (interpreted into IR and passed to LLM for guidance)
-
-```compose
-## This module syncs invoice data across distributed branches ##
-```
-
-Context comments appear standalone on their own line.
+**Use for:**
+- User-facing functionality
+- Business workflows
+- UI/UX requirements
+- Integrations
+- Visual design
 
 ---
 
-## 4. Data Definition
+### 3. `guide` - Implementation Details
 
-### 4.1 Structures (similar to types/classes)
-
-```compose
-define structure Customer
-  has id as number
-  has name as text
-  has dateOfBirth as date
-```
-
-### 4.2 Variables
-
-#### Normal variable
+Specify how features should be implemented:
 
 ```compose
-define total as number
+guide "Authentication Security":
+  - Use bcrypt with cost factor 12
+  - Rate limit: 5 login attempts per 15 minutes
+  - JWT tokens expire after 24 hours
+  - Refresh tokens in httpOnly cookies
+
+guide "Performance":
+  - Cache user data for 5 minutes
+  - Use database connection pooling (min 5, max 20)
+  - Debounce search input (300ms)
 ```
 
-#### Explained variable (LLM determines initialization)
+**Use for:**
+- Implementation constraints
+- Performance requirements
+- Security rules
+- Edge case handling
+- Bug fixes
 
-```compose
-define startDate as "a date object representing today's date"
-```
-
-#### Structure variable
-
-```compose
-define currentCustomer as Customer
-```
-
-#### Arrays
-
-```compose
-define customers as list of Customer
-```
+**Key insight:** Guides grow as you develop. Start minimal, add details as you discover edge cases.
 
 ---
 
-## 5. Frontend DSL
+## Special Operators
 
-Frontend rules are namespaced with the `frontend.` prefix.
+### `@` - Reference External Code
 
-### 5.1 Pages
-
-```compose
-frontend.page "Dashboard"
-  is protected
-  description: "Shows financial metrics and charts"
-```
-
-### 5.2 Components
+Reference implementation code in any language:
 
 ```compose
-frontend.component "Loader"
-  description: "A spinning loader used across the app"
+guide "Pricing Calculation":
+  - Reference: @reference/pricing.py::calculate_discount
+  - LLM translates this to target language
+  - Preserve exact business rules
 ```
 
-### 5.3 Components With Data
-
-```compose
-frontend.component "CustomerCard"
-  accepts customer as Customer
-  description: "Renders a customer box with details"
-```
-
-### 5.4 State
-
-```compose
-frontend.state selectedTab as "stores the currently active tab"
-```
-
-### 5.5 Rendering
-
-```compose
-frontend.render "Dashboard"
-  description: "Shows tiles, charts, and tables"
-```
-
-### 5.6 Themes
-
-```compose
-frontend.theme "main"
-  primaryColor: "#1055FF"
-  accentColor: "#00A38C"
-```
+**The LLM reads the reference file and translates the logic** to your target language (TypeScript, Rust, Go, etc.).
 
 ---
 
-## 6. Backend DSL
+## File Organization
 
-Backend rules are namespaced under `backend.`
+### `.compose` Files - Business Logic
 
-### 6.1 Environment Variables
+Framework-agnostic specifications:
 
-```compose
-backend.read_env DATABASE_URL
-backend.read_env EMAIL_API_KEY
+```
+src/
+├── app.compose           # Main application
+├── models/
+│   ├── user.compose
+│   └── product.compose
+└── features/
+    ├── auth.compose
+    └── checkout.compose
 ```
 
-### 6.2 File System
+### `compose.json` - Technical Decisions
 
-```compose
-backend.read_file "config.json"
-backend.save_file "output/report.pdf"
-```
-
-### 6.3 APIs
-
-```compose
-backend.create_api "GetCustomer"
-  description: "Fetch a single customer by ID"
-```
-
-### 6.4 Queries
-
-```compose
-backend.query "FetchInvoices"
-  description: "Return all invoices for a customer"
-```
-
-### 6.5 External Services
-
-```compose
-backend.connect "email_provider"
-  with apiKey: EMAIL_API_KEY
-```
-
-### 6.6 Sockets
-
-```compose
-backend.emit "invoice.updates"
-  description: "Broadcasts invoice refresh events to clients"
-```
-
----
-
-## 7. Functions
-
-Functions describe behavior using **pure English**, not code.
-
-### 7.1 Basic Function
-
-```compose
-define function calculateAge
-  inputs: birthdate as date
-  returns: number
-  description: "Calculate age from birthdate using today's date"
-```
-
-### 7.2 Complex Function
-
-```compose
-define function generateMonthlyReport
-  inputs: invoices as list of Invoice
-  returns: Report
-  description: "Summarize totals, group by type, compute trends, and return a Report object"
-```
-
-The LLM translates descriptions into real code.
-
----
-
-## 8. Pages, Components, Backend, and Frontend Separation
-
-Compose enforces separation:
-
-* Frontend → UI, components, state, pages
-* Backend → APIs, queries, database, fs, env, sockets
-* Shared → structures and functions
-
-This helps the compiler generate modular IR and update only modified pieces.
-
----
-
-## 9. Using Multiple Files
-
-Compose supports multi-file imports:
-
-```compose
-import "shared/types.compose"
-import "backend/invoices.compose"
-```
-
-Each file's IR is stored separately enabling incremental code regeneration.
-
----
-
-## 10. compose.json
-
-Controls code generation output.
+Framework and deployment configuration:
 
 ```json
 {
   "targets": {
-    "frontend": {
-      "type": "react",
-      "output": "./generated/frontend",
-      "dependencies": ["react", "chakra-ui", "react-router-dom"]
-    },
-    "backend": {
-      "type": "node",
-      "output": "./generated/backend",
-      "dependencies": ["express", "pg"]
+    "web": {
+      "framework": "nextjs",
+      "language": "typescript"
     }
+  },
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-2.5-flash"
   }
 }
 ```
 
-Targets + IR + LLM = final project code.
+### `reference/` - Complex Logic
+
+Business logic reference implementations:
+
+```
+reference/
+├── pricing.py       # Pricing algorithms
+├── validation.js    # Validation rules
+└── queries.sql      # Database queries
+```
+
+### `assets/` - Static Files
+
+Framework-agnostic static assets:
+
+```
+assets/
+├── logo.svg
+├── favicon.ico
+└── images/
+```
 
 ---
 
-## 11. Macro Philosophy
+## Imports
 
-Compose macros are:
+Import models and definitions from other files:
 
-* Non-opinionated
-* Minimal
-* High-level
-* Easy to parse
-* LLM-friendly
+```compose
+import "models/user.compose"
+import "features/auth.compose"
 
-Examples of macros:
-
-* `define structure`
-* `define function`
-* `define component`
-* `frontend.*`
-* `backend.*`
-* `import`
-* `define <variable>`
+model Order:
+  userId: User     # References imported User model
+  total: number
+```
 
 ---
 
-## 12. What Compose Is NOT
+## Complete Example
 
-* Not a runtime language
-* Not executing instructions itself
-* Not a markup language
-* Not a templating system
+```compose
+# ═══════════════════════════════════════
+# MODELS
+# ═══════════════════════════════════════
 
-Compose is a **structured instruction layer**.
+model User:
+  id: number
+  email: text (unique)
+  role: "admin" | "member"
+
+model Todo:
+  id: number
+  title: text
+  completed: bool
+  userId: User
+  dueDate: date?
+
+# ═══════════════════════════════════════
+# FEATURES
+# ═══════════════════════════════════════
+
+feature "Todo Management":
+  - Create todos with title and optional due date
+  - Mark as complete/incomplete
+  - Delete todos
+  - Filter by status (all/active/completed)
+
+feature "User Authentication":
+  - Email/password login
+  - Session persistence
+  - Logout functionality
+
+feature "Theme":
+  - Clean, minimal design
+  - Blue/indigo color scheme
+  - Dark mode support
+
+# ═══════════════════════════════════════
+# GUIDES
+# ═══════════════════════════════════════
+
+guide "Data Validation":
+  - Todo titles: 1-200 characters
+  - Trim whitespace before saving
+  - Due date must be today or future
+
+guide "Performance":
+  - Cache todo list for 5 minutes
+  - Paginate at 50 items per page
+  - Debounce filter changes (300ms)
+
+guide "Security":
+  - Hash passwords with bcrypt cost 12
+  - Rate limit login: 5 attempts per 15 min
+  - Store sessions in Redis (24h TTL)
+```
 
 ---
 
-## 13. Purpose of Compose
+## Type System
 
-Compose is designed for:
+### Primitive Types
 
-* Developers
-* Non-developers
-* AI-first builders
-* Companies building internal tools
-* Big applications (not only small landing pages)
+```compose
+model Example:
+  textField: text           # String
+  numberField: number       # Integer or decimal
+  boolField: bool          # Boolean
+  dateField: date          # Date only
+  timestampField: timestamp # Date + time
+```
 
-The language's strength comes from:
+### Rich Types
 
-* Natural English + structure
-* IR consistency
-* Incremental generation
-* Full app modeling
+```compose
+model Article:
+  content: markdown        # Markdown content
+  metadata: json          # JSON object
+  coverImage: image       # Image file
+  attachment: file        # Generic file
+```
+
+### Enums
+
+```compose
+model User:
+  status: "active" | "suspended" | "deleted"
+  role: "admin" | "moderator" | "member"
+```
+
+### Arrays
+
+```compose
+model Order:
+  items: list of Item      # Array notation 1
+  tags: text[]            # Array notation 2
+```
+
+### Optional Fields
+
+```compose
+model User:
+  bio: text?              # Optional
+  avatar: image?          # Optional
+```
+
+### References
+
+```compose
+model Comment:
+  authorId: User          # Reference to User model
+  postId: Post           # Reference to Post model
+```
 
 ---
 
-## 14. Future Features (Post-v1)
+## Grammar Rules
 
-* OOP: classes, inheritance, methods
-* Async workflows
-* Advanced socket rooms
-* Built-in auth macros
-* Plugin system
-* Better type inference
-* Declarative animations
-* Compose Studio (GUI composer)
+### Indentation
+
+Use consistent indentation (2 or 4 spaces):
+
+```compose
+model User:
+  email: text            # Indented
+  name: text             # Same level
+
+feature "Auth":
+  - Login                # Indented
+  - Logout               # Same level
+```
+
+### Comments
+
+```compose
+# Single-line comment
+model User:
+  email: text  # Inline comment
+```
+
+### String Literals
+
+Use double quotes for strings:
+
+```compose
+feature "User Management"   # Quoted
+guide "Security Rules"      # Quoted
+```
 
 ---
 
-## 15. Summary
+## Best Practices
 
-Compose v1 provides:
+### Start Simple
 
-* A structured English-based DSL
-* A macro system for frontend + backend
-* Pure English function descriptions
-* Structures, variables, explained variables, arrays
-* Pages, components, themes
-* Backend APIs, queries, env, fs, sockets
-* imports
-* `compose.json` for codegen control
-* Clear IR separation
+```compose
+# Day 1
+model User
+feature "Login"
+```
 
-It is designed to be **the best structured language for LLM code generation**, supporting large multi-file applications.
+### Add Details as You Develop
+
+```compose
+# Week 2 (after discovering bugs)
+model User:
+  email: text (unique)
+  
+feature "Login"
+
+guide "Login Security":
+  - Rate limit 5 attempts
+  - Lock after 10 failures
+```
+
+### Use Reference Code for Complex Logic
+
+```compose
+# For complex calculations, write Python
+guide "Pricing":
+  - Reference: @reference/pricing.py
+  - DO NOT import - LLM translates
+```
+
+### Separate Concerns
+
+- **Models** = Data shape (framework-agnostic)
+- **Features** = What app does (business view)
+- **Guides** = How it works (developer view)
+- **compose.json** = Tech stack (infrastructure)
+
+---
+
+## Evolution Pattern
+
+Compose specs evolve naturally:
+
+**Initial (Product Manager):**
+```compose
+feature "Payment Processing"
+```
+
+**After Development (Engineer adds guides):**
+```compose
+feature "Payment Processing"
+
+guide "Payment Security":
+  - Use Stripe tokenization
+  - Never store card numbers
+  - PCI DSS compliant
+
+guide "Error Handling":
+  - Retry failed payments 3 times
+  - Send alert on repeated failures
+```
+
+**After Bug Report (Engineer refines):**
+```compose
+guide "Payment Security":
+  - Use Stripe tokenization
+  - Never store card numbers
+  - PCI DSS compliant
+  - CRITICAL: Verify webhook signatures
+
+guide "Idempotency":
+  - Use UUID idempotency keys
+  - Check duplicate payments
+  - Handle race conditions
+```
+
+**The .compose file becomes institutional knowledge.**
+
+---
+
+## Comparison to Traditional Languages
+
+| Traditional | Compose |
+|-------------|---------|
+| Classes, methods, functions | 3 keywords |
+| 1000s of lines of code | 50-100 lines of spec |
+| Code = source of truth | Spec = source of truth |
+| Comments often outdated | Spec generates code |
+| Framework-specific | Framework-agnostic |
+| Learn syntax deeply | Learn 3 keywords |
+
+---
+
+## Summary
+
+**Compose is not a programming language.** It's a vibe engineering language.
+
+You describe the vibe (what the app should do), the LLM handles the implementation.
+
+**Three keywords:**
+- `model` - Data
+- `feature` - Behavior
+- `guide` - Implementation
+
+**That's it.** No complexity. Just vibes. 🎯

@@ -1,543 +1,394 @@
-# Compose IR Specification
+# Intermediate Representation (IR) Specification
 
-This document defines the **Intermediate Representation (IR)** format used by the Compose compiler.
+> **Version 0.2.0** - Simplified IR for Three-Keyword Architecture
 
----
+## Overview
 
-## Purpose
+The Compose compiler generates a simplified Intermediate Representation (IR) from `.compose` files. This IR is framework-agnostic and contains only the essential information needed for code generation.
 
-The ComposeIR is a **JSON-based, target-agnostic representation** of a Compose program. It serves as the bridge between:
+## IR Schema
 
-1. The **Compose compiler** (lexer, parser, analyzer)
-2. The **LLM code generator** (which produces actual source code)
-
-The IR is designed to be:
-- **Complete**: Contains all information needed for code generation
-- **Structured**: Easy for both machines and LLMs to parse
-- **Modular**: Each `.compose` file produces separate IR
-- **Incremental**: Unchanged modules reuse cached IR
-
----
-
-## IR Structure
-
-Each `.compose` file compiles to a single IR module:
-
-```json
+```javascript
 {
-  "version": "1.0",
-  "module": "shared/customer.compose",
-  "hash": "abc123...",
-  "imports": [...],
-  "structures": [...],
-  "variables": [...],
-  "functions": [...],
-  "frontend": {...},
-  "backend": {...},
-  "context": [...]
+  models: [],      // Array of ModelIR
+  features: [],    // Array of FeatureIR
+  guides: [],      // Array of GuideIR
+  imports: []      // Array of import paths (strings)
 }
 ```
 
 ---
 
-## Top-Level Fields
+## 1. Model IR
 
-### `version`
-**Type**: `string`  
-**Description**: IR schema version (e.g., `"1.0"`)
+Represents data structures defined with `model` keyword.
 
-### `module`
-**Type**: `string`  
-**Description**: Relative path to source `.compose` file
-
-### `hash`
-**Type**: `string`  
-**Description**: Content hash for change detection
-
-### `imports`
-**Type**: `Array<string>`  
-**Description**: List of imported module paths
-
-**Example**:
-```json
-"imports": [
-  "shared/types.compose",
-  "backend/database.compose"
-]
+```javascript
+{
+  type: 'model',
+  name: string,           // Model name (e.g., "User")
+  fields: FieldIR[]       // Array of fields
+}
 ```
 
----
+### Field IR
 
-## Data Definitions
+```javascript
+{
+  name: string,           // Field name (e.g., "email")
+  type: TypeIR,           // Type information
+  optional: boolean,      // Is field optional?
+  constraints: string[]   // e.g., ['unique', 'required']
+}
+```
 
-### `structures`
-**Type**: `Array<Structure>`
+### Type IR
 
-Defines all data structures (types/classes).
+```javascript
+{
+  baseType: string,       // 'text', 'number', 'User', etc.
+  isArray: boolean,       // true if list/array
+  enumValues: string[]    // For enum types: ["admin", "member"]
+}
+```
 
-**Structure Schema**:
+### Example
+
+**Source:**
+```compose
+model User:
+  email: text (unique)
+  role: "admin" | "member"
+  posts: list of Post
+```
+
+**IR:**
 ```json
 {
-  "name": "Customer",
+  "type": "model",
+  "name": "User",
   "fields": [
     {
-      "name": "id",
-      "type": "number"
+      "name": "email",
+      "type": { "baseType": "text", "isArray": false },
+      "optional": false,
+      "constraints": ["unique"]
     },
     {
-      "name": "name",
-      "type": "text"
+      "name": "role",
+      "type": { 
+        "baseType": "enum", 
+        "isArray": false,
+        "enumValues": ["admin", "member"]
+      },
+      "optional": false,
+      "constraints": []
     },
     {
-      "name": "createdAt",
-      "type": "datetime"
+      "name": "posts",
+      "type": { "baseType": "Post", "isArray": true },
+      "optional": false,
+      "constraints": []
     }
-  ],
-  "location": {
-    "line": 3,
-    "file": "shared/customer.compose"
-  }
-}
-```
-
-### `variables`
-**Type**: `Array<Variable>`
-
-Defines module-level variables.
-
-**Variable Schema**:
-```json
-{
-  "name": "currentUser",
-  "type": "User",
-  "explanation": null,
-  "location": {...}
-}
-```
-
-**Explained Variable Example**:
-```json
-{
-  "name": "startDate",
-  "type": null,
-  "explanation": "a date object representing today's date",
-  "location": {...}
+  ]
 }
 ```
 
 ---
 
-## Functions
+## 2. Feature IR
 
-### `functions`
-**Type**: `Array<Function>`
+Represents application behavior defined with `feature` keyword.
 
-**Function Schema**:
-```json
+```javascript
 {
-  "name": "calculateAge",
-  "inputs": [
-    {
-      "name": "birthdate",
-      "type": "date"
-    }
-  ],
-  "returns": "number",
-  "description": "Calculate age from birthdate using today's date",
-  "location": {...}
+  type: 'feature',
+  name: string,           // Feature name
+  description: string[]   // Array of bullet points
 }
 ```
 
-**Complex Function Example**:
+### Example
+
+**Source:**
+```compose
+feature "User Authentication":
+  - Email/password signup
+  - Password reset via email
+  - Session management
+```
+
+**IR:**
 ```json
 {
-  "name": "generateReport",
-  "inputs": [
-    {
-      "name": "transactions",
-      "type": {
-        "kind": "list",
-        "of": "Transaction"
-      }
-    }
-  ],
-  "returns": "Report",
-  "description": "Aggregate transaction data, compute trends, and format as Report",
-  "location": {...}
+  "type": "feature",
+  "name": "User Authentication",
+  "description": [
+    "Email/password signup",
+    "Password reset via email",
+    "Session management"
+  ]
 }
 ```
 
 ---
 
-## Frontend Definitions
+## 3. Guide IR
 
-### `frontend`
-**Type**: `Object`
+Represents implementation details defined with `guide` keyword.
 
-Contains all frontend-related definitions.
-
-```json
-"frontend": {
-  "pages": [...],
-  "components": [...],
-  "state": [...],
-  "renders": [...],
-  "themes": [...]
+```javascript
+{
+  type: 'guide',
+  name: string,           // Guide name
+  hints: string[]         // Array of implementation hints
 }
 ```
 
-### `frontend.pages`
+### Example
 
-**Page Schema**:
-```json
-{
-  "name": "Dashboard",
-  "protected": true,
-  "description": "Shows financial metrics and charts",
-  "location": {...}
-}
+**Source:**
+```compose
+guide "Authentication Security":
+  - Use bcrypt with cost factor 12
+  - Rate limit: 5 attempts per 15 min
+  - JWT tokens expire after 24 hours
 ```
 
-### `frontend.components`
-
-**Component Schema**:
+**IR:**
 ```json
 {
-  "name": "CustomerCard",
-  "props": [
-    {
-      "name": "customer",
-      "type": "Customer"
-    }
-  ],
-  "description": "Renders a customer box with details",
-  "location": {...}
-}
-```
-
-**Component Without Props**:
-```json
-{
-  "name": "Loader",
-  "props": [],
-  "description": "A spinning loader used across the app",
-  "location": {...}
-}
-```
-
-### `frontend.state`
-
-**State Schema**:
-```json
-{
-  "name": "selectedTab",
-  "explanation": "stores the currently active tab",
-  "location": {...}
-}
-```
-
-### `frontend.renders`
-
-**Render Schema**:
-```json
-{
-  "target": "Dashboard",
-  "description": "Shows tiles, charts, and tables",
-  "location": {...}
-}
-```
-
-### `frontend.themes`
-
-**Theme Schema**:
-```json
-{
-  "name": "main",
-  "properties": {
-    "primaryColor": "#1055FF",
-    "accentColor": "#00A38C"
-  },
-  "location": {...}
+  "type": "guide",
+  "name": "Authentication Security",
+  "hints": [
+    "Use bcrypt with cost factor 12",
+    "Rate limit: 5 attempts per 15 min",
+    "JWT tokens expire after 24 hours"
+  ]
 }
 ```
 
 ---
 
-## Backend Definitions
+## 4. Complete IR Example
 
-### `backend`
-**Type**: `Object`
-
-Contains all backend-related definitions.
-
-```json
-"backend": {
-  "env": [...],
-  "files": {...},
-  "apis": [...],
-  "queries": [...],
-  "connections": [...],
-  "sockets": [...]
-}
-```
-
-### `backend.env`
-
-**Environment Variable Schema**:
-```json
-{
-  "name": "DATABASE_URL",
-  "location": {...}
-}
-```
-
-### `backend.files`
-
-**File Operations Schema**:
-```json
-{
-  "reads": ["config.json", "templates/email.html"],
-  "writes": ["output/report.pdf", "logs/activity.log"]
-}
-```
-
-### `backend.apis`
-
-**API Schema**:
-```json
-{
-  "name": "GetCustomer",
-  "description": "Fetch a single customer by ID",
-  "location": {...}
-}
-```
-
-### `backend.queries`
-
-**Query Schema**:
-```json
-{
-  "name": "FetchInvoices",
-  "description": "Return all invoices for a customer",
-  "location": {...}
-}
-```
-
-### `backend.connections`
-
-**Connection Schema**:
-```json
-{
-  "name": "email_provider",
-  "config": {
-    "apiKey": "EMAIL_API_KEY"
-  },
-  "location": {...}
-}
-```
-
-### `backend.sockets`
-
-**Socket Schema**:
-```json
-{
-  "event": "invoice.updates",
-  "description": "Broadcasts invoice refresh events to clients",
-  "location": {...}
-}
-```
-
----
-
-## Context Comments
-
-### `context`
-**Type**: `Array<string>`
-
-Stores all context comments (`##...##`) for LLM guidance.
-
-**Example**:
-```json
-"context": [
-  "This module handles customer authentication",
-  "Integrates with Auth0 for SSO"
-]
-```
-
----
-
-## Type Representation
-
-Types are represented as:
-
-### Primitive Types
-```json
-"number"
-"text"
-"boolean"
-"date"
-"datetime"
-"void"
-```
-
-### Custom Types
-```json
-"Customer"
-"Invoice"
-```
-
-### List Types
-```json
-{
-  "kind": "list",
-  "of": "Customer"
-}
-```
-
-Nested lists:
-```json
-{
-  "kind": "list",
-  "of": {
-    "kind": "list",
-    "of": "number"
-  }
-}
-```
-
----
-
-## Complete IR Example
-
-**Source** (`customer.compose`):
+**Source (.compose file):**
 ```compose
 import "shared/types.compose"
 
-## Customer management module ##
+model Todo:
+  title: text
+  completed: bool
+  dueDate: date?
 
-define structure Customer
-  has id as number
-  has name as text
+feature "Todo Management":
+  - Create todos
+  - Mark complete
+  - Delete todos
 
-define customers as list of Customer
-
-frontend.page "Customers"
-  is protected
-  description: "Manage customer list"
-
-backend.create_api "GetCustomers"
-  description: "Fetch all customers"
-
-define function validateEmail
-  inputs: email as text
-  returns: boolean
-  description: "Check email format validity"
+guide "Performance":
+  - Cache todo list for 5 minutes
+  - Paginate at 50 items
 ```
 
-**Generated IR**:
+**Generated IR:**
 ```json
 {
-  "version": "1.0",
-  "module": "customer.compose",
-  "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-  "imports": ["shared/types.compose"],
-  "structures": [
+  "models": [
     {
-      "name": "Customer",
+      "type": "model",
+      "name": "Todo",
       "fields": [
-        {"name": "id", "type": "number"},
-        {"name": "name", "type": "text"}
-      ],
-      "location": {"line": 5, "file": "customer.compose"}
+        {
+          "name": "title",
+          "type": { "baseType": "text", "isArray": false },
+          "optional": false,
+          "constraints": []
+        },
+        {
+          "name": "completed",
+          "type": { "baseType": "bool", "isArray": false },
+          "optional": false,
+          "constraints": []
+        },
+        {
+          "name": "dueDate",
+          "type": { "baseType": "date", "isArray": false },
+          "optional": true,
+          "constraints": []
+        }
+      ]
     }
   ],
-  "variables": [
+  "features": [
     {
-      "name": "customers",
-      "type": {"kind": "list", "of": "Customer"},
-      "explanation": null,
-      "location": {"line": 9, "file": "customer.compose"}
+      "type": "feature",
+      "name": "Todo Management",
+      "description": [
+        "Create todos",
+        "Mark complete",
+        "Delete todos"
+      ]
     }
   ],
-  "functions": [
+  "guides": [
     {
-      "name": "validateEmail",
-      "inputs": [{"name": "email", "type": "text"}],
-      "returns": "boolean",
-      "description": "Check email format validity",
-      "location": {"line": 17, "file": "customer.compose"}
+      "type": "guide",
+      "name": "Performance",
+      "hints": [
+        "Cache todo list for 5 minutes",
+        "Paginate at 50 items"
+      ]
     }
   ],
-  "frontend": {
-    "pages": [
-      {
-        "name": "Customers",
-        "protected": true,
-        "description": "Manage customer list",
-        "location": {"line": 11, "file": "customer.compose"}
-      }
-    ],
-    "components": [],
-    "state": [],
-    "renders": [],
-    "themes": []
-  },
-  "backend": {
-    "env": [],
-    "files": {"reads": [], "writes": []},
-    "apis": [
-      {
-        "name": "GetCustomers",
-        "description": "Fetch all customers",
-        "location": {"line": 15, "file": "customer.compose"}
-      }
-    ],
-    "queries": [],
-    "connections": [],
-    "sockets": []
-  },
-  "context": ["Customer management module"]
+  "imports": ["shared/types.compose"]
 }
 ```
 
 ---
 
-## IR Validation
+## Type Mappings
 
-The IR must satisfy:
+### Primitive Types
 
-1. **All referenced types exist** (in structures or primitives)
-2. **No circular dependencies** in imports
-3. **Valid location metadata** for all nodes
-4. **Consistent type representations**
+| Compose Type | Description | Common Mappings |
+|--------------|-------------|-----------------|
+| `text` | String | `string`, `str`, `String` |
+| `number` | Numeric value | `number`, `int`, `float` |
+| `bool` | Boolean | `boolean`, `bool` |
+| `date` | Date only | `Date`, `datetime.date` |
+| `timestamp` | Date + time | `Date`, `datetime` |
+
+### Rich Types
+
+| Compose Type | Description | Common Mappings |
+|--------------|-------------|-----------------|
+| `image` | Image file | `File`, `Blob`, `Image` |
+| `file` | Generic file | `File`, `Blob` |
+| `markdown` | Markdown text | `string` |
+| `json` | JSON object | `object`, `dict`, `Map` |
 
 ---
 
-## IR Caching
+## Multi-File Projects
 
-IR modules are cached based on content hash:
+When multiple `.compose` files are imported, the compiler:
+
+1. **Parses each file independently** → Generates separate IR
+2. **Resolves imports** → Links model references
+3. **Merges IR** → Creates combined IR for code generation
+
+**Example:**
 
 ```
-.compose-cache/
-  e3b0c4429.json    ← customer.compose IR
-  a1b2c3d4e.json    ← types.compose IR
+src/
+├── models/user.compose    → IR1
+├── models/post.compose    → IR2
+└── app.compose            → IR3 (imports IR1, IR2)
 ```
 
-Cache invalidation occurs when:
-- Source file changes
-- Imports change
-- Compiler version changes
+**Combined IR:**
+```json
+{
+  "models": [...IR1.models, ...IR2.models, ...IR3.models],
+  "features": [...IR3.features],
+  "guides": [...IR3.guides],
+  "imports": ["models/user.compose", "models/post.compose"]
+}
+```
+
+---
+
+## LLM Prompt Generation
+
+The IR is converted to a prompt for the LLM:
+
+```
+You are generating code for a [TARGET_FRAMEWORK] application.
+
+## Data Models
+
+User
+- email: text (unique)
+- role: "admin" | "member"
+
+Todo
+- title: text
+- completed: boolean
+- userId: User reference
+
+## Features
+
+User Authentication:
+- Email/password signup
+- Password reset via email
+- Session management
+
+Todo Management:
+- Create todos
+- Mark complete
+- Delete todos
+
+## Implementation Guides
+
+Authentication Security:
+- Use bcrypt with cost factor 12
+- Rate limit: 5 attempts per 15 min
+- JWT tokens expire after 24 hours
+
+Performance:
+- Cache todo list for 5 minutes
+- Paginate at 50 items
+
+Generate production-ready [LANGUAGE] code that implements this specification.
+```
+
+---
+
+## Reference Code Integration
+
+When `@reference/file.ext` is used in guides:
+
+1. **Parse guide text** → Extract `@reference/...` paths
+2. **Read reference files** → Load content
+3. **Include in LLM prompt** → Add to context
+
+**Example:**
+
+```compose
+guide "Pricing Logic":
+  - Reference: @reference/pricing.py::calculate_discount
+  - Translate to target language
+```
+
+**LLM receives:**
+```
+Reference implementation (translate to TypeScript):
+
+File: reference/pricing.py
+```python
+def calculate_discount(tier, amount):
+    discounts = {'bronze': 0.05, 'silver': 0.10, 'gold': 0.15}
+    return amount * discounts.get(tier, 0)
+```
+
+Translate this function to TypeScript, preserving the exact logic.
+```
 
 ---
 
 ## Summary
 
-The ComposeIR is:
-- ✅ JSON-based and structured
-- ✅ Target-agnostic
-- ✅ Contains all semantic information
-- ✅ Optimized for LLM consumption
-- ✅ Supports incremental compilation
-- ✅ Includes source location metadata
+The Compose IR is:
+- ✅ **Minimal** - Only essential information
+- ✅ **Framework-agnostic** - No runtime dependencies
+- ✅ **Serializable** - JSON format for caching
+- ✅ **Composable** - Multi-file support
+- ✅ **LLM-friendly** - Easy to convert to prompts
 
-This IR enables deterministic, high-quality code generation across multiple target platforms.
+**Three IR types for three keywords:**
+- ModelIR ← `model`
+- FeatureIR ← `feature`
+- GuideIR ← `guide`
+
+That's it. 🎯
