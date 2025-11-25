@@ -1,0 +1,64 @@
+# E-commerce Example with Reference Code
+
+
+# ══════════════════════════════════════
+# MODELS
+# ══════════════════════════════════════
+
+model Item:
+  id: number
+  name: text
+  price: number
+  quantity: number
+
+model User:
+  id: number
+  email: text
+  loyaltyTier: "bronze" | "silver" | "gold"
+  state: text
+
+model Order:
+  id: number
+  items: list of Item
+  user: User
+  subtotal: number
+  discount: number
+  tax: number
+  total: number
+
+# ══════════════════════════════════════
+# FEATURES
+# ══════════════════════════════════════
+
+feature "Shopping Cart":
+  - Add items to cart
+  - Update quantities
+  - Remove items
+  - View cart total
+
+feature "Checkout":
+  - Calculate order total with discounts and tax
+  - Apply loyalty tier discounts
+  - Process payment
+  - Send confirmation email
+
+# ══════════════════════════════════════
+# GUIDES (with @ references)
+# ══════════════════════════════════════
+
+guide "Price Calculation":
+  - Uses calculate_total() and apply_discount() functions
+  - Translate this exact logic to target language
+  - Preserve all business rules:
+  - Volume discounts more than 10 items at 10 percent off
+  - Loyalty tier bonuses bronze 5 percent, silver 10 percent, gold 15 percent
+  - State tax rates CA 8 percent, others 5 percent
+
+guide "Discount Rules":
+  - Apply discounts before tax calculation
+  - Round to 2 decimal places
+  - Minimum order 10 dollars after discounts
+
+guide "Tax Calculation":
+  - Calculate on (subtotal - discount)
+  - Store tax separately for reporting
