@@ -179,26 +179,22 @@ describe('Prompt Templates', () => {
                 features: [
                     {
                         name: 'User Management',
-                        items: [
-                            'Create new users',
-                            'Edit user profiles',
-                            'Delete users with confirmation'
+                        description: [
+                            'Create users',
+                            'Edit profiles',
+                            'Delete accounts'
                         ]
                     }
                 ],
                 guides: []
             };
 
-            const target = {
-                language: 'typescript',
-                output: './dist'
-            };
-
+            const target = { language: 'typescript' };
             const prompt = createFullProjectPrompt(ir, target);
 
             assert.ok(prompt.includes('User Management'));
-            assert.ok(prompt.includes('Create new users'));
-            assert.ok(prompt.includes('Edit user profiles'));
+            assert.ok(prompt.includes('Create users'));
+            assert.ok(prompt.includes('Edit profiles'));
         });
 
         it('should include guides', () => {
@@ -278,7 +274,7 @@ describe('Prompt Templates', () => {
                 features: [
                     {
                         name: 'Authentication',
-                        items: ['Login', 'Logout']
+                        description: ['Login', 'Logout'] // Changed 'items' to 'description'
                     }
                 ],
                 guides: [

@@ -6,6 +6,31 @@
 import { mkdirSync, writeFileSync, existsSync } from 'fs';
 import { dirname, join } from 'path';
 
+/**
+ * Normalize file path by removing common output directory prefixes
+ * @param {string} filePath - Generated file path
+ * @param {string} baseOutputDir - Base output directory
+ * @returns {string} - Normalized path
+ */
+function normalizePath(filePath, baseOutputDir) {
+    // Remove leading ./ or /
+    let normalized = filePath.replace(/^\.?\//, '');
+
+    // Extract directory parts from baseOutputDir
+    const baseDirParts = baseOutputDir.replace(/^\.?\//, '').split('/');
+
+    // Try to find and remove common prefixes
+    for (let i = baseDirParts.length; i > 0; i--) {
+        const prefix = baseDirParts.slice(-i).join('/') + '/';
+        if (normalized.startsWith(prefix)) {
+            normalized = normalized.substring(prefix.length);
+            break;
+        }
+    }
+
+    return normalized;
+}
+
 export class OutputWriter {
     constructor(baseOutputDir) {
         this.baseOutputDir = baseOutputDir;
@@ -22,8 +47,10 @@ export class OutputWriter {
 
         for (const file of files) {
             try {
-                this.writeFile(file);
-                written.push(file.path);
+                // Normalize the path before writing
+                const normalizedPath = normalizePath(file.path, this.baseOutputDir);
+                this.writeFile({ ...file, path: normalizedPath });
+                written.push(normalizedPath);
             } catch (error) {
                 errors.push({
                     path: file.path,

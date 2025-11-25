@@ -7,6 +7,33 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 
 /**
+ * Normalize file path by removing common output directory prefixes
+ * Handles cases where LLM includes the output directory in file paths
+ * @param {string} filePath - Generated file path
+ * @param {string} targetDir - Target output directory
+ * @returns {string} - Normalized path
+ */
+function normalizePath(filePath, targetDir) {
+    // Remove leading ./ or /
+    let normalized = filePath.replace(/^\.?\//, '');
+
+    // Extract the last part of targetDir (e.g., "web" from "./generated/web")
+    const targetDirParts = targetDir.replace(/^\.?\//, '').split('/');
+
+    // Try to find and remove common prefixes
+    // Check for patterns like: "generated/web/src/App.jsx" when targetDir is "./generated/web"
+    for (let i = targetDirParts.length; i > 0; i--) {
+        const prefix = targetDirParts.slice(-i).join('/') + '/';
+        if (normalized.startsWith(prefix)) {
+            normalized = normalized.substring(prefix.length);
+            break;
+        }
+    }
+
+    return normalized;
+}
+
+/**
  * Merge generated code into framework structure
  * @param {object} generatedFiles - Files from code generator
  * @param {object} frameworkInfo - Framework detection result
@@ -43,17 +70,19 @@ function mergeViteCode(generatedFiles, frameworkInfo, targetDir) {
     const components = [];
 
     for (const file of generatedFiles) {
-        if (file.path.includes('/pages/')) {
-            pages.push(file);
+        const normalizedPath = normalizePath(file.path, targetDir);
+
+        if (normalizedPath.includes('/pages/') || normalizedPath.includes('pages/')) {
+            pages.push({ ...file, path: normalizedPath });
             // Write page file
-            writeFile(join(targetDir, 'src', file.path), file.content);
-        } else if (file.path.includes('/components/')) {
-            components.push(file);
+            writeFile(join(targetDir, 'src', normalizedPath), file.content);
+        } else if (normalizedPath.includes('/components/') || normalizedPath.includes('components/')) {
+            components.push({ ...file, path: normalizedPath });
             // Write component file
-            writeFile(join(targetDir, 'src', file.path), file.content);
+            writeFile(join(targetDir, 'src', normalizedPath), file.content);
         } else {
             // Write other files (utils, types, etc.)
-            writeFile(join(targetDir, 'src', file.path), file.content);
+            writeFile(join(targetDir, 'src', normalizedPath), file.content);
         }
     }
 
@@ -108,19 +137,13 @@ export default App;
  * Merge code for Next.js projects  
  */
 function mergeNextCode(generatedFiles, frameworkInfo, targetDir) {
-    // For Next.js, just write pages to pages/ directory
-    // Next.js uses file-based routing, so no injection needed
-
     for (const file of generatedFiles) {
-        if (file.path.includes('/pages/')) {
-            writeFile(join(targetDir, file.path), file.content);
-        } else if (file.path.includes('/components/')) {
-            writeFile(join(targetDir, file.path), file.content);
-        } else if (file.path.includes('/api/')) {
-            writeFile(join(targetDir, 'pages', 'api', file.path), file.content);
-        } else {
-            writeFile(join(targetDir, file.path), file.content);
-        }
+        const normalizedPath = normalizePath(file.path, targetDir);
+
+        // For Next.js, just write files directly to targetDir
+        // Don't add additional 'pages' or 'components' subdirectories
+        // because the normalized path already includes them
+        writeFile(join(targetDir, normalizedPath), file.content);
     }
 
     return { success: true, files: generatedFiles.length };
@@ -131,20 +154,20 @@ function mergeNextCode(generatedFiles, frameworkInfo, targetDir) {
  */
 function mergeExpressCode(generatedFiles, frameworkInfo, targetDir) {
     const serverFilePath = join(targetDir, frameworkInfo.entryPoint);
-
-    // Collect route files
     const routes = [];
 
     for (const file of generatedFiles) {
-        if (file.path.includes('/routes/')) {
-            routes.push(file);
-            writeFile(join(targetDir, file.path), file.content);
+        const normalizedPath = normalizePath(file.path, targetDir);
+
+        if (normalizedPath.includes('/routes/') || normalizedPath.includes('routes/')) {
+            routes.push({ ...file, path: normalizedPath });
+            writeFile(join(targetDir, 'routes', normalizedPath), file.content);
         } else {
-            writeFile(join(targetDir, file.path), file.content);
+            writeFile(join(targetDir, normalizedPath), file.content);
         }
     }
 
-    // Update server.js with route imports and registrations
+    // Inject route imports and registrations into server file
     if (routes.length > 0 && existsSync(serverFilePath)) {
         injectExpressRoutes(serverFilePath, routes);
     }
@@ -193,7 +216,8 @@ function injectExpressRoutes(serverFilePath, routes) {
  */
 function writeDirectly(generatedFiles, targetDir) {
     for (const file of generatedFiles) {
-        writeFile(join(targetDir, file.path), file.content);
+        const normalizedPath = normalizePath(file.path, targetDir);
+        writeFile(join(targetDir, normalizedPath), file.content);
     }
     return { success: true, files: generatedFiles.length };
 }

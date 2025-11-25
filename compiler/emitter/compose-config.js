@@ -118,6 +118,29 @@ function validateLLMConfig(llm) {
 }
 
 /**
+ * Infer project type from framework
+ * @param {string} framework - Framework name
+ * @returns {string} - Inferred type
+ */
+function inferTypeFromFramework(framework) {
+    const frameworkTypeMap = {
+        'nextjs': 'react',
+        'next': 'react',
+        'vite': 'react',
+        'vite-react': 'react',
+        'remix': 'react',
+        'react-native': 'mobile',
+        'flutter': 'mobile',
+        'vue': 'web',
+        'svelte': 'web',
+        'express': 'node',
+        'fastify': 'node',
+        'nestjs': 'node'
+    };
+    return frameworkTypeMap[framework] || 'web';
+}
+
+/**
  * Validate single target configuration
  * @param {string} name - Target name
  * @param {object} target - Target config object
@@ -167,6 +190,11 @@ function validateTarget(name, target, baseDir, skipFileChecks = false) {
         if (!validFrameworks.includes(target.framework)) {
             // Warning, not error
             console.warn(`Target "${name}": Unknown framework "${target.framework}"`);
+        }
+
+        // Infer type from framework if not provided
+        if (!target.type) {
+            target.type = inferTypeFromFramework(target.framework);
         }
     }
 

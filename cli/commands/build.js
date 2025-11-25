@@ -9,7 +9,6 @@ import { compile } from '../../compiler/index.js';
 import { loadComposeConfig } from '../../compiler/emitter/compose-config.js';
 import { emitCode } from '../../compiler/emitter/code-emitter.js';
 import { writeOutput } from '../../compiler/emitter/output-writer.js';
-import { detectFramework } from '../../compiler/emitter/framework-analyzer.js';
 import { mergeCode } from '../../compiler/emitter/code-merger.js';
 import { copyAssets } from '../../compiler/emitter/asset-copier.js';
 
@@ -77,12 +76,14 @@ export async function build(args) {
 
         const combinedIR = result.ir;
 
-        // Detect framework if output directory exists
-        let frameworkInfo = null;
-        if (existsSync(target.output)) {
-            frameworkInfo = detectFramework(target.output);
-            console.log(`   Detected framework: ${frameworkInfo.framework || 'none'}`);
-        }
+        // Use framework from config if specified
+        const frameworkInfo = target.framework ? {
+            type: target.type || 'react',
+            framework: target.framework,
+            routing: target.framework === 'nextjs' || target.framework === 'next' ? 'file-based' : 'react-router'
+        } : { framework: 'none' };
+
+        console.log(`   Framework: ${frameworkInfo.framework}`);
 
         // Generate code with LLM config
         const output = await emitCode(combinedIR, target, {

@@ -14,7 +14,6 @@
             "language": "typescript",
             "output": "./generated/web",
             "framework": "nextjs",
-            "type": "react",
             "dependencies": [
                 "date-fns"
             ],

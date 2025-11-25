@@ -116,7 +116,6 @@ Each target represents a deployment environment (web, API, mobile, etc.).
       "framework": "nextjs",          // Required: Framework identifier
       "language": "typescript",       // Required: Output language
       "output": "./generated/web",    // Required: Output directory
-      "type": "react",                // Optional: Type hint
       "dependencies": [...],          // Optional: Additional npm packages
       "assets": [...],                // Optional: Asset copying
       "extraRules": [...]             // Optional: LLM instructions
@@ -124,6 +123,8 @@ Each target represents a deployment environment (web, API, mobile, etc.).
   }
 }
 ```
+
+**Note:** The `type` field is automatically inferred from the `framework` (e.g., `nextjs` → `react`, `express` → `node`). You can still specify it manually if needed.
 
 ### Required Target Fields
 
@@ -133,10 +134,15 @@ Each target represents a deployment environment (web, API, mobile, etc.).
 | `language` | string | **Yes** | Output language |
 | `output` | string | **Yes** | Output directory path |
 | `framework` | string | No | Framework identifier (optional) |
-| `type` | string | No | Type hint |
 | `dependencies` | string[] | No | Additional npm packages |
 | `assets` | [from, to][] | No | Asset copy mappings |
 | `extraRules` | string[] | No | LLM instructions |
+
+**Type Auto-Inference:**
+- `nextjs`, `vite-react`, `remix` → `react`
+- `express`, `fastify`, `nestjs` → `node`
+- `react-native`, `flutter` → `mobile`
+- `vue`, `svelte` → `web`
 
 ---
 
@@ -298,7 +304,6 @@ Optional global settings:
       "framework": "nextjs",
       "language": "typescript",
       "output": "./generated/web",
-      "type": "react",
       
       "dependencies": [
         "@tanstack/react-query",
@@ -325,7 +330,6 @@ Optional global settings:
       "framework": "express",
       "language": "typescript",
       "output": "./generated/api",
-      "type": "node",
       
       "dependencies": [
         "prisma",
