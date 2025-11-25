@@ -59,3 +59,6 @@ guide "Accessibility":
 guide "Performance":
   - The app must perform like hell
   - Lazy load
+
+guide "Fetching data or posting data":
+  - avoidinfinite loops when fetching data or posting data inside useEffect or similar

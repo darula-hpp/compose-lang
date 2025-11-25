@@ -6,7 +6,7 @@
         "model": "gemini-2.5-flash",
         "apiKey": "${GEMINI_API_KEY}",
         "temperature": 0.2,
-        "maxTokens": 20000
+        "maxTokens": 40000
     },
     "targets": {
         "web": {
@@ -15,7 +15,7 @@
             "output": "./generated/web",
             "framework": "nextjs",
             "dependencies": [
-                "date-fns"
+                "date-fns", "next-themes", "lucide-react", "clsx"
             ],
             "extraRules": [
                 "Use the latest version of nextjs and react",
