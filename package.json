@@ -8,12 +8,9 @@
         "compose": "./cli/index.js"
     },
     "scripts": {
-        "test": "node tests/compiler/lexer.test.js && node tests/compiler/parser.test.js && node tests/compiler/analyzer.test.js && node tests/compiler/ir.test.js && node tests/compiler/emitter.test.js",
-        "test:lexer": "node tests/compiler/lexer.test.js",
-        "test:parser": "node tests/compiler/parser.test.js",
-        "test:analyzer": "node tests/compiler/analyzer.test.js",
-        "test:ir": "node tests/compiler/ir.test.js",
-        "test:emitter": "node tests/compiler/emitter.test.js",
+        "test": "node --test compiler/__tests__/*.test.js compiler/parser/__tests__/*.test.js compiler/analyzer/__tests__/*.test.js compiler/emitter/__tests__/*.test.js && npm run test:language-server",
+        "test:compiler": "node --test compiler/__tests__/*.test.js compiler/parser/__tests__/*.test.js compiler/analyzer/__tests__/*.test.js compiler/emitter/__tests__/*.test.js",
+        "test:language-server": "cd language-server && npm test",
         "example": "node -e \"import('./compiler/index.js').then(c => { const fs = require('fs'); const source = fs.readFileSync('./examples/customer.compose', 'utf8'); const ast = c.compile(source, 'customer.compose'); console.log(JSON.stringify(ast, null, 2)); })\""
     },
     "keywords": [

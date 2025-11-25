@@ -5,7 +5,8 @@
     "main": "src/server.js",
     "type": "module",
     "scripts": {
-        "start": "node src/server.js"
+        "start": "node src/server.js",
+        "test": "node --test __tests__/*.test.js"
     },
     "dependencies": {
         "vscode-languageserver": "^9.0.1",

@@ -18,16 +18,18 @@ const __dirname = dirname(__filename);
 const compilerPath = join(__dirname, '../../compiler');
 
 // Dynamically import compiler modules
-let Tokenizer, Parser, Analyzer;
+let Lexer, Parser, Analyzer;
+let compilerLoaded = false;
 
 async function loadCompiler() {
-    const { Tokenizer: T } = await import(`${compilerPath}/lexer/tokenizer.js`);
+    const { Lexer: L } = await import(`${compilerPath}/lexer/tokenizer.js`);
     const { Parser: P } = await import(`${compilerPath}/parser/parser.js`);
-    const { Analyzer: A } = await import(`${compilerPath}/analyzer/index.js`);
+    const { SemanticAnalyzer: A } = await import(`${compilerPath}/analyzer/index.js`);
 
-    Tokenizer = T;
+    Lexer = L;
     Parser = P;
     Analyzer = A;
+    compilerLoaded = true;
 }
 
 // Create a connection for the server
@@ -46,52 +48,81 @@ connection.onInitialize((params) => {
 
 // Validate a document
 async function validateTextDocument(textDocument) {
+    // Ensure compiler is loaded before validating
+    if (!compilerLoaded) {
+        console.warn('Compiler not yet loaded, skipping validation');
+        return;
+    }
+
+    // Validate input
+    if (!textDocument) {
+        console.error('Invalid document provided to validateTextDocument');
+        return;
+    }
+
     const text = textDocument.getText();
     const diagnostics = [];
 
     try {
         // Tokenize
-        const tokenizer = new Tokenizer(text);
-        const tokens = tokenizer.tokenize();
+        const lexer = new Lexer(text);
+        const tokens = lexer.tokenize();
 
         // Parse
         const parser = new Parser(tokens);
         const ast = parser.parse();
 
         // Analyze
-        const analyzer = new Analyzer();
+        const analyzer = new Analyzer({ loadImports: false });
         const result = analyzer.analyze(ast);
 
         // Convert errors to diagnostics
         if (result.errors && result.errors.length > 0) {
             for (const error of result.errors) {
+                // Defensive: handle missing location data
+                const line = Math.max(0, (error.location?.line || 1) - 1);
+                const column = Math.max(0, (error.location?.column || 1) - 1);
+
+                // Calculate a reasonable end character based on error message length
+                // or use a sensible default (e.g., 50 characters)
+                const endCharacter = column + Math.min(error.message?.length || 20, 50);
+
                 const diagnostic = {
                     severity: DiagnosticSeverity.Error,
                     range: {
                         start: {
-                            line: (error.location?.line || 1) - 1,
-                            character: (error.location?.column || 1) - 1
+                            line: line,
+                            character: column
                         },
                         end: {
-                            line: (error.location?.line || 1) - 1,
-                            character: (error.location?.column || 1) + 10
+                            line: line,
+                            character: endCharacter
                         }
                     },
-                    message: error.message,
+                    message: error.message || 'An error occurred',
                     source: 'compose'
                 };
                 diagnostics.push(diagnostic);
             }
         }
     } catch (error) {
-        // Parser or analyzer error
+        // Parser or analyzer error - provide helpful diagnostic
+        const errorMessage = error.message || 'Unknown compilation error';
+
+        // Try to extract line info from error message if available
+        let line = 0;
+        const lineMatch = errorMessage.match(/:([0-9]+):/);
+        if (lineMatch) {
+            line = Math.max(0, parseInt(lineMatch[1]) - 1);
+        }
+
         const diagnostic = {
             severity: DiagnosticSeverity.Error,
             range: {
-                start: { line: 0, character: 0 },
-                end: { line: 0, character: 10 }
+                start: { line: line, character: 0 },
+                end: { line: line, character: 50 }
             },
-            message: error.message || 'Unknown error',
+            message: errorMessage,
             source: 'compose'
         };
         diagnostics.push(diagnostic);
