@@ -61,4 +61,4 @@ guide "Performance":
   - Lazy load
 
 guide "Fetching data or posting data":
-  - avoidinfinite loops when fetching data or posting data inside useEffect or similar
+  - avoid infinite loops when fetching data or posting data inside useEffect or similar
