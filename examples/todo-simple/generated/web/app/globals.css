@@ -3,34 +3,12 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --foreground-rgb: 0, 0, 0;
-    --background-start-rgb: 255, 255, 255;
-    --background-end-rgb: 255, 255, 255;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --foreground-rgb: 255, 255, 255;
-      --background-start-rgb: 0, 0, 0;
-      --background-end-rgb: 0, 0, 0;
-    }
-  }
-
   body {
-    color: rgb(var(--foreground-rgb));
-    background: linear-gradient(
-        to bottom,
-        transparent,
-        rgb(var(--background-end-rgb))
-      )
-      rgb(var(--background-start-rgb));
+    @apply bg-background-light text-text-light dark:bg-background-dark dark:text-text-dark transition-colors duration-300;
   }
-}
 
-/* Custom focus styles for accessibility */
-*:focus-visible {
-  outline: 2px solid theme('colors.primary.500');
-  outline-offset: 2px;
-  border-radius: theme('borderRadius.md'); /* Match card/button radius */
+  /* Focus indicators for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-background-dark;
+  }
 }

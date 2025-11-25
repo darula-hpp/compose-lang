@@ -1,0 +1,25 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Or "sqlite" if using SQLite
+  url      = env("DATABASE_URL")
+}
+
+model Todo {
+  id        String    @id @default(uuid()) @db.Uuid
+  title     String
+  completed Boolean   @default(false)
+  dueDate   DateTime?
+  userId    String?   @db.Uuid // Added for future multi-user support, optional for now
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // Soft delete
+
+  @@index([userId])
+  @@index([dueDate])
+}

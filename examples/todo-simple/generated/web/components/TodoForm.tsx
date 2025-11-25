@@ -1,138 +1,110 @@
-'use client';
-
 import React, { useState } from 'react';
-import { TodoInput } from '@/types';
+import { useTodos } from '@/hooks/useTodos';
+import { toast } from 'react-hot-toast';
+import { TodoSchema } from '@/lib/validation';
 import { format } from 'date-fns';
-import { todoInputSchema } from '@/lib/validation';
-import { PlusIcon } from './Icons';
-import { cn } from '@/lib/utils';
+import LoadingSpinner from './LoadingSpinner';
 
-interface TodoFormProps {
-  onSubmit: (todo: TodoInput) => Promise<void>;
-}
-
-export function TodoForm({ onSubmit }: TodoFormProps) {
+const TodoForm: React.FC = () => {
   const [title, setTitle] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [errors, setErrors] = useState<{ title?: string; dueDate?: string }>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dueDate, setDueDate] = useState<string>('');
+  const [description, setDescription] = useState('');
+  const { createTodoMutation } = useTodos();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({});
-    setIsSubmitting(true);
+
+    // Frontend validation
+    const validationResult = TodoSchema.safeParse({
+      title: title.trim(),
+      dueDate: dueDate ? new Date(dueDate) : undefined,
+      description: description.trim() || undefined,
+    });
+
+    if (!validationResult.success) {
+      validationResult.error.errors.forEach((err) => toast.error(err.message));
+      return;
+    }
 
     try {
-      const validatedData = todoInputSchema.parse({
-        title: title.trim(),
-        dueDate: dueDate || undefined,
+      await createTodoMutation.mutateAsync({
+        title: validationResult.data.title,
+        dueDate: validationResult.data.dueDate,
+        description: validationResult.data.description,
       });
-
-      await onSubmit({
-        title: validatedData.title,
-        dueDate: validatedData.dueDate,
-      });
+      toast.success('Todo created successfully!');
       setTitle('');
       setDueDate('');
+      setDescription('');
     } catch (error: any) {
-      if (error.name === 'ZodError') {
-        const newErrors: { title?: string; dueDate?: string } = {};
-        error.errors.forEach((err: any) => {
-          if (err.path.includes('title')) newErrors.title = err.message;
-          if (err.path.includes('dueDate')) newErrors.dueDate = err.message;
-        });
-        setErrors(newErrors);
-      } else {
-        console.error('Failed to add todo:', error);
-        setErrors({ title: 'An unexpected error occurred.' });
-      }
-    } finally {
-      setIsSubmitting(false);
+      toast.error(error.message || 'Failed to create todo.');
     }
   };
 
+  // Get today's date in YYYY-MM-DD format for min attribute
   const today = format(new Date(), 'yyyy-MM-dd');
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col sm:flex-row gap-4 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-card"
-      aria-label="Add new todo"
-    >
-      <div className="flex-grow">
-        <label htmlFor="todo-title" className="sr-only">
-          Todo Title
+    <form onSubmit={handleSubmit} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-inner">
+      <div className="mb-4">
+        <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Title <span className="text-red-500">*</span>
         </label>
         <input
-          id="todo-title"
           type="text"
+          id="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="What needs to be done?"
-          className={cn(
-            'w-full px-4 py-2 border rounded-md shadow-sm',
-            'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600',
-            'text-gray-900 dark:text-gray-100',
-            'focus:ring-primary-500 focus:border-primary-500',
-            errors.title && 'border-red-500'
-          )}
-          aria-invalid={!!errors.title}
-          aria-describedby={errors.title ? 'title-error' : undefined}
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-text-light dark:text-text-dark transition-colors duration-200"
+          required
           maxLength={200}
+          aria-required="true"
+          aria-label="Todo title"
         />
-        {errors.title && (
-          <p id="title-error" className="text-red-500 text-sm mt-1">
-            {errors.title}
-          </p>
-        )}
       </div>
 
-      <div>
-        <label htmlFor="todo-dueDate" className="sr-only">
+      <div className="mb-4">
+        <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Description (optional)
+        </label>
+        <textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Add more details about this todo..."
+          rows={3}
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-text-light dark:text-text-dark transition-colors duration-200 resize-y"
+          maxLength={500}
+          aria-label="Todo description"
+        />
+      </div>
+
+      <div className="mb-6">
+        <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Due Date (optional)
         </label>
         <input
-          id="todo-dueDate"
           type="date"
+          id="dueDate"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
           min={today}
-          className={cn(
-            'w-full sm:w-auto px-4 py-2 border rounded-md shadow-sm',
-            'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600',
-            'text-gray-900 dark:text-gray-100',
-            'focus:ring-primary-500 focus:border-primary-500',
-            errors.dueDate && 'border-red-500'
-          )}
-          aria-invalid={!!errors.dueDate}
-          aria-describedby={errors.dueDate ? 'dueDate-error' : undefined}
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-text-light dark:text-text-dark transition-colors duration-200"
+          aria-label="Todo due date"
         />
-        {errors.dueDate && (
-          <p id="dueDate-error" className="text-red-500 text-sm mt-1">
-            {errors.dueDate}
-          </p>
-        )}
       </div>
 
       <button
         type="submit"
-        disabled={isSubmitting}
-        className={cn(
-          'flex items-center justify-center px-6 py-2 rounded-md font-semibold text-white',
-          'bg-primary-600 hover:bg-primary-700 transition-colors duration-200 shadow-md',
-          'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
-          'disabled:opacity-60 disabled:cursor-not-allowed'
-        )}
-        aria-label="Add todo"
+        className="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-background-dark flex items-center justify-center"
+        disabled={createTodoMutation.isPending}
+        aria-label="Add new todo"
       >
-        {isSubmitting ? (
-          'Adding...'
-        ) : (
-          <>
-            <PlusIcon className="h-5 w-5 mr-2" /> Add Todo
-          </>
-        )}
+        {createTodoMutation.isPending ? <LoadingSpinner size="sm" color="white" /> : 'Add Todo'}
       </button>
     </form>
   );
-}
+};
+
+export default TodoForm;

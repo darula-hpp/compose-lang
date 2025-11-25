@@ -1,18 +1,19 @@
-import { Todo } from '@/types';
-import { TodoItem } from './TodoItem';
+import React from 'react';
+import { Todo } from '@/lib/types';
+import TodoCard from './TodoCard';
 
 interface TodoListProps {
   todos: Todo[];
-  onUpdate: (id: string, updates: Partial<Todo>) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
 }
 
-export function TodoList({ todos, onUpdate, onDelete }: TodoListProps) {
+const TodoList: React.FC<TodoListProps> = ({ todos }) => {
   return (
-    <ul className="space-y-4 mt-8" aria-label="Todo list">
+    <div className="space-y-4" role="list" aria-label="List of todos">
       {todos.map((todo) => (
-        <TodoItem key={todo.id} todo={todo} onUpdate={onUpdate} onDelete={onDelete} />
+        <TodoCard key={todo.id} todo={todo} />
       ))}
-    </ul>
+    </div>
   );
-}
+};
+
+export default TodoList;

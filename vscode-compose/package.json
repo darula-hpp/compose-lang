@@ -19,6 +19,9 @@
         "llm",
         "code generation"
     ],
+    "activationEvents": [
+        "onLanguage:compose"
+    ],
     "main": "./src/extension.js",
     "contributes": {
         "languages": [
@@ -90,6 +93,9 @@
         "test": "echo \"No tests yet\"",
         "package": "vsce package",
         "publish": "vsce publish"
+    },
+    "dependencies": {
+        "vscode-languageclient": "^9.0.1"
     },
     "devDependencies": {
         "@types/vscode": "^1.85.0",

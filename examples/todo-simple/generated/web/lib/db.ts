@@ -1,123 +1,114 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { Todo } from '@/types';
-import { isFuture, isToday, parseISO } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
+import { Todo } from './types';
 
-const DB_FILE = path.join(process.cwd(), 'data', 'todos.json');
+// Path to the JSON file that simulates our database
+const DATA_FILE_PATH = path.join(process.cwd(), 'data', 'todos.json');
 
 // Ensure the data directory exists
-async function ensureDbFileExists() {
-  const dir = path.dirname(DB_FILE);
-  await fs.mkdir(dir, { recursive: true });
+async function ensureDataDirectory() {
+  const dataDir = path.dirname(DATA_FILE_PATH);
   try {
-    await fs.access(DB_FILE);
+    await fs.mkdir(dataDir, { recursive: true });
   } catch (error) {
-    await fs.writeFile(DB_FILE, JSON.stringify([]), 'utf8');
+    // Ignore if directory already exists
+    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+      console.error('Failed to create data directory:', error);
+      throw error;
+    }
   }
 }
 
-// Read todos from the file
+// Read all todos from the JSON file
 async function readTodos(): Promise<Todo[]> {
-  await ensureDbFileExists();
-  const data = await fs.readFile(DB_FILE, 'utf8');
-  return JSON.parse(data);
+  await ensureDataDirectory();
+  try {
+    const data = await fs.readFile(DATA_FILE_PATH, 'utf8');
+    return JSON.parse(data) as Todo[];
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      // File does not exist, return empty array
+      return [];
+    }
+    console.error('Error reading todos from file:', error);
+    throw new Error('Failed to read todos from database.');
+  }
 }
 
-// Write todos to the file
+// Write all todos to the JSON file
 async function writeTodos(todos: Todo[]): Promise<void> {
-  await fs.writeFile(DB_FILE, JSON.stringify(todos, null, 2), 'utf8');
-}
-
-interface GetTodosOptions {
-  filter?: 'all' | 'active' | 'completed' | null;
-  page?: number;
-  limit?: number;
-  searchQuery?: string;
-}
-
-export async function getTodos({
-  filter = 'all',
-  page = 1,
-  limit = 50,
-  searchQuery = '',
-}: GetTodosOptions): Promise<{ todos: Todo[]; totalPages: number }> {
-  let allTodos = await readTodos();
-
-  // Filter out soft-deleted todos
-  allTodos = allTodos.filter((todo) => todo.deletedAt === null);
-
-  // Apply search query
-  if (searchQuery) {
-    const lowerCaseQuery = searchQuery.toLowerCase();
-    allTodos = allTodos.filter((todo) =>
-      todo.title.toLowerCase().includes(lowerCaseQuery)
-    );
+  await ensureDataDirectory();
+  try {
+    await fs.writeFile(DATA_FILE_PATH, JSON.stringify(todos, null, 2), 'utf8');
+  } catch (error) {
+    console.error('Error writing todos to file:', error);
+    throw new Error('Failed to write todos to database.');
   }
-
-  // Apply status filter
-  let filteredTodos = allTodos;
-  if (filter === 'active') {
-    filteredTodos = allTodos.filter((todo) => !todo.completed);
-  } else if (filter === 'completed') {
-    filteredTodos = allTodos.filter((todo) => todo.completed);
-  }
-
-  // Sort by createdAt descending (newest first)
-  filteredTodos.sort((a, b) => parseISO(b.createdAt).getTime() - parseISO(a.createdAt).getTime());
-
-  // Pagination
-  const totalItems = filteredTodos.length;
-  const totalPages = Math.ceil(totalItems / limit);
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedTodos = filteredTodos.slice(startIndex, endIndex);
-
-  return { todos: paginatedTodos, totalPages };
 }
 
-export async function addTodo(newTodo: Todo): Promise<Todo> {
+// --- CRUD Operations ---
+
+export async function getTodosFromDB(): Promise<Todo[]> {
   const todos = await readTodos();
-  todos.push(newTodo);
+  // Filter out soft-deleted items by default for most queries
+  return todos.filter(todo => !todo.deletedAt);
+}
+
+export async function getTodoByIdFromDB(id: string): Promise<Todo | null> {
+  const todos = await readTodos();
+  const todo = todos.find(t => t.id === id && !t.deletedAt);
+  return todo || null;
+}
+
+export async function createTodoInDB(newTodoData: Omit<Todo, 'id' | 'completed' | 'createdAt' | 'updatedAt' | 'deletedAt'>): Promise<Todo> {
+  const todos = await readTodos();
+  const now = new Date().toISOString();
+  const todo: Todo = {
+    id: uuidv4(),
+    title: newTodoData.title,
+    description: newTodoData.description || undefined,
+    completed: false,
+    dueDate: newTodoData.dueDate ? new Date(newTodoData.dueDate) : undefined,
+    createdAt: now,
+    updatedAt: now,
+    deletedAt: undefined,
+  };
+  todos.push(todo);
   await writeTodos(todos);
-  return newTodo;
+  return todo;
 }
 
-export async function updateTodo(id: string, updates: Partial<Todo>): Promise<Todo | null> {
+export async function updateTodoInDB(id: string, updates: Partial<Omit<Todo, 'id' | 'createdAt' | 'deletedAt'>>): Promise<Todo | null> {
   const todos = await readTodos();
-  const index = todos.findIndex((todo) => todo.id === id && todo.deletedAt === null);
+  const index = todos.findIndex(t => t.id === id && !t.deletedAt);
 
   if (index === -1) {
     return null;
   }
 
-  const updatedTodo = {
+  const updatedTodo: Todo = {
     ...todos[index],
     ...updates,
     updatedAt: new Date().toISOString(),
+    // Ensure dueDate is correctly handled if it's a string from API
+    dueDate: updates.dueDate ? new Date(updates.dueDate) : todos[index].dueDate,
   };
-
-  // Ensure dueDate validation on update if it's being changed
-  if (updates.dueDate) {
-    const dueDate = parseISO(updates.dueDate);
-    if (!isToday(dueDate) && !isFuture(dueDate)) {
-      throw new Error('Due date must be today or in the future.');
-    }
-  }
 
   todos[index] = updatedTodo;
   await writeTodos(todos);
   return updatedTodo;
 }
 
-export async function deleteTodoSoft(id: string): Promise<Todo | null> {
+export async function softDeleteTodoInDB(id: string): Promise<Todo | null> {
   const todos = await readTodos();
-  const index = todos.findIndex((todo) => todo.id === id && todo.deletedAt === null);
+  const index = todos.findIndex(t => t.id === id && !t.deletedAt);
 
   if (index === -1) {
     return null;
   }
 
-  const deletedTodo = {
+  const deletedTodo: Todo = {
     ...todos[index],
     deletedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -127,3 +118,8 @@ export async function deleteTodoSoft(id: string): Promise<Todo | null> {
   await writeTodos(todos);
   return deletedTodo;
 }
+
+// Note on indexing: For a real database (e.g., PostgreSQL, MongoDB),
+// you would add indexes on fields like `userId` (if applicable, not in this spec),
+// `dueDate`, and `deletedAt` for efficient querying and filtering.
+// For this file-based simulation, indexing is not directly applicable.

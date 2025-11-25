@@ -1,12 +1,17 @@
 const vscode = require('vscode');
-const { exec } = require('child_process');
 const path = require('path');
+const { LanguageClient, TransportKind } = require('vscode-languageclient/node');
+
+let client;
 
 /**
  * Extension activation
  */
 function activate(context) {
     console.log('Compose Language extension is now active');
+
+    // Start the language server
+    startLanguageServer(context);
 
     // Register commands
     registerCommands(context);
@@ -21,6 +26,47 @@ function activate(context) {
             context.globalState.update('compose.hasShownWelcome', true);
         });
     }
+}
+
+/**
+ * Start the language server
+ */
+function startLanguageServer(context) {
+    // The server is implemented in node
+    const serverModule = context.asAbsolutePath(
+        path.join('..', 'language-server', 'src', 'server.js')
+    );
+
+    // If the extension is launched in debug mode then the debug server options are used
+    // Otherwise the run options are used
+    const serverOptions = {
+        run: { module: serverModule, transport: TransportKind.ipc },
+        debug: {
+            module: serverModule,
+            transport: TransportKind.ipc
+        }
+    };
+
+    // Options to control the language client
+    const clientOptions = {
+        // Register the server for compose documents
+        documentSelector: [{ scheme: 'file', language: 'compose' }],
+        synchronize: {
+            // Notify the server about file changes to '.compose' files
+            fileEvents: vscode.workspace.createFileSystemWatcher('**/*.compose')
+        }
+    };
+
+    // Create the language client and start the client
+    client = new LanguageClient(
+        'composeLanguageServer',
+        'Compose Language Server',
+        serverOptions,
+        clientOptions
+    );
+
+    // Start the client. This will also launch the server
+    client.start();
 }
 
 /**
@@ -80,7 +126,10 @@ function registerCommands(context) {
  * Extension deactivation
  */
 function deactivate() {
-    console.log('Compose Language extension is now deactivated');
+    if (!client) {
+        return undefined;
+    }
+    return client.stop();
 }
 
 module.exports = {

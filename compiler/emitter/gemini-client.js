@@ -49,10 +49,23 @@ export class GeminiClient {
    * @returns {Promise<string>} - Generated code
    */
     async generate(systemPrompt, userPrompt, options = {}) {
-        try {
-            // Gemini uses a combined prompt
-            const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
+        // Gemini uses a combined prompt
+        const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
 
+        // Check cache first
+        if (this.cacheManager) {
+            const cacheKey = this.cacheManager.generateKey(fullPrompt, {
+                model: this.model,
+                temperature: this.temperature,
+            });
+
+            const cached = this.cacheManager.get(cacheKey);
+            if (cached) {
+                return cached;
+            }
+        }
+
+        try {
             const result = await this.generativeModel.generateContent(fullPrompt);
             const response = await result.response;
             const text = response.text();

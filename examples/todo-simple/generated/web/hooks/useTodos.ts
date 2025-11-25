@@ -1,137 +1,147 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Todo, TodoInput, TodoFilter } from '@/types';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Todo, CreateTodoPayload, UpdateTodoPayload, TodoFilter, PaginatedTodos } from '@/lib/types';
 import { api } from '@/lib/api';
-import localforage from 'localforage';
+import { toast } from 'react-hot-toast';
 
 interface UseTodosOptions {
-  filter: TodoFilter;
-  page: number;
-  limit: number;
-  searchQuery: string;
+  filter?: TodoFilter;
+  page?: number;
+  limit?: number;
+  search?: string;
 }
 
-const COMPLETED_TODOS_CACHE_KEY = 'completedTodosCache';
+export const useTodos = ({ filter = 'all', page = 1, limit = 50, search = '' }: UseTodosOptions = {}) => {
+  const queryClient = useQueryClient();
 
-export function useTodos({ filter, page, limit, searchQuery }: UseTodosOptions) {
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [totalPages, setTotalPages] = useState(1);
+  // Query for fetching todos
+  const todosQuery = useQuery<PaginatedTodos, Error>({
+    queryKey: ['todos', { filter, page, limit, search }],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filter !== 'all') params.append('status', filter);
+      params.append('page', String(page));
+      params.append('limit', String(limit));
+      if (search) params.append('search', search);
+      return api.get<PaginatedTodos>(`/api/todos?${params.toString()}`);
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    keepPreviousData: true, // Keep old data while fetching new page/filter
+  });
 
-  const fetchTodos = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
+  // Query for fetching a single todo's details (lazy load)
+  const getTodoDetailsQuery = (id: string, enabled: boolean) => useQuery<Todo, Error>({
+    queryKey: ['todo', id],
+    queryFn: () => api.get<Todo>(`/api/todos/${id}`),
+    enabled: enabled, // Only fetch when enabled (e.g., card is expanded)
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  });
+
+  // Mutation for creating a todo
+  const createTodoMutation = useMutation<Todo, Error, CreateTodoPayload>({
+    mutationFn: (newTodo) => api.post<Todo>('/api/todos', newTodo),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] }); // Invalidate all todo lists
+    },
+    onError: (error) => {
+      toast.error(`Error creating todo: ${error.message}`);
+    },
+  });
+
+  // Mutation for updating a todo
+  const updateTodoMutation = useMutation<Todo, Error, UpdateTodoPayload>({
+    mutationFn: ({ id, ...updates }) => api.put<Todo>(`/api/todos/${id}`, updates),
+    onMutate: async (updatedTodo) => {
+      // Cancel any outgoing refetches for the todos list
+      await queryClient.cancelQueries({ queryKey: ['todos'] });
+      await queryClient.cancelQueries({ queryKey: ['todo', updatedTodo.id] });
+
+      // Snapshot the previous value
+      const previousTodos = queryClient.getQueryData<PaginatedTodos>(['todos', { filter, page, limit, search }]);
+      const previousTodoDetail = queryClient.getQueryData<Todo>(['todo', updatedTodo.id]);
+
+      // Optimistically update the todos list
+      queryClient.setQueryData<PaginatedTodos>(['todos', { filter, page, limit, search }], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          todos: old.todos.map((todo) =>
+            todo.id === updatedTodo.id ? { ...todo, ...updatedTodo } : todo
+          ),
+        };
       });
-      if (filter !== 'all') {
-        params.append('filter', filter);
+
+      // Optimistically update the single todo detail
+      queryClient.setQueryData<Todo>(['todo', updatedTodo.id], (old) => {
+        if (!old) return old;
+        return { ...old, ...updatedTodo };
+      });
+
+      return { previousTodos, previousTodoDetail };
+    },
+    onError: (error, updatedTodo, context) => {
+      toast.error(`Error updating todo: ${error.message}`);
+      // Rollback to the previous value on error
+      if (context?.previousTodos) {
+        queryClient.setQueryData(['todos', { filter, page, limit, search }], context.previousTodos);
       }
-      if (searchQuery) {
-        params.append('searchQuery', searchQuery);
+      if (context?.previousTodoDetail) {
+        queryClient.setQueryData(['todo', updatedTodo.id], context.previousTodoDetail);
       }
+    },
+    onSettled: (data, error, variables) => {
+      // Invalidate queries to refetch and ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+      queryClient.invalidateQueries({ queryKey: ['todo', variables.id] });
+    },
+  });
 
-      const response = await api.get<{ todos: Todo[]; totalPages: number }>(`/api/todos?${params.toString()}`);
-      setTodos(response.todos);
-      setTotalPages(response.totalPages);
+  // Mutation for deleting a todo (soft delete)
+  const deleteTodoMutation = useMutation<void, Error, string>({
+    mutationFn: (id) => api.delete(`/api/todos/${id}`),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['todos'] });
+      await queryClient.cancelQueries({ queryKey: ['todo', id] });
 
-      // Cache completed todos
-      const completed = response.todos.filter(t => t.completed);
-      if (completed.length > 0) {
-        await localforage.setItem(COMPLETED_TODOS_CACHE_KEY, completed);
+      const previousTodos = queryClient.getQueryData<PaginatedTodos>(['todos', { filter, page, limit, search }]);
+      const previousTodoDetail = queryClient.getQueryData<Todo>(['todo', id]);
+
+      queryClient.setQueryData<PaginatedTodos>(['todos', { filter, page, limit, search }], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          todos: old.todos.map((todo) =>
+            todo.id === id ? { ...todo, deletedAt: new Date().toISOString() } : todo
+          ),
+        };
+      });
+
+      queryClient.setQueryData<Todo>(['todo', id], (old) => {
+        if (!old) return old;
+        return { ...old, deletedAt: new Date().toISOString() };
+      });
+
+      return { previousTodos, previousTodoDetail };
+    },
+    onError: (error, id, context) => {
+      toast.error(`Error deleting todo: ${error.message}`);
+      if (context?.previousTodos) {
+        queryClient.setQueryData(['todos', { filter, page, limit, search }], context.previousTodos);
       }
-    } catch (err: any) {
-      console.error('Failed to fetch todos:', err);
-      setError(err.message || 'Failed to load todos.');
-      // Try to load from cache if fetching fails for completed todos
-      if (filter === 'completed') {
-        const cachedCompleted = await localforage.getItem<Todo[]>(COMPLETED_TODOS_CACHE_KEY);
-        if (cachedCompleted) {
-          setTodos(cachedCompleted);
-          setError('Failed to load latest todos, showing cached completed todos.');
-        }
+      if (context?.previousTodoDetail) {
+        queryClient.setQueryData(['todo', id], context.previousTodoDetail);
       }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [filter, page, limit, searchQuery]);
-
-  useEffect(() => {
-    fetchTodos();
-  }, [fetchTodos]);
-
-  const addTodo = useCallback(async (todoInput: TodoInput) => {
-    try {
-      const newTodo = await api.post<Todo>('/api/todos', todoInput);
-      setTodos((prev) => (filter === 'completed' ? prev : [newTodo, ...prev])); // Only add if not on completed filter
-      // Re-fetch to ensure correct pagination/filtering if needed, or just update state
-      // For simplicity and immediate feedback, we'll update state directly if filter allows.
-      // A full re-fetch might be better for complex filtering/sorting.
-      fetchTodos();
-    } catch (err: any) {
-      console.error('Failed to add todo:', err);
-      throw new Error(err.message || 'Failed to add todo.');
-    }
-  }, [filter, fetchTodos]);
-
-  const updateTodo = useCallback(async (id: string, updates: Partial<Todo>) => {
-    try {
-      const updatedTodo = await api.put<Todo>(`/api/todos/${id}`, updates);
-      setTodos((prev) =>
-        prev
-          .map((todo) => (todo.id === id ? { ...todo, ...updatedTodo } : todo))
-          .filter((todo) => {
-            // If filter is 'active' and todo becomes completed, remove it
-            if (filter === 'active' && todo.id === id && todo.completed) return false;
-            // If filter is 'completed' and todo becomes active, remove it
-            if (filter === 'completed' && todo.id === id && !todo.completed) return false;
-            return true;
-          })
-      );
-      // Update cache for completed todos
-      if (updatedTodo.completed) {
-        const cachedCompleted = (await localforage.getItem<Todo[]>(COMPLETED_TODOS_CACHE_KEY)) || [];
-        const existingIndex = cachedCompleted.findIndex(t => t.id === updatedTodo.id);
-        if (existingIndex > -1) {
-          cachedCompleted[existingIndex] = updatedTodo;
-        } else {
-          cachedCompleted.push(updatedTodo);
-        }
-        await localforage.setItem(COMPLETED_TODOS_CACHE_KEY, cachedCompleted);
-      } else {
-        // If it's no longer completed, remove from cache
-        const cachedCompleted = (await localforage.getItem<Todo[]>(COMPLETED_TODOS_CACHE_KEY)) || [];
-        await localforage.setItem(COMPLETED_TODOS_CACHE_KEY, cachedCompleted.filter(t => t.id !== updatedTodo.id));
-      }
-    } catch (err: any) {
-      console.error('Failed to update todo:', err);
-      throw new Error(err.message || 'Failed to update todo.');
-    }
-  }, [filter]);
-
-  const deleteTodo = useCallback(async (id: string) => {
-    try {
-      await api.delete(`/api/todos/${id}`);
-      setTodos((prev) => prev.filter((todo) => todo.id !== id));
-      // Remove from completed cache if it was there
-      const cachedCompleted = (await localforage.getItem<Todo[]>(COMPLETED_TODOS_CACHE_KEY)) || [];
-      await localforage.setItem(COMPLETED_TODOS_CACHE_KEY, cachedCompleted.filter(t => t.id !== id));
-    } catch (err: any) {
-      console.error('Failed to delete todo:', err);
-      throw new Error(err.message || 'Failed to delete todo.');
-    }
-  }, []);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+    },
+  });
 
   return {
-    todos,
-    isLoading,
-    error,
-    totalPages,
-    addTodo,
-    updateTodo,
-    deleteTodo,
-    fetchTodos, // Expose fetchTodos for manual refresh if needed
+    todosQuery,
+    createTodoMutation,
+    updateTodoMutation,
+    deleteTodoMutation,
+    getTodoDetailsQuery,
+    ...todosQuery, // Spread all properties from todosQuery for convenience
   };
-}
+};

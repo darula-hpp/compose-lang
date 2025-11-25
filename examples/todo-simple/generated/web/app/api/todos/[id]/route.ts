@@ -1,56 +1,63 @@
 import { NextResponse } from 'next/server';
-import { updateTodo, deleteTodoSoft } from '@/lib/db';
-import { updateTodoSchema } from '@/lib/validation';
-import { isFuture, isToday, parseISO } from 'date-fns';
+import { getTodoByIdFromDB, updateTodoInDB, softDeleteTodoInDB } from '@/lib/db';
+import { UpdateTodoSchema } from '@/lib/validation';
 
-// Helper to handle Zod validation errors
-const handleValidationError = (error: any) => {
-  return NextResponse.json({ message: 'Validation Error', errors: error.errors }, { status: 400 });
-};
+// GET /api/todos/[id] - Fetch a single todo by ID
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params;
+    const todo = await getTodoByIdFromDB(id);
 
-// PUT /api/todos/[id] (for marking complete/incomplete or updating title/dueDate)
+    if (!todo) {
+      return NextResponse.json({ message: 'Todo not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(todo, { status: 200 });
+  } catch (error: any) {
+    console.error(`API GET /api/todos/${params.id} error:`, error);
+    return NextResponse.json({ message: error.message || 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+// PUT /api/todos/[id] - Update a todo by ID
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const id = params.id;
+    const { id } = params;
     const body = await request.json();
-    const parsedBody = updateTodoSchema.parse(body);
 
-    // Backend specific due date validation if dueDate is being updated
-    if (parsedBody.dueDate) {
-      const dueDate = parseISO(parsedBody.dueDate);
-      if (!isToday(dueDate) && !isFuture(dueDate)) {
-        return NextResponse.json(
-          { message: 'Validation Error', errors: [{ path: ['dueDate'], message: 'Due date must be today or in the future.' }] },
-          { status: 400 }
-        );
-      }
+    // Validate incoming updates
+    const parsedBody = UpdateTodoSchema.safeParse({ ...body, id }); // Include ID for schema validation if needed
+
+    if (!parsedBody.success) {
+      return NextResponse.json({ errors: parsedBody.error.errors }, { status: 400 });
     }
 
-    const updatedTodo = await updateTodo(id, parsedBody);
+    const updates = parsedBody.data;
+
+    const updatedTodo = await updateTodoInDB(id, updates);
+
     if (!updatedTodo) {
-      return NextResponse.json({ message: 'Todo not found' }, { status: 404 });
+      return NextResponse.json({ message: 'Todo not found or already deleted' }, { status: 404 });
     }
-    return NextResponse.json(updatedTodo);
+
+    return NextResponse.json(updatedTodo, { status: 200 });
   } catch (error: any) {
-    if (error.name === 'ZodError') {
-      return handleValidationError(error);
-    }
-    console.error(`Failed to update todo ${params.id}:`, error);
-    return NextResponse.json({ message: 'Failed to update todo' }, { status: 500 });
+    console.error(`API PUT /api/todos/${params.id} error:`, error);
+    return NextResponse.json({ message: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }
 
-// DELETE /api/todos/[id] (soft delete)
+// DELETE /api/todos/[id] - Soft delete a todo by ID
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const id = params.id;
-    const deletedTodo = await deleteTodoSoft(id);
+    const { id } = params;
+    const deletedTodo = await softDeleteTodoInDB(id);
+
     if (!deletedTodo) {
-      return NextResponse.json({ message: 'Todo not found' }, { status: 404 });
+      return NextResponse.json({ message: 'Todo not found or already deleted' }, { status: 404 });
     }
-    return NextResponse.json({ message: 'Todo soft-deleted successfully' });
-  } catch (error) {
-    console.error(`Failed to soft-delete todo ${params.id}:`, error);
-    return NextResponse.json({ message: 'Failed to soft-delete todo' }, { status: 500 });
-  }
-}
+
+    return NextResponse.json({ message: 'Todo soft deleted successfully' }, { status: 200 });
+  } catch (error: any) {
+    console.error(`API DELETE /api/todos/${params.id} error:`, error);
+    return NextResponse.json({ message: error.message || 'Internal Server
