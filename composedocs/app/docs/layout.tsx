@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Menu, X, Home, Book, Settings, Zap, Moon, Sun } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import Footer from "../components/Footer";
 
 export default function DocsLayout({
@@ -12,23 +13,12 @@ export default function DocsLayout({
     children: React.ReactNode;
 }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [darkMode, setDarkMode] = useState(false);
+    const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
-        const isDark = localStorage.getItem("theme") === "dark" ||
-            (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
-        setDarkMode(isDark);
-        document.documentElement.classList.toggle("dark", isDark);
     }, []);
-
-    const toggleDarkMode = () => {
-        const newDarkMode = !darkMode;
-        setDarkMode(newDarkMode);
-        localStorage.setItem("theme", newDarkMode ? "dark" : "light");
-        document.documentElement.classList.toggle("dark", newDarkMode);
-    };
 
     const navigation = [
         { name: "Home", href: "/", icon: Home },
@@ -94,11 +84,11 @@ export default function DocsLayout({
                             </svg>
                         </a>
                         <button
-                            onClick={toggleDarkMode}
+                            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                             className="rounded-lg p-2 hover:bg-muted"
                             aria-label="Toggle dark mode"
                         >
-                            {darkMode ? <Sun className="size-5" /> : <Moon className="size-5" />}
+                            {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
                         </button>
                     </div>
                 </div>

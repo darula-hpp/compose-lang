@@ -3,27 +3,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Code2, Sparkles, Zap, Moon, Sun } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import Footer from "./components/Footer";
 
 export default function Home() {
-  const [darkMode, setDarkMode] = useState(false);
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const isDark = localStorage.getItem("theme") === "dark" ||
-      (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    setDarkMode(isDark);
-    document.documentElement.classList.toggle("dark", isDark);
   }, []);
-
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    localStorage.setItem("theme", newDarkMode ? "dark" : "light");
-    document.documentElement.classList.toggle("dark", newDarkMode);
-  };
 
   if (!mounted) {
     return null;
@@ -62,11 +52,11 @@ export default function Home() {
               Docs
             </Link>
             <button
-              onClick={toggleDarkMode}
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="rounded-lg p-2 hover:bg-muted"
               aria-label="Toggle dark mode"
             >
-              {darkMode ? <Sun className="size-5" /> : <Moon className="size-5" />}
+              {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
             </button>
           </div>
         </div>
