@@ -41,7 +41,7 @@ describe('Code Merger', () => {
 
         // This should write to: /tmp/compose-test-output/generated/web/src/App.jsx
         // NOT to: /tmp/compose-test-output/generated/web/generated/web/src/App.jsx
-        mergeCode(generatedFiles, frameworkInfo, targetDir);
+        mergeCode(generatedFiles, frameworkInfo, targetDir, `${testOutputDir}/.compose/cache`);
 
         // Verify files are in correct location (not nested)
         const correctPath = join(testOutputDir, 'generated/web/src/App.jsx');
@@ -69,7 +69,7 @@ describe('Code Merger', () => {
         const frameworkInfo = { framework: 'none' };
         const targetDir = join(testOutputDir, 'output');
 
-        mergeCode(generatedFiles, frameworkInfo, targetDir);
+        mergeCode(generatedFiles, frameworkInfo, targetDir, `${testOutputDir}/.compose/cache`);
 
         const correctPath = join(testOutputDir, 'output/src/App.jsx');
         assert.ok(existsSync(correctPath), `File should exist at ${correctPath}`);
@@ -90,7 +90,7 @@ describe('Code Merger', () => {
         const frameworkInfo = { framework: 'none' };
         const targetDir = join(testOutputDir, 'generated/web');
 
-        mergeCode(generatedFiles, frameworkInfo, targetDir);
+        mergeCode(generatedFiles, frameworkInfo, targetDir, `${testOutputDir}/.compose/cache`);
 
         // All should be at root of targetDir, not nested
         assert.ok(existsSync(join(testOutputDir, 'generated/web/index.js')));
@@ -129,7 +129,7 @@ describe('Code Merger', () => {
         const frameworkInfo = { framework: 'next' };
         const targetDir = join(testOutputDir, 'generated/web');
 
-        mergeCode(generatedFiles, frameworkInfo, targetDir);
+        mergeCode(generatedFiles, frameworkInfo, targetDir, `${testOutputDir}/.compose/cache`);
 
         // Check files are in correct location
         assert.ok(existsSync(join(testOutputDir, 'generated/web/app/page.tsx')));

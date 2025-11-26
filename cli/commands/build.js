@@ -102,9 +102,6 @@ export async function build(args) {
             // Use intelligent merging
             console.log(`   Merging into ${frameworkInfo.framework} project...`);
             const mergeResult = mergeCode(output.files, frameworkInfo, target.output);
-            if (mergeResult.success) {
-                console.log(`   ✓ Merged ${mergeResult.files} file(s) into ${target.output}`);
-            }
         } else {
             // Fallback to simple write
             const writeResult = writeOutput(output.files, target.output, target);
