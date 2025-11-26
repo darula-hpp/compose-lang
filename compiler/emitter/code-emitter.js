@@ -5,11 +5,14 @@
 
 import { createLLMClient } from './llm-client.js';
 import { createFullProjectPrompt } from './prompt-templates.js';
+import { ExportMapBuilder } from './export-map-builder.js';
+import { existsSync } from 'fs';
 
 export class CodeEmitter {
     constructor(target, options = {}) {
         this.target = target;
         this.llmConfig = options.llm || {};
+        this.options = options; // Store all options
         this.llmClient = null; // Will be initialized in emit()
     }
 
@@ -34,10 +37,36 @@ export class CodeEmitter {
         // Parse the output into files
         const files = this.parseOutput(generatedCode);
 
+        // Build or update export map
+        await this.buildExportMap(files);
+
         return {
             files,
             target: this.target
         };
+    }
+
+    /**
+     * Build or update export map based on context
+     * Auto-detects incremental vs full build
+     * @param {Array} files - Generated files
+     */
+    async buildExportMap(files) {
+        const exportMapBuilder = new ExportMapBuilder();
+        const exportMapPath = '.compose/cache/export-map.json';
+
+        // Auto-detect: if export map exists and not forcing full build, update incrementally
+        const exportMapExists = existsSync(exportMapPath);
+        const useIncremental = exportMapExists && !this.options.forceFullBuild;
+
+        if (useIncremental) {
+            console.log('🚀 Updating export map (incremental)');
+            await exportMapBuilder.updateExportMap(files);
+        } else {
+            const buildType = this.options.forceFullBuild ? 'forced' : 'no export map found';
+            console.log(`🏗️  Building export map (full build - ${buildType})`);
+            await exportMapBuilder.buildExportMap(files);
+        }
     }
 
     /**

@@ -137,7 +137,29 @@ export class Lexer {
                 }
                 break;
 
-            case '/':
+            case '@':
+                this.scanAtReference();
+                break;
+
+            case '*':
+                this.addToken(TokenType.STAR, '*');
+                break;
+
+            case '+':
+                this.addToken(TokenType.PLUS, '+');
+                break;
+
+            case '=':
+                this.addToken(TokenType.EQUALS, '=');
+                break;
+
+            case '%':
+                this.addToken(TokenType.PERCENT, '%');
+                break;
+
+            case '$':
+                this.addToken(TokenType.DOLLAR, '$');
+                break;
 
             default:
                 if (this.isDigit(char)) {
@@ -237,6 +259,34 @@ export class Lexer {
         // Check if it's a keyword
         const type = KEYWORDS[value] || TokenType.IDENTIFIER;
         this.addToken(type, value, this.line, startColumn);
+    }
+
+    /**
+     * Scan an @reference path
+     * Handles patterns like: @reference/pricing.py or @reference/file.py::function
+     */
+    scanAtReference() {
+        const startColumn = this.column - 1;
+        let value = '@';
+
+        // Scan identifier part after @
+        while (!this.isAtEnd() && this.isAtReferenceChar(this.peek())) {
+            value += this.advance();
+        }
+
+        this.addToken(TokenType.IDENTIFIER, value, this.line, startColumn);
+    }
+
+    /**
+     * Check if character is valid in @reference paths
+     */
+    isAtReferenceChar(char) {
+        return this.isAlphaNumeric(char) ||
+            char === '_' ||
+            char === '/' ||
+            char === '.' ||
+            char === ':' ||
+            char === '-';
     }
 
     /**

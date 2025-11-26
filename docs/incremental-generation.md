@@ -7,6 +7,8 @@
 
 This document outlines strategies for optimizing Compose's code generation system to intelligently fetch and inject only the necessary code changes, rather than regenerating the entire application on every prompt modification.
 
+> **Important**: Compose is a **declarative code generation system**. Users edit `.compose` files, and all application code is **generated** from these files. Users do **not** manually edit the generated code. This assumption significantly simplifies incremental generation - we don't need to preserve manual changes or resolve merge conflicts.
+
 ### Current Challenges
 
 The current implementation ([code-emitter.js](../compiler/emitter/code-emitter.js)) regenerates the **entire application** on every change:
@@ -20,9 +22,9 @@ const generatedCode = await this.llmClient.generate('', prompt);
 **Pain Points:**
 - 💸 **Cost**: $5-20 per build (50+ files)
 - ⏱️ **Time**: 30-120 seconds per build
-- 📝 **Manual changes**: Overwritten on each regeneration
-- 🔄 **Token waste**: Most code unchanged between iterations
+-  **Token waste**: Most code unchanged between iterations
 - 📊 **Git noise**: Massive diffs even for small changes
+- 🚫 **Slow iteration**: Even trivial `.compose` changes trigger full rebuild
 
 ---
 
@@ -126,64 +128,391 @@ class PromptCherryPicker {
 
 ---
 
-### 3. Intelligent Code Merging
+### 3. Export Map & Signature Tracking
 
-**Concept**: Use AST-aware merging to combine existing code with generated updates.
+**Concept**: Maintain a comprehensive index of all exported symbols with their full signatures, enabling the LLM to correctly import and use existing functions without seeing the entire codebase.
 
-#### AST-Based Merging
+#### The Problem
+
+When generating **new files** incrementally, the LLM needs to know:
+- ✅ What functions/classes already exist
+- ✅ Where they're located (file paths)
+- ✅ **How to call them** (parameters, types, return values)
+- ✅ **How to import them** (correct import paths)
+
+Without this, you get broken imports, type mismatches, and duplicate code.
+
+#### Export Map Structure
 
 ```javascript
-class IntelligentMerger {
-  smartMerge(existingAST, generatedAST) {
-    // Extract exports from both versions
-    // Add new exports, merge existing ones
-    // Preserve sections marked with @custom
+// .compose/cache/export-map.json
+{
+  "models/User.ts": {
+    "path": "src/models/User.ts",
+    "exports": {
+      "User": {
+        "kind": "interface",
+        "signature": "interface User { id: string; email: string; name: string; role: UserRole; }",
+        "properties": ["id: string", "email: string", "name: string", "role: UserRole"]
+      },
+      "UserRole": {
+        "kind": "enum",
+        "signature": "enum UserRole { Admin = 'admin', User = 'user', Guest = 'guest' }",
+        "values": ["Admin", "User", "Guest"]
+      },
+      "hashPassword": {
+        "kind": "function",
+        "signature": "async function hashPassword(password: string): Promise<string>",
+        "params": [
+          { "name": "password", "type": "string", "required": true }
+        ],
+        "returns": "Promise<string>",
+        "async": true
+      },
+      "validateEmail": {
+        "kind": "function",
+        "signature": "function validateEmail(email: string): boolean",
+        "params": [
+          { "name": "email", "type": "string", "required": true }
+        ],
+        "returns": "boolean",
+        "async": false
+      }
+    }
+  },
+  "utils/validation.ts": {
+    "path": "src/utils/validation.ts",
+    "exports": {
+      "isEmail": {
+        "kind": "function",
+        "signature": "function isEmail(value: string): boolean",
+        "params": [{ "name": "value", "type": "string", "required": true }],
+        "returns": "boolean"
+      },
+      "sanitize": {
+        "kind": "function",
+        "signature": "function sanitize(input: string, options?: SanitizeOptions): string",
+        "params": [
+          { "name": "input", "type": "string", "required": true },
+          { "name": "options", "type": "SanitizeOptions", "required": false }
+        ],
+        "returns": "string"
+      }
+    }
   }
 }
 ```
 
-#### Three-Way Merge
+#### Building the Export Map
+
+Use AST parsing to extract signatures from generated code:
 
 ```javascript
-class ThreeWayMerger {
-  merge(baseline, current, generated) {
-    // Use git-like diff3 algorithm
-    // Apply non-conflicting changes automatically
-    // Mark conflicts for manual resolution
+class ExportMapBuilder {
+  async buildFromFiles(generatedFiles, target) {
+    const exportMap = {};
+    const parser = this.getParser(target); // TypeScript, JavaScript, Python, etc.
+    
+    for (const file of generatedFiles) {
+      const ast = await parser.parse(file.content);
+      const exports = await this.extractExports(ast, file.path);
+      
+      exportMap[file.relativePath] = {
+        path: file.path,
+        exports: exports
+      };
+    }
+    
+    await this.saveToCache(exportMap);
+    return exportMap;
+  }
+  
+  async extractExports(ast, filePath) {
+    const exports = {};
+    
+    // Find all export declarations
+    for (const node of ast.body) {
+      if (node.type === 'ExportNamedDeclaration') {
+        const exported = this.extractExportedSymbol(node);
+        if (exported) {
+          exports[exported.name] = exported.metadata;
+        }
+      }
+    }
+    
+    return exports;
+  }
+  
+  extractExportedSymbol(node) {
+    // Handle different export types
+    if (node.declaration.type === 'FunctionDeclaration') {
+      return this.extractFunction(node.declaration);
+    }
+    if (node.declaration.type === 'InterfaceDeclaration') {
+      return this.extractInterface(node.declaration);
+    }
+    if (node.declaration.type === 'ClassDeclaration') {
+      return this.extractClass(node.declaration);
+    }
+    // ... handle enums, types, etc.
+  }
+  
+  extractFunction(node) {
+    return {
+      name: node.id.name,
+      metadata: {
+        kind: 'function',
+        signature: this.nodeToString(node),
+        params: node.params.map(p => ({
+          name: p.name,
+          type: this.extractType(p.typeAnnotation),
+          required: !p.optional
+        })),
+        returns: this.extractType(node.returnType),
+        async: node.async
+      }
+    };
+  }
+  
+  extractInterface(node) {
+    return {
+      name: node.id.name,
+      metadata: {
+        kind: 'interface',
+        signature: this.nodeToString(node),
+        properties: node.body.properties.map(p => 
+          `${p.key.name}: ${this.extractType(p.typeAnnotation)}`
+        )
+      }
+    };
   }
 }
 ```
 
-#### Developer Annotations
+#### Cherry-Picking for Prompts
+
+Don't send the entire export map (too many tokens). Filter based on what's relevant:
 
 ```javascript
-// @compose:preserve
-function myCustomLogic() {
-  // This won't be overwritten
+class ExportMapFilter {
+  getRelevantExports(changes, exportMap, ir) {
+    const relevant = {};
+    
+    // Example: Adding a Review model
+    if (changes.addedModels.includes('Review')) {
+      const reviewDef = ir.models.find(m => m.name === 'Review');
+      
+      // Include models referenced in fields
+      for (const field of reviewDef.fields) {
+        if (field.type in exportMap) {
+          relevant[field.type] = exportMap[this.findFile(field.type)];
+        }
+      }
+      
+      // Include features that will use this model
+      for (const feature of ir.features) {
+        if (feature.references.includes('Review')) {
+          // Include that feature's exports
+        }
+      }
+      
+      // Always include common utils
+      relevant['utils/validation.ts'] = exportMap['utils/validation.ts'];
+    }
+    
+    return relevant;
+  }
+  
+  formatForPrompt(relevantExports) {
+    let prompt = '**Available Exports (Import from these, DO NOT recreate):**\n\n';
+    
+    for (const [filePath, fileExports] of Object.entries(relevantExports)) {
+      prompt += `\n#### ${filePath}\n`;
+      
+      for (const [name, meta] of Object.entries(fileExports.exports)) {
+        prompt += `- ${meta.signature}\n`;
+        
+        // Add usage hints for functions
+        if (meta.kind === 'function' && meta.params.length > 0) {
+          const args = meta.params.map(p => 
+            p.required ? p.name : `${p.name}?`
+          ).join(', ');
+          prompt += `  Usage: ${name}(${args})\n`;
+        }
+      }
+    }
+    
+    return prompt;
+  }
+}
+```
+
+#### Example Prompt Output
+
+When generating a new `Review` feature, the LLM sees:
+
+````markdown
+**Available Exports (Import from these, DO NOT recreate):**
+
+#### src/models/User.ts
+- interface User { id: string; email: string; name: string; role: UserRole; }
+- enum UserRole { Admin = 'admin', User = 'user', Guest = 'guest' }
+- async function hashPassword(password: string): Promise<string>
+  Usage: hashPassword(password)
+
+#### src/models/Product.ts
+- interface Product { id: string; name: string; price: number; category: ProductCategory; }
+- enum ProductCategory { Electronics = 'electronics', Clothing = 'clothing' }
+- function calculatePrice(product: Product, quantity: number): number
+  Usage: calculatePrice(product, quantity)
+
+#### src/utils/validation.ts
+- function isEmail(value: string): boolean
+  Usage: isEmail(value)
+- function sanitize(input: string, options?: SanitizeOptions): string
+  Usage: sanitize(input, options?)
+
+**NEW: Generate Review Model**
+Create a new Review model with:
+- Fields: id, product (Product), user (User), rating (1-5), comment (string)
+- Location: src/models/Review.ts
+- IMPORT Product and User from existing files shown above
+````
+
+This gives the LLM everything it needs to generate correct code:
+
+```typescript
+// Generated: src/models/Review.ts
+import { Product } from './Product';
+import { User } from './User';
+import { sanitize } from '../utils/validation';
+
+export interface Review {
+  id: string;
+  product: Product;  // ← Correct type, correct import
+  user: User;        // ← Correct type, correct import
+  rating: number;
+  comment: string;
 }
 
-// @compose:auto
-export const defaultConfig = {
-  // This will be regenerated
-};
+export function createReview(
+  product: Product,   // ← Knows the signature
+  user: User,         // ← Knows the signature
+  rating: number,
+  comment: string
+): Review {
+  return {
+    id: crypto.randomUUID(),
+    product,
+    user,
+    rating,
+    comment: sanitize(comment)  // ← Correct usage of existing function!
+  };
+}
+```
+
+#### Incremental Updates
+
+After each build, **update** the export map with new exports:
+
+```javascript
+class IncrementalExportMapUpdater {
+  async updateAfterBuild(previousMap, newlyGeneratedFiles) {
+    const updatedMap = { ...previousMap };
+    
+    for (const file of newlyGeneratedFiles) {
+      const exports = await this.extractExports(file);
+      updatedMap[file.relativePath] = {
+        path: file.path,
+        exports: exports
+      };
+    }
+    
+    await this.saveToCache(updatedMap);
+    return updatedMap;
+  }
+}
+```
+
+Now the next incremental build can reference `Review` just like it references `User` and `Product`!
+
+| Pros | Cons |
+|------|------|
+| ✅ Correct imports automatically | ❌ Requires AST parsing |
+| ✅ Type-safe function calls | ❌ Parser per target language |
+| ✅ No duplicate code | ❌ Map can get large (filter aggressively) |
+| ✅ Enables accurate incremental generation | ❌ Must stay in sync with generated code |
+
+---
+
+### 4. File Replacement Strategy
+
+**Concept**: Since users never manually edit generated files, we can safely **replace entire files** when they need updating.
+
+#### Simple Replacement Logic
+
+```javascript
+class FileReplacementStrategy {
+  async updateFiles(affectedFiles, newlyGeneratedCode) {
+    const updates = [];
+    
+    for (const file of affectedFiles) {
+      // No merge needed - just replace
+      updates.push({
+        path: file.path,
+        action: file.isNew ? 'create' : 'replace',
+        content: newlyGeneratedCode[file.path]
+      });
+    }
+    
+    return updates;
+  }
+}
+```
+
+#### Incremental Write Strategy
+
+```javascript
+class IncrementalWriter {
+  async writeChanges(changes) {
+    // Affected files: REPLACE
+    for (const file of changes.modified) {
+      await fs.writeFile(file.path, file.content);
+    }
+    
+    // New files: CREATE
+    for (const file of changes.added) {
+      await fs.ensureDir(path.dirname(file.path));
+      await fs.writeFile(file.path, file.content);
+    }
+    
+    // Deleted models/features: REMOVE
+    for (const file of changes.removed) {
+      await fs.remove(file.path);
+    }
+    
+    // Unchanged files: SKIP (don't even touch them)
+  }
+}
 ```
 
 | Pros | Cons |
 |------|------|
-| ✅ Preserves manual changes | ❌ Complex AST manipulation |
-| ✅ Minimal conflicts | ❌ Language-specific parsers |
-| ✅ Fine-grained control | ❌ Performance overhead |
+| ✅ Simple implementation | ❌ File timestamps change |
+| ✅ No merge conflicts ever | ❌ Must regenerate entire file |
+| ✅ Fast writes | ❌ Can't preserve custom code (not needed) |
+| ✅ Language-agnostic | ❌ None - this is the right approach! |
 
 ---
 
-### 4. Hybrid Approach ⭐ (Recommended)
+### 5. Hybrid Approach ⭐ (Recommended)
 
 Combine all strategies for optimal results:
 
 ```javascript
 class HybridCodeGenerator {
   async generateIncremental(previousIR, existingCode) {
-    // 1. Detect changes
+    // 1. Detect changes in .compose file
     const changes = this.differ.detectChanges(this.ir);
     
     // 2. Determine affected components
@@ -195,8 +524,8 @@ class HybridCodeGenerator {
     // 4. Generate code for affected components only
     const generated = await this.generateCode(prompts);
     
-    // 5. Merge with existing code
-    return this.merger.mergeAll(existingCode, generated);
+    // 5. Replace affected files (no merging needed!)
+    return this.fileReplacer.replaceFiles(affected, generated);
   }
 }
 ```
@@ -214,8 +543,8 @@ graph TD
     G --> H[Cherry-pick context for each]
     H --> I[Build incremental prompts]
     I --> J[Generate only affected files]
-    J --> K[Intelligent merge with existing]
-    K --> L[Write output]
+    J --> K[Replace affected files]
+    K --> L[Update export map]
     D --> L
 ```
 
@@ -227,20 +556,28 @@ graph TD
 - [ ] Implement IR diffing (`ir-differ.js`)
 - [ ] Add file-level caching with hash-based deduplication
 - [ ] Track IR versions (save snapshots in `.compose/cache/`)
+- [ ] **Generate and cache file structure manifest**
+  - Store in `.compose/cache/file-tree.json`
+  - Track exports/functions per file (export map)
+  - Update on each successful build
+  - Include in incremental prompts
 
 ### Phase 2: Smart Generation (Month 1)
 - [ ] Build dependency graph (`dependency-graph.js`)
 - [ ] Implement smart prompt builder (`smart-prompt-builder.js`)
-- [ ] Add annotation support (`@compose:preserve`, `@compose:auto`)
+- [ ] Implement export map builder with AST parsing
 
-### Phase 3: Advanced Merging (Months 2-3)
-- [ ] AST-based merging (`code-merger.js`)
-- [ ] Three-way merge with conflict resolution
-- [ ] Optimize LLM calls (parallel generation, retry logic)
+### Phase 3: File Replacement & Optimization (Months 2-3)
+- [ ] File replacement strategy (`file-replacer.js`)
+- [ ] Parallel generation for multiple affected components
+- [ ] Optimize LLM calls (batching, retry logic)
+- [ ] Smart caching to avoid regenerating unchanged files
 
 ### Phase 4: Polish
-- [ ] Add `--incremental` CLI flag
-- [ ] Merge conflict resolution workflow
+- [ ] Auto-detection based on export map existence
+- [ ] Add `--full` flag to force complete rebuild
+- [ ] Add `compose cache clear` command
+- [ ] Progress indicators for builds (show file counts)
 - [ ] Comprehensive test suite
 - [ ] Update documentation
 
@@ -249,17 +586,43 @@ graph TD
 ## Usage Examples
 
 ```bash
-# First build - full generation
+# First build - no export map exists, runs full generation
 compose build
+🏗️  Full build
+✅ Generated 50 files
+💾 Saved export map to .compose/cache/export-map.json
 
-# Modify User model - only regenerate User-related files
-compose build --incremental
+# Modify User model in app.compose file
+# Export map exists - automatically runs incremental build
+compose build
+🚀 Incremental build (export map found)
+✅ Detected changes: User model modified
+📝 Regenerating 8 affected files
+⏭️  Skipping 42 unchanged files
+💾 Updated export map
 
-# Add new feature - only generate new feature files
-compose build --incremental
+# Add new Review model
+compose build
+🚀 Incremental build (export map found)
+✅ Detected changes: Review model added
+📝 Generating 5 new files
+⏭️  Skipping 50 unchanged files
+💾 Updated export map
 
-# Force full rebuild
+# Force full rebuild (when needed)
 compose build --full
+🏗️  Full build (forced)
+✅ Generated 55 files
+💾 Rebuilt export map from scratch
+
+# Clear cache to force full rebuild on next build
+compose cache clear
+🗑️  Cleared export map and LLM cache
+
+compose build
+🏗️  Full build (no export map found)
+✅ Generated 55 files
+💾 Saved export map
 ```
 
 ---
@@ -277,22 +640,22 @@ compose build --full
 
 ## Open Questions
 
-1. **Merge strategy default**: Preserve manual changes or prefer generated code?
+1. **Caching granularity**: File-level, component-level, or function-level?
 
-2. **Conflict resolution**: CLI prompt? Web UI? Special markers?
+2. **Partial failures**: Abort build? Continue with stale version? Retry?
 
-3. **Caching granularity**: File-level, component-level, or function-level?
+3. **IR versioning**: Store history? How many versions? How long to keep?
 
-4. **Partial failures**: Abort build? Continue with stale version? Retry?
-
-5. **IR versioning**: Store history? How many versions?
-
-6. **Performance targets**: 
+4. **Performance targets**: 
    - Single model change: < 10s?
    - New feature: < 20s?
    - Multiple changes: < 40s?
 
-7. **Annotation syntax**: Support `@compose:preserve`? Other markers?
+5. **Export map size**: Maximum size before filtering becomes mandatory?
+
+6. **File deletion strategy**: When user removes a model, delete all related files or mark as deprecated?
+
+7. **Hot reload**: Integrate with dev servers for instant preview of changes?
 
 ---
 

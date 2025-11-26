@@ -1,5 +1,12 @@
 # Reference Code Guide
 
+> **Important**: Reference code is **NOT** manually edited application code. It's a **translation source** for the LLM. The Compose workflow is:
+> 1. Write business logic in `reference/` (Python, SQL, etc.)
+> 2. Reference it in `.compose` files
+> 3. LLM **generates** target code (TypeScript, Rust, etc.)
+> 4. Users **never** manually edit the generated code
+> 5. All changes go through `.compose` files or `reference/` updates
+
 ## What is the reference/ Directory?
 
 The `reference/` directory contains implementation code in any language that serves as a blueprint for the LLM. The LLM reads this code and translates it to your target language, preserving the exact business logic.
