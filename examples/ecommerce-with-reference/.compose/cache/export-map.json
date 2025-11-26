@@ -1,0 +1,329 @@
+{
+  "generated/web/next.config.js": {
+    "path": "generated/web/next.config.js",
+    "exports": {},
+    "lastUpdated": 1764184421282
+  },
+  "generated/web/tailwind.config.ts": {
+    "path": "generated/web/tailwind.config.ts",
+    "exports": {},
+    "lastUpdated": 1764184421285
+  },
+  "generated/web/postcss.config.js": {
+    "path": "generated/web/postcss.config.js",
+    "exports": {},
+    "lastUpdated": 1764184421286
+  },
+  "generated/web/src/app/layout.tsx": {
+    "path": "generated/web/src/app/layout.tsx",
+    "exports": {
+      "metadata": {
+        "kind": "variable",
+        "signature": "const metadata: Metadata = {\n  title: 'Next.js E-commerce App',\n  description: 'A production-ready e-commerce application built with Next.js and TypeScript.',\n};",
+        "type": "Metadata",
+        "const": true
+      },
+      "default": {
+        "kind": "function",
+        "signature": "function RootLayout({\n  children,\n}: Readonly<{\n  children: React.ReactNode;\n}>) {\n  return (\n    <html lang=\"en\" suppressHydrationWarning>\n      <body className={`${inter.className} bg-background-light text-text-light dark:bg-background-dark dark:text-text-dark min-h-screen flex flex-col`}>\n        <ThemeProvider attribute=\"class\" defaultTheme=\"system\" enableSystem>\n          <CartProvider>\n            <Header />\n            <main className=\"flex-grow container mx-auto p-4 sm:p-6 lg:p-8\">\n              {children}\n            </main>\n            <Footer />\n          </CartProvider>\n        </ThemeProvider>\n      </body>\n    </html>\n  );\n}",
+        "params": [
+          {
+            "name": "param",
+            "type": "Readonly<object>",
+            "required": true
+          }
+        ],
+        "returns": "any",
+        "async": false
+      }
+    },
+    "lastUpdated": 1764184421289
+  },
+  "generated/web/src/app/page.tsx": {
+    "path": "generated/web/src/app/page.tsx",
+    "exports": {
+      "default": {
+        "kind": "function",
+        "signature": "function Home() {\n  return (\n    <div className=\"py-8\">\n      <h1 className=\"text-4xl font-bold text-center mb-10 text-primary-DEFAULT dark:text-primary-dark\">\n        Our Products\n      </h1>\n      <div className=\"grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6\">\n        {products.map((product) => (\n          <ProductCard key={product.id} product={product} />\n        ))}\n      </div>\n    </div>\n  );\n}",
+        "params": [],
+        "returns": "any",
+        "async": false
+      }
+    },
+    "lastUpdated": 1764184421292
+  },
+  "generated/web/src/app/cart/page.tsx": {
+    "path": "generated/web/src/app/cart/page.tsx",
+    "exports": {
+      "default": {
+        "kind": "function",
+        "signature": "function CartPage() {\n  const { cartItems, totalItems, getCartTotals } = useCart();\n  const [user, setUser] = useState<User>(MOCK_USER); // State to allow changing user details if needed\n\n  const { subtotal, discount, tax, total } = getCartTotals(user);\n\n  if (cartItems.length === 0) {\n    return (\n      <div className=\"flex flex-col items-center justify-center py-20\">\n        <h1 className=\"text-3xl font-semibold mb-4 text-secondary-DEFAULT dark:text-secondary-dark\">\n          Your cart is empty\n        </h1>\n        <p className=\"text-lg mb-8 text-text-light dark:text-text-dark\">\n          Looks like you haven&apos;t added anything to your cart yet.\n        </p>\n        <Link href=\"/\">\n          <Button className=\"px-8 py-3 text-lg\">Start Shopping</Button>\n        </Link>\n      </div>\n    );\n  }\n\n  return (\n    <div className=\"py-8\">\n      <h1 className=\"text-4xl font-bold text-center mb-10 text-primary-DEFAULT dark:text-primary-dark\">\n        Your Shopping Cart\n      </h1>\n      <div className=\"grid grid-cols-1 lg:grid-cols-3 gap-8\">\n        <div className=\"lg:col-span-2 space-y-4\">\n          {cartItems.map((item) => (\n            <CartItemCard key={item.id} item={item} />\n          ))}\n        </div>\n        <div className=\"lg:col-span-1\">\n          <CheckoutSummary\n            subtotal={subtotal}\n            discount={discount}\n            tax={tax}\n            total={total}\n            totalItems={totalItems}\n            user={user}\n            onUserChange={setUser} // Allow changing user details for testing\n          />\n          <Link href=\"/checkout\">\n            <Button className=\"w-full mt-6 py-3 text-lg\">Proceed to Checkout</Button>\n          </Link>\n        </div>\n      </div>\n    </div>\n  );\n}",
+        "params": [],
+        "returns": "any",
+        "async": false
+      }
+    },
+    "lastUpdated": 1764184421294
+  },
+  "generated/web/src/app/checkout/page.tsx": {
+    "path": "generated/web/src/app/checkout/page.tsx",
+    "exports": {
+      "default": {
+        "kind": "function",
+        "signature": "function CheckoutPage() {\n  const { cartItems, totalItems, clearCart, getCartTotals } = useCart();\n  const router = useRouter();\n  const [user, setUser] = useState<User>(MOCK_USER);\n  const [paymentProcessing, setPaymentProcessing] = useState(false);\n  const [paymentError, setPaymentError] = useState<string | null>(null);\n\n  const { subtotal, discount, tax, total } = getCartTotals(user);\n\n  const handleProcessPayment = async () => {\n    setPaymentProcessing(true);\n    setPaymentError(null);\n\n    if (cartItems.length === 0) {\n      setPaymentError('Your cart is empty. Please add items before checking out.');\n      setPaymentProcessing(false);\n      return;\n    }\n\n    try {\n      // Simulate API call to process payment and create order\n      const response = await fetch('/api/checkout', {\n        method: 'POST',\n        headers: {\n          'Content-Type': 'application/json',\n        },\n        body: JSON.stringify({\n          items: cartItems,\n          user: user,\n          subtotal,\n          discount,\n          tax,\n          total,\n        }),\n      });\n\n      if (!response.ok) {\n        const errorData = await response.json();\n        throw new Error(errorData.error || 'Payment failed. Please try again.');\n      }\n\n      // Payment successful, clear cart and redirect to confirmation\n      clearCart();\n      router.push('/confirmation');\n    } catch (error: any) {\n      console.error('Checkout error:', error);\n      setPaymentError(error.message || 'An unexpected error occurred during checkout.');\n    } finally {\n      setPaymentProcessing(false);\n    }\n  };\n\n  if (cartItems.length === 0) {\n    return (\n      <div className=\"flex flex-col items-center justify-center py-20\">\n        <h1 className=\"text-3xl font-semibold mb-4 text-secondary-DEFAULT dark:text-secondary-dark\">\n          Your cart is empty\n        </h1>\n        <p className=\"text-lg mb-8 text-text-light dark:text-text-dark\">\n          Please add items to your cart before proceeding to checkout.\n        </p>\n        <Link href=\"/\">\n          <Button className=\"px-8 py-3 text-lg\">Start Shopping</Button>\n        </Link>\n      </div>\n    );\n  }\n\n  return (\n    <div className=\"py-8\">\n      <h1 className=\"text-4xl font-bold text-center mb-10 text-primary-DEFAULT dark:text-primary-dark\">\n        Checkout\n      </h1>\n      <div className=\"grid grid-cols-1 lg:grid-cols-2 gap-8\">\n        <div className=\"space-y-6 p-6 bg-card-light dark:bg-card-dark rounded-lg shadow-custom-light dark:shadow-custom-dark\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Shipping & Payment Details</h2>\n          <form className=\"space-y-4\">\n            <div>\n              <label htmlFor=\"email\" className=\"block text-sm font-medium mb-1\">\n                Email Address\n              </label>\n              <Input\n                type=\"email\"\n                id=\"email\"\n                value={user.email}\n                onChange={(e) => setUser({ ...user, email: e.target.value })}\n                placeholder=\"Enter your email\"\n                required\n              />\n            </div>\n            <div>\n              <label htmlFor=\"state\" className=\"block text-sm font-medium mb-1\">\n                Shipping State (for tax calculation)\n              </label>\n              <Input\n                type=\"text\"\n                id=\"state\"\n                value={user.state}\n                onChange={(e) => setUser({ ...user, state: e.target.value.toUpperCase() })}\n                placeholder=\"e.g., CA, NY, TX\"\n                maxLength={2}\n                required\n              />\n            </div>\n            <div>\n              <label htmlFor=\"loyaltyTier\" className=\"block text-sm font-medium mb-1\">\n                Loyalty Tier\n              </label>\n              <select\n                id=\"loyaltyTier\"\n                value={user.loyaltyTier}\n                onChange={(e) => setUser({ ...user, loyaltyTier: e.target.value as User['loyaltyTier'] })}\n                className=\"w-full p-2 border border-gray-300 rounded-md bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-DEFAULT focus:border-primary-DEFAULT\"\n              >\n                <option value=\"bronze\">Bronze</option>\n                <option value=\"silver\">Silver</option>\n                <option value=\"gold\">Gold</option>\n              </select>\n            </div>\n            {/* Payment details - simulated */}\n            <div>\n              <label htmlFor=\"cardNumber\" className=\"block text-sm font-medium mb-1\">\n                Card Number\n              </label>\n              <Input\n                type=\"text\"\n                id=\"cardNumber\"\n                placeholder=\"**** **** **** ****\"\n                maxLength={19}\n                required\n              />\n            </div>\n            <div className=\"grid grid-cols-2 gap-4\">\n              <div>\n                <label htmlFor=\"expiry\" className=\"block text-sm font-medium mb-1\">\n                  Expiry Date\n                </label>\n                <Input type=\"text\" id=\"expiry\" placeholder=\"MM/YY\" maxLength={5} required />\n              </div>\n              <div>\n                <label htmlFor=\"cvv\" className=\"block text-sm font-medium mb-1\">\n                  CVV\n                </label>\n                <Input type=\"text\" id=\"cvv\" placeholder=\"***\" maxLength={3} required />\n              </div>\n            </div>\n          </form>\n        </div>\n\n        <div className=\"space-y-6\">\n          <CheckoutSummary\n            subtotal={subtotal}\n            discount={discount}\n            tax={tax}\n            total={total}\n            totalItems={totalItems}\n            user={user}\n            onUserChange={setUser}\n          />\n          {paymentError && (\n            <p className=\"text-red-500 text-sm text-center\">{paymentError}</p>\n          )}\n          <Button\n            onClick={handleProcessPayment}\n            className=\"w-full py-3 text-lg\"\n            disabled={paymentProcessing || cartItems.length === 0}\n          >\n            {paymentProcessing ? 'Processing Payment...' : 'Place Order'}\n          </Button>\n        </div>\n      </div>\n    </div>\n  );\n}",
+        "params": [],
+        "returns": "any",
+        "async": false
+      }
+    },
+    "lastUpdated": 1764184421300
+  },
+  "generated/web/src/app/confirmation/page.tsx": {
+    "path": "generated/web/src/app/confirmation/page.tsx",
+    "exports": {
+      "default": {
+        "kind": "function",
+        "signature": "function ConfirmationPage() {\n  return (\n    <div className=\"flex flex-col items-center justify-center py-20 text-center\">\n      <svg\n        className=\"w-24 h-24 text-green-500 mb-6\"\n        fill=\"none\"\n        stroke=\"currentColor\"\n        viewBox=\"0 0 24 24\"\n        xmlns=\"http://www.w3.org/2000/svg\"\n      >\n        <path\n          strokeLinecap=\"round\"\n          strokeLinejoin=\"round\"\n          strokeWidth=\"2\"\n          d=\"M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\"\n        ></path>\n      </svg>\n      <h1 className=\"text-4xl font-bold mb-4 text-primary-DEFAULT dark:text-primary-dark\">\n        Order Confirmed!\n      </h1>\n      <p className=\"text-lg mb-8 text-text-light dark:text-text-dark max-w-md\">\n        Thank you for your purchase. Your order has been successfully placed and a confirmation email has been sent to your inbox.\n      </p>\n      <Link href=\"/\">\n        <Button className=\"px-8 py-3 text-lg\">Continue Shopping</Button>\n      </Link>\n    </div>\n  );\n}",
+        "params": [],
+        "returns": "any",
+        "async": false
+      }
+    },
+    "lastUpdated": 1764184421301
+  },
+  "generated/web/src/app/api/checkout/route.ts": {
+    "path": "generated/web/src/app/api/checkout/route.ts",
+    "exports": {
+      "POST": {
+        "kind": "function",
+        "signature": "async function POST(req: NextRequest) {\n  try {\n    const { items, user, subtotal, discount, tax, total } = await req.json();\n\n    // Basic validation\n    if (!items || !Array.isArray(items) || items.length === 0) {\n      return NextResponse.json({ error: 'Cart items are required.' }, { status: 400 });\n    }\n    if (!user || !user.email || !user.loyaltyTier || !user.state) {\n      return NextResponse.json({ error: 'User details are required.' }, { status: 400 });\n    }\n\n    // Re-calculate totals on the server to prevent client-side tampering\n    const serverCalculatedTotals: PricingResult = calculateOrderTotals(items, user);\n\n    // Compare client-sent totals with server-calculated totals\n    // Allow for minor floating point differences, but flag significant discrepancies\n    const tolerance = 0.01; // 1 cent tolerance\n    if (\n      Math.abs(serverCalculatedTotals.subtotal - subtotal) > tolerance ||\n      Math.abs(serverCalculatedTotals.discount - discount) > tolerance ||\n      Math.abs(serverCalculatedTotals.tax - tax) > tolerance ||\n      Math.abs(serverCalculatedTotals.total - total) > tolerance\n    ) {\n      console.warn('Client-side totals mismatch server-side totals:', {\n        client: { subtotal, discount, tax, total },\n        server: serverCalculatedTotals,\n      });\n      // In a real application, you might reject the order or use server-calculated values\n      // For this example, we'll proceed with server-calculated values but log the warning.\n      // If the discrepancy is too large, you might return an error.\n    }\n\n    // Simulate payment processing\n    // In a real app, integrate with Stripe, PayPal, etc.\n    const paymentSuccess = Math.random() > 0.1; // 90% success rate for simulation\n\n    if (!paymentSuccess) {\n      return NextResponse.json({ error: 'Payment failed. Please try a different method.' }, { status: 400 });\n    }\n\n    // Simulate saving order to database\n    const newOrder: Order = {\n      id: Math.floor(Math.random() * 1000000), // Generate a mock order ID\n      items: items,\n      user: user,\n      subtotal: serverCalculatedTotals.subtotal,\n      discount: serverCalculatedTotals.discount,\n      tax: serverCalculatedTotals.tax,\n      total: serverCalculatedTotals.total,\n      // Add timestamp, status, etc.\n    };\n\n    console.log('Order processed successfully:', newOrder);\n\n    // Simulate sending confirmation email\n    // In a real app, integrate with SendGrid, Mailgun, etc.\n    console.log(`Sending confirmation email to ${user.email} for order ${newOrder.id}`);\n\n    return NextResponse.json({ message: 'Order placed successfully!', order: newOrder }, { status: 200 });\n  } catch (error: any) {\n    console.error('API Checkout Error:', error);\n    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });\n  }\n}",
+        "params": [
+          {
+            "name": "req",
+            "type": "NextRequest",
+            "required": true
+          }
+        ],
+        "returns": "any",
+        "async": true
+      }
+    },
+    "lastUpdated": 1764184421303
+  },
+  "generated/web/src/components/cart-item-card.tsx": {
+    "path": "generated/web/src/components/cart-item-card.tsx",
+    "exports": {
+      "default": {
+        "kind": "function",
+        "signature": "function CartItemCard({ item }: CartItemCardProps) {\n  const { updateQuantity, removeItem } = useCart();\n\n  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {\n    const newQuantity = parseInt(e.target.value, 10);\n    if (!isNaN(newQuantity) && newQuantity > 0) {\n      updateQuantity(item.id, newQuantity);\n    }\n  };\n\n  return (\n    <div className=\"flex items-center bg-card-light dark:bg-card-dark p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200\">\n      <div className=\"flex-grow\">\n        <h3 className=\"text-lg font-semibold text-text-light dark:text-text-dark\">{item.name}</h3>\n        <p className=\"text-secondary-DEFAULT dark:text-secondary-dark\">${item.price.toFixed(2)}</p>\n      </div>\n      <div className=\"flex items-center space-x-4\">\n        <Input\n          type=\"number\"\n          min=\"1\"\n          value={item.quantity}\n          onChange={handleQuantityChange}\n          className=\"w-20 text-center\"\n          aria-label={`Quantity for ${item.name}`}\n        />\n        <Button\n          onClick={() => removeItem(item.id)}\n          variant=\"danger\"\n          className=\"px-3 py-2 text-sm\"\n          aria-label={`Remove ${item.name} from cart`}\n        >\n          Remove\n        </Button>\n      </div>\n    </div>\n  );\n}",
+        "params": [
+          {
+            "name": "param",
+            "type": "CartItemCardProps",
+            "required": true
+          }
+        ],
+        "returns": "any",
+        "async": false
+      }
+    },
+    "lastUpdated": 1764184421305
+  },
+  "generated/web/src/components/checkout-summary.tsx": {
+    "path": "generated/web/src/components/checkout-summary.tsx",
+    "exports": {
+      "default": {
+        "kind": "function",
+        "signature": "function CheckoutSummary({\n  subtotal,\n  discount,\n  tax,\n  total,\n  totalItems,\n  user,\n  onUserChange,\n}: CheckoutSummaryProps) {\n  return (\n    <div className=\"bg-card-light dark:bg-card-dark p-6 rounded-lg shadow-custom-light dark:shadow-custom-dark space-y-4\">\n      <h2 className=\"text-2xl font-semibold mb-4 text-primary-DEFAULT dark:text-primary-dark\">\n        Order Summary\n      </h2>\n      <div className=\"space-y-2 text-text-light dark:text-text-dark\">\n        <div className=\"flex justify-between\">\n          <span>Items ({totalItems}) Subtotal:</span>\n          <span>${subtotal.toFixed(2)}</span>\n        </div>\n        <div className=\"flex justify-between\">\n          <span>Discount:</span>\n          <span className=\"text-red-500\">-${discount.toFixed(2)}</span>\n        </div>\n        <div className=\"flex justify-between\">\n          <span>Tax ({user.state}):</span>\n          <span>${tax.toFixed(2)}</span>\n        </div>\n        <div className=\"border-t border-gray-200 dark:border-gray-700 pt-4 mt-4 flex justify-between text-xl font-bold\">\n          <span>Order Total:</span>\n          <span>${total.toFixed(2)}</span>\n        </div>\n      </div>\n\n      <div className=\"pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3\">\n        <h3 className=\"text-lg font-semibold text-text-light dark:text-text-dark\">\n          Customer Details (for calculation)\n        </h3>\n        <div>\n          <label htmlFor=\"summary-email\" className=\"block text-sm font-medium mb-1\">\n            Email\n          </label>\n          <Input\n            id=\"summary-email\"\n            type=\"email\"\n            value={user.email}\n            onChange={(e) => onUserChange({ ...user, email: e.target.value })}\n            placeholder=\"customer@example.com\"\n            className=\"text-sm\"\n          />\n        </div>\n        <div>\n          <label htmlFor=\"summary-state\" className=\"block text-sm font-medium mb-1\">\n            State (for Tax)\n          </label>\n          <Input\n            id=\"summary-state\"\n            type=\"text\"\n            value={user.state}\n            onChange={(e) => onUserChange({ ...user, state: e.target.value.toUpperCase() })}\n            placeholder=\"e.g., CA, NY\"\n            maxLength={2}\n            className=\"text-sm\"\n          />\n        </div>\n        <div>\n          <label htmlFor=\"summary-loyalty\" className=\"block text-sm font-medium mb-1\">\n            Loyalty Tier (for Discount)\n          </label>\n          <select\n            id=\"summary-loyalty\"\n            value={user.loyaltyTier}\n            onChange={(e) => onUserChange({ ...user, loyaltyTier: e.target.value as LoyaltyTier })}\n            className=\"w-full p-2 border border-gray-300 rounded-md bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-primary-DEFAULT focus:border-primary-DEFAULT text-sm\"\n          >\n            <option value=\"bronze\">Bronze</option>\n            <option value=\"silver\">Silver</option>\n            <option value=\"gold\">Gold</option>\n          </select>\n        </div>\n      </div>\n    </div>\n  );\n}",
+        "params": [
+          {
+            "name": "param",
+            "type": "CheckoutSummaryProps",
+            "required": true
+          }
+        ],
+        "returns": "any",
+        "async": false
+      }
+    },
+    "lastUpdated": 1764184421307
+  },
+  "generated/web/src/components/footer.tsx": {
+    "path": "generated/web/src/components/footer.tsx",
+    "exports": {
+      "default": {
+        "kind": "function",
+        "signature": "function Footer() {\n  return (\n    <footer className=\"bg-card-light dark:bg-card-dark text-text-light dark:text-text-dark py-6 mt-10 shadow-inner\">\n      <div className=\"container mx-auto text-center text-sm\">\n        <p>&copy; {new Date().getFullYear()} Next.js E-commerce. All rights reserved.</p>\n        <p className=\"mt-2\">\n          Built with ❤️ by an expert Next.js developer.\n        </p>\n      </div>\n    </footer>\n  );\n}",
+        "params": [],
+        "returns": "any",
+        "async": false
+      }
+    },
+    "lastUpdated": 1764184421307
+  },
+  "generated/web/src/components/header.tsx": {
+    "path": "generated/web/src/components/header.tsx",
+    "exports": {
+      "default": {
+        "kind": "function",
+        "signature": "function Header() {\n  const { theme, setTheme } = useTheme();\n  const [mounted, setMounted] = useState(false);\n  const { totalItems } = useCart();\n\n  // useEffect only runs on the client, so now we can safely show the UI\n  useEffect(() => {\n    setMounted(true);\n  }, []);\n\n  if (!mounted) {\n    return null; // Render nothing on the server to avoid hydration mismatch\n  }\n\n  return (\n    <header className=\"bg-card-light dark:bg-card-dark shadow-md py-4 sticky top-0 z-50\">\n      <div className=\"container mx-auto flex justify-between items-center px-4 sm:px-6 lg:px-8\">\n        <Link href=\"/\" className=\"text-2xl font-bold text-primary-DEFAULT dark:text-primary-dark hover:text-primary-dark dark:hover:text-primary-DEFAULT transition-colors duration-200\">\n          NextShop\n        </Link>\n\n        <nav className=\"flex items-center space-x-6\">\n          <Link href=\"/\" className=\"text-text-light dark:text-text-dark hover:text-primary-DEFAULT dark:hover:text-primary-dark transition-colors duration-200\">\n            Products\n          </Link>\n          <Link href=\"/cart\" className=\"relative text-text-light dark:text-text-dark hover:text-primary-DEFAULT dark:hover:text-primary-dark transition-colors duration-200\">\n            Cart\n            {totalItems > 0 && (\n              <span className=\"absolute -top-2 -right-3 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center\">\n                {totalItems}\n              </span>\n            )}\n          </Link>\n\n          <button\n            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}\n            className=\"p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-DEFAULT dark:focus:ring-primary-dark\"\n            aria-label=\"Toggle theme\"\n          >\n            {theme === 'dark' ? (\n              <svg\n                xmlns=\"http://www.w3.org/2000/svg\"\n                className=\"h-5 w-5\"\n                viewBox=\"0 0 20 20\"\n                fill=\"currentColor\"\n              >\n                <path d=\"M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z\" />\n              </svg>\n            ) : (\n              <svg\n                xmlns=\"http://www.w3.org/2000/svg\"\n                className=\"h-5 w-5\"\n                viewBox=\"0 0 20 20\"\n                fill=\"currentColor\"\n              >\n                <path\n                  fillRule=\"evenodd\"\n                  d=\"M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 4a1 1 0 011 1v1a1 1 0 11-2 0V7a1 1 0 011-1zM3 10a1 1 0 011-1h1a1 1 0 110 2H4a1 1 0 01-1-1zm14 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zm-9 9a1 1 0 011-1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4-4a1 1 0 011-1h1a1 1 0 110 2H7a1 1 0 01-1-1zM5 7a1 1 0 011-1h1a1 1 0 110 2H6a1 1 0 01-1-1zm12 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM8 10a2 2 0 114 0 2 2 0 01-4 0z\"\n                  clipRule=\"evenodd\"\n                />\n              </svg>\n            )}\n          </button>\n        </nav>\n      </div>\n    </header>\n  );\n}",
+        "params": [],
+        "returns": "any",
+        "async": false
+      }
+    },
+    "lastUpdated": 1764184421308
+  },
+  "generated/web/src/components/product-card.tsx": {
+    "path": "generated/web/src/components/product-card.tsx",
+    "exports": {
+      "default": {
+        "kind": "function",
+        "signature": "function ProductCard({ product }: ProductCardProps) {\n  const { addItem } = useCart();\n\n  return (\n    <div className=\"bg-card-light dark:bg-card-dark rounded-lg shadow-custom-light dark:shadow-custom-dark p-6 flex flex-col items-center text-center hover:shadow-lg transition-shadow duration-200\">\n      <h3 className=\"text-xl font-semibold mb-2 text-text-light dark:text-text-dark\">{product.name}</h3>\n      <p className=\"text-2xl font-bold text-primary-DEFAULT dark:text-primary-dark mb-4\">${product.price.toFixed(2)}</p>\n      <Button onClick={() => addItem(product)} className=\"mt-auto px-6 py-2\">\n        Add to Cart\n      </Button>\n    </div>\n  );\n}",
+        "params": [
+          {
+            "name": "param",
+            "type": "ProductCardProps",
+            "required": true
+          }
+        ],
+        "returns": "any",
+        "async": false
+      }
+    },
+    "lastUpdated": 1764184421309
+  },
+  "generated/web/src/components/theme-provider.tsx": {
+    "path": "generated/web/src/components/theme-provider.tsx",
+    "exports": {
+      "ThemeProvider": {
+        "kind": "function",
+        "signature": "function ThemeProvider({ children, ...props }: ThemeProviderProps) {\n  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;\n}",
+        "params": [
+          {
+            "name": "param",
+            "type": "ThemeProviderProps",
+            "required": true
+          }
+        ],
+        "returns": "any",
+        "async": false
+      }
+    },
+    "lastUpdated": 1764184421309
+  },
+  "generated/web/src/components/ui/button.tsx": {
+    "path": "generated/web/src/components/ui/button.tsx",
+    "exports": {},
+    "lastUpdated": 1764184421310
+  },
+  "generated/web/src/components/ui/input.tsx": {
+    "path": "generated/web/src/components/ui/input.tsx",
+    "exports": {},
+    "lastUpdated": 1764184421310
+  },
+  "generated/web/src/context/cart-context.tsx": {
+    "path": "generated/web/src/context/cart-context.tsx",
+    "exports": {
+      "CartProvider": {
+        "kind": "function",
+        "signature": "function CartProvider({ children }: { children: ReactNode }) {\n  const [cartItems, setCartItems] = useState<Item[]>([]);\n\n  // Load cart from localStorage on initial mount\n  useEffect(() => {\n    const storedCart = localStorage.getItem('cartItems');\n    if (storedCart) {\n      setCartItems(JSON.parse(storedCart));\n    }\n  }, []);\n\n  // Save cart to localStorage whenever it changes\n  useEffect(() => {\n    localStorage.setItem('cartItems', JSON.stringify(cartItems));\n  }, [cartItems]);\n\n  const addItem = useCallback((item: Item) => {\n    setCartItems((prevItems) => {\n      const existingItem = prevItems.find((i) => i.id === item.id);\n      if (existingItem) {\n        return prevItems.map((i) =>\n          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i\n        );\n      } else {\n        return [...prevItems, { ...item, quantity: 1 }];\n      }\n    });\n  }, []);\n\n  const updateQuantity = useCallback((itemId: number, quantity: number) => {\n    setCartItems((prevItems) => {\n      if (quantity <= 0) {\n        return prevItems.filter((item) => item.id !== itemId);\n      }\n      return prevItems.map((item) =>\n        item.id === itemId ? { ...item, quantity } : item\n      );\n    });\n  }, []);\n\n  const removeItem = useCallback((itemId: number) => {\n    setCartItems((prevItems) => prevItems.filter((item) => item.id !== itemId));\n  }, []);\n\n  const clearCart = useCallback(() => {\n    setCartItems([]);\n  }, []);\n\n  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);\n\n  const getCartTotals = useCallback((user: User): PricingResult => {\n    return calculateOrderTotals(cartItems, user);\n  }, [cartItems]);\n\n  const value = {\n    cartItems,\n    totalItems,\n    addItem,\n    updateQuantity,\n    removeItem,\n    clearCart,\n    getCartTotals,\n  };\n\n  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;\n}",
+        "params": [
+          {
+            "name": "param",
+            "type": "object",
+            "required": true
+          }
+        ],
+        "returns": "any",
+        "async": false
+      },
+      "useCart": {
+        "kind": "function",
+        "signature": "function useCart() {\n  const context = useContext(CartContext);\n  if (context === undefined) {\n    throw new Error('useCart must be used within a CartProvider');\n  }\n  return context;\n}",
+        "params": [],
+        "returns": "any",
+        "async": false
+      }
+    },
+    "lastUpdated": 1764184421312
+  },
+  "generated/web/src/lib/pricing.ts": {
+    "path": "generated/web/src/lib/pricing.ts",
+    "exports": {
+      "calculateOrderTotals": {
+        "kind": "function",
+        "signature": "function calculateOrderTotals(items: Item[], user: User): PricingResult {\n  let subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);\n  subtotal = roundToTwoDecimals(subtotal);\n\n  // Apply loyalty tier discount\n  let discount = applyDiscount(subtotal, user.loyaltyTier);\n\n  // Calculate amount after discount\n  let amountAfterDiscount = subtotal - discount;\n\n  // Business Rule: Minimum order $10 after discounts\n  if (amountAfterDiscount < 10 && subtotal > 0) {\n    // If the discount makes the total less than $10,\n    // adjust the discount so that amountAfterDiscount is exactly $10\n    // unless the original subtotal was already less than $10.\n    if (subtotal >= 10) {\n      discount = subtotal - 10;\n      amountAfterDiscount = 10;\n    } else {\n      // If subtotal was already less than $10, no discount should be applied\n      // to prevent negative totals or further reduction.\n      discount = 0;\n      amountAfterDiscount = subtotal;\n    }\n  }\n  discount = roundToTwoDecimals(discount);\n  amountAfterDiscount = roundToTwoDecimals(amountAfterDiscount);\n\n\n  // Get tax rate for the user's state, default if not found\n  const stateTaxRate = TAX_RATES[user.state] || TAX_RATES['DEFAULT'];\n\n  // Calculate tax on (subtotal - discount)\n  let tax = amountAfterDiscount * stateTaxRate;\n  tax = roundToTwoDecimals(tax);\n\n  // Calculate final total\n  let total = amountAfterDiscount + tax;\n  total = roundToTwoDecimals(total);\n\n  return {\n    subtotal,\n    discount,\n    tax,\n    total,\n  };\n}",
+        "params": [
+          {
+            "name": "items",
+            "type": "Item[]",
+            "required": true
+          },
+          {
+            "name": "user",
+            "type": "User",
+            "required": true
+          }
+        ],
+        "returns": "PricingResult",
+        "async": false
+      }
+    },
+    "lastUpdated": 1764184421314
+  },
+  "generated/web/src/types/index.ts": {
+    "path": "generated/web/src/types/index.ts",
+    "exports": {
+      "Item": {
+        "kind": "interface",
+        "signature": "interface Item {\n  id: number;\n  name: string;\n  price: number;\n  quantity: number;\n}",
+        "properties": [
+          "id: number",
+          "name: string",
+          "price: number",
+          "quantity: number"
+        ]
+      },
+      "LoyaltyTier": {
+        "kind": "type",
+        "signature": "type LoyaltyTier = \"bronze\" | \"silver\" | \"gold\";",
+        "typeDefinition": "\"bronze\" | \"silver\" | \"gold\""
+      },
+      "User": {
+        "kind": "interface",
+        "signature": "interface User {\n  id: number;\n  email: string;\n  loyaltyTier: LoyaltyTier;\n  state: string; // e.g., \"CA\", \"NY\"\n}",
+        "properties": [
+          "id: number",
+          "email: string",
+          "loyaltyTier: LoyaltyTier",
+          "state: string"
+        ]
+      },
+      "Order": {
+        "kind": "interface",
+        "signature": "interface Order {\n  id: number;\n  items: Item[];\n  user: User;\n  subtotal: number;\n  discount: number;\n  tax: number;\n  total: number;\n  // Add other order details like status, createdAt, etc.\n}",
+        "properties": [
+          "id: number",
+          "items: Item[]",
+          "user: User",
+          "subtotal: number",
+          "discount: number",
+          "tax: number",
+          "total: number"
+        ]
+      },
+      "PricingResult": {
+        "kind": "interface",
+        "signature": "interface PricingResult {\n  subtotal: number;\n  discount: number;\n  tax: number;\n  total: number;\n}",
+        "properties": [
+          "subtotal: number",
+          "discount: number",
+          "tax: number",
+          "total: number"
+        ]
+      }
+    },
+    "lastUpdated": 1764184421315
+  }
+}

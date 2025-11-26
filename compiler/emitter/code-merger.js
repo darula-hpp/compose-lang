@@ -5,6 +5,7 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
+import { FileHashCache } from './file-hash-cache.js';
 
 /**
  * Normalize file path by removing common output directory prefixes
@@ -42,27 +43,46 @@ function normalizePath(filePath, targetDir) {
 export function mergeCode(generatedFiles, frameworkInfo, targetDir) {
     const { framework } = frameworkInfo;
 
+    // Initialize file hash cache
+    const fileHashCache = new FileHashCache();
+    const stats = { written: 0, skipped: 0 };
+
+    let result;
     switch (framework) {
         case 'vite':
-            return mergeViteCode(generatedFiles, frameworkInfo, targetDir);
+            result = mergeViteCode(generatedFiles, frameworkInfo, targetDir, fileHashCache, stats);
+            break;
 
         case 'next':
-            return mergeNextCode(generatedFiles, frameworkInfo, targetDir);
+            result = mergeNextCode(generatedFiles, frameworkInfo, targetDir, fileHashCache, stats);
+            break;
 
         case 'express':
         case 'fastify':
-            return mergeExpressCode(generatedFiles, frameworkInfo, targetDir);
+            result = mergeExpressCode(generatedFiles, frameworkInfo, targetDir, fileHashCache, stats);
+            break;
 
         default:
             // Fallback: just write files to output directory
-            return writeDirectly(generatedFiles, targetDir);
+            result = writeDirectly(generatedFiles, targetDir, fileHashCache, stats);
     }
+
+    // Save updated cache
+    fileHashCache.saveCache();
+
+    // Report stats
+    console.log(`   ✓ Merged ${stats.written} file(s) into ${targetDir}`);
+    if (stats.skipped > 0) {
+        console.log(`   ⏭️  Skipped ${stats.skipped} unchanged file(s)`);
+    }
+
+    return result;
 }
 
 /**
  * Merge code for Vite + React projects
  */
-function mergeViteCode(generatedFiles, frameworkInfo, targetDir) {
+function mergeViteCode(generatedFiles, frameworkInfo, targetDir, hashCache, stats) {
     const appFilePath = join(targetDir, frameworkInfo.entryPoint);
 
     // Collect pages and components
@@ -75,14 +95,14 @@ function mergeViteCode(generatedFiles, frameworkInfo, targetDir) {
         if (normalizedPath.includes('/pages/') || normalizedPath.includes('pages/')) {
             pages.push({ ...file, path: normalizedPath });
             // Write page file
-            writeFile(join(targetDir, 'src', normalizedPath), file.content);
+            writeFile(join(targetDir, 'src', normalizedPath), file.content, hashCache, stats);
         } else if (normalizedPath.includes('/components/') || normalizedPath.includes('components/')) {
             components.push({ ...file, path: normalizedPath });
             // Write component file
-            writeFile(join(targetDir, 'src', normalizedPath), file.content);
+            writeFile(join(targetDir, 'src', normalizedPath), file.content, hashCache, stats);
         } else {
             // Write other files (utils, types, etc.)
-            writeFile(join(targetDir, 'src', normalizedPath), file.content);
+            writeFile(join(targetDir, 'src', normalizedPath), file.content, hashCache, stats);
         }
     }
 
@@ -136,14 +156,14 @@ export default App;
 /**
  * Merge code for Next.js projects  
  */
-function mergeNextCode(generatedFiles, frameworkInfo, targetDir) {
+function mergeNextCode(generatedFiles, frameworkInfo, targetDir, hashCache, stats) {
     for (const file of generatedFiles) {
         const normalizedPath = normalizePath(file.path, targetDir);
 
         // For Next.js, just write files directly to targetDir
         // Don't add additional 'pages' or 'components' subdirectories
         // because the normalized path already includes them
-        writeFile(join(targetDir, normalizedPath), file.content);
+        writeFile(join(targetDir, normalizedPath), file.content, hashCache, stats);
     }
 
     return { success: true, files: generatedFiles.length };
@@ -152,7 +172,7 @@ function mergeNextCode(generatedFiles, frameworkInfo, targetDir) {
 /**
  * Merge code for Express projects
  */
-function mergeExpressCode(generatedFiles, frameworkInfo, targetDir) {
+function mergeExpressCode(generatedFiles, frameworkInfo, targetDir, hashCache, stats) {
     const serverFilePath = join(targetDir, frameworkInfo.entryPoint);
     const routes = [];
 
@@ -161,9 +181,9 @@ function mergeExpressCode(generatedFiles, frameworkInfo, targetDir) {
 
         if (normalizedPath.includes('/routes/') || normalizedPath.includes('routes/')) {
             routes.push({ ...file, path: normalizedPath });
-            writeFile(join(targetDir, 'routes', normalizedPath), file.content);
+            writeFile(join(targetDir, 'routes', normalizedPath), file.content, hashCache, stats);
         } else {
-            writeFile(join(targetDir, normalizedPath), file.content);
+            writeFile(join(targetDir, normalizedPath), file.content, hashCache, stats);
         }
     }
 
@@ -214,21 +234,41 @@ function injectExpressRoutes(serverFilePath, routes) {
 /**
  * Write generated files directly (fallback)
  */
-function writeDirectly(generatedFiles, targetDir) {
+function writeDirectly(generatedFiles, targetDir, hashCache, stats) {
     for (const file of generatedFiles) {
         const normalizedPath = normalizePath(file.path, targetDir);
-        writeFile(join(targetDir, normalizedPath), file.content);
+        writeFile(join(targetDir, normalizedPath), file.content, hashCache, stats);
     }
     return { success: true, files: generatedFiles.length };
 }
 
 /**
  * Write file and create directories if needed
+ * @param {string} filePath - Absolute file path
+ * @param {string} content - File content
+ * @param {FileHashCache} hashCache - File hash cache instance
+ * @param {Object} stats - Stats object to track written/skipped files
  */
-function writeFile(filePath, content) {
+function writeFile(filePath, content, hashCache, stats) {
+    // Check if file content has changed
+    if (hashCache && !hashCache.hasChanged(filePath, content)) {
+        if (stats) stats.skipped++;
+        return; // Skip writing unchanged file
+    }
+
+    // Create directory if needed
     const dir = dirname(filePath);
     if (!existsSync(dir)) {
         mkdirSync(dir, { recursive: true });
     }
+
+    // Write file
     writeFileSync(filePath, content);
+
+    // Update hash cache
+    if (hashCache) {
+        hashCache.updateHash(filePath, content);
+    }
+
+    if (stats) stats.written++;
 }

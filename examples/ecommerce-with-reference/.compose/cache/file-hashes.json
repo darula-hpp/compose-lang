@@ -1,0 +1,94 @@
+{
+  "generated/web/package.json": {
+    "hash": "21d93adf00bfaadc8f262a60c092489c2adef5c81d910fe9b29784e23224fa05",
+    "lastModified": 1764184398289
+  },
+  "generated/web/tsconfig.json": {
+    "hash": "53f96418e60724de8c624de8d7d1b549f64a6c34a5f40f07a7596af4380c92f6",
+    "lastModified": 1764184398289
+  },
+  "generated/web/next.config.js": {
+    "hash": "631aef92db3169ec80d463078149df1c9c57cbaf4b1d40b85556f9bb415382ca",
+    "lastModified": 1764184398289
+  },
+  "generated/web/tailwind.config.ts": {
+    "hash": "03dd042aa17f7aa32e3d69346b81969306a36d253d0b2cb4e78c28c47600b225",
+    "lastModified": 1764184398290
+  },
+  "generated/web/postcss.config.js": {
+    "hash": "fa650b380adfabb151a0b352f7135e107e6352345f899060f1c5c231228f94bf",
+    "lastModified": 1764184398290
+  },
+  "generated/web/src/app/layout.tsx": {
+    "hash": "f24edb71ce5d3d43f1c67ba2bb768743283efa5e1d13f9643d933f711b40e0bf",
+    "lastModified": 1764184398290
+  },
+  "generated/web/src/app/globals.css": {
+    "hash": "0508b25d7d82443b110637ba7322e8f8aaea220136cedb97018a41b624a61f1e",
+    "lastModified": 1764184398290
+  },
+  "generated/web/src/app/page.tsx": {
+    "hash": "1427e13f4939f8f05432566dc878ad6ba7af35a8737852249c64f4d8e69aba60",
+    "lastModified": 1764184398290
+  },
+  "generated/web/src/app/cart/page.tsx": {
+    "hash": "5b94f58c2e62375caa2ea94c1d7b307978a9bbaad2840bb8a161901f98555035",
+    "lastModified": 1764184398290
+  },
+  "generated/web/src/app/checkout/page.tsx": {
+    "hash": "42ee4a14650e02c5baa9ba11b8caac9bf3d5a94bb2e8ef844359f3f6055bc142",
+    "lastModified": 1764184398291
+  },
+  "generated/web/src/app/confirmation/page.tsx": {
+    "hash": "3f1d8771817b1dfbca3ba368dec0ff97b91f5718902c2579766750f7f8acbade",
+    "lastModified": 1764184398291
+  },
+  "generated/web/src/app/api/checkout/route.ts": {
+    "hash": "71f267834c4adf71b6e04553c334788c1ac3ed0208cce18677d7eccff1e23572",
+    "lastModified": 1764184398291
+  },
+  "generated/web/src/components/cart-item-card.tsx": {
+    "hash": "5e4d30dc57bb7611fe078ea7146ea7c2567224f2c3b74e2919faf79c0c973318",
+    "lastModified": 1764184398291
+  },
+  "generated/web/src/components/checkout-summary.tsx": {
+    "hash": "4cc6dda780297aaa6a51f52e6a626d258abb8dcd28e08fd1484a0bc30b1258a0",
+    "lastModified": 1764184398291
+  },
+  "generated/web/src/components/footer.tsx": {
+    "hash": "dee88055fe8f9630ac3aeae75740bd909baba884b18c29e8fd86db72c7ccdbf0",
+    "lastModified": 1764184398291
+  },
+  "generated/web/src/components/header.tsx": {
+    "hash": "52f2348deb44136c1e369d2f8232b88dd79bbcb2b3c267107c86956039a4c4c6",
+    "lastModified": 1764184398291
+  },
+  "generated/web/src/components/product-card.tsx": {
+    "hash": "fad561d268d3550905fe6a63f19a807c392a6bb47637d101d32a0b7151126761",
+    "lastModified": 1764184398291
+  },
+  "generated/web/src/components/theme-provider.tsx": {
+    "hash": "36ef6110a5669e7a0ffa8930616ab5316deb894658d3462c6d4a5ca1b2316b72",
+    "lastModified": 1764184398291
+  },
+  "generated/web/src/components/ui/button.tsx": {
+    "hash": "60c57b2d002c1bf66d48fc68ece5d986356ef881523a2586747e7d9126481f21",
+    "lastModified": 1764184398292
+  },
+  "generated/web/src/components/ui/input.tsx": {
+    "hash": "1d50431df455bfce18bc5b92483ebca2e31a2d264204eee65608060ad9f066a0",
+    "lastModified": 1764184398292
+  },
+  "generated/web/src/context/cart-context.tsx": {
+    "hash": "3629485a1a99ea13c4877014796e8339ff14458cefab31074d6aed96e52042ec",
+    "lastModified": 1764184398292
+  },
+  "generated/web/src/lib/pricing.ts": {
+    "hash": "50f4ba715c7d5af57b1ee7cdc23a7a00e47c4c91f4b6e20b3e2353d5eeea4392",
+    "lastModified": 1764184398292
+  },
+  "generated/web/src/types/index.ts": {
+    "hash": "870bb13e9ac398e730a87b340b6d50da6238dec55c39393617cbde1f22700895",
+    "lastModified": 1764184398292
+  }
+}

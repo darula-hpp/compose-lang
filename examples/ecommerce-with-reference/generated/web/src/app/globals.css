@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar for better aesthetics */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: theme('colors.background.light');
+  border-radius: 10px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: theme('colors.background.dark');
+}
+
+::-webkit-scrollbar-thumb {
+  background: theme('colors.primary.DEFAULT');
+  border-radius: 10px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: theme('colors.primary.dark');
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.primary.dark');
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: theme('colors.primary.DEFAULT');
+}

@@ -1,0 +1,34 @@
+{
+  "/tmp/compose-test-output/generated/web/src/App.jsx": {
+    "hash": "9b1555c6e5eacbbd0a7b78601d2b4b247687057e019ad0b71bc319d2fcb66d61",
+    "lastModified": 1764184921955
+  },
+  "/tmp/compose-test-output/generated/web/src/components/Button.jsx": {
+    "hash": "d12fe0bd7227e37141bb8e106823596121a452d1c9b4f050ffa94bcb0c3b7528",
+    "lastModified": 1764184921957
+  },
+  "/tmp/compose-test-output/output/src/App.jsx": {
+    "hash": "9b1555c6e5eacbbd0a7b78601d2b4b247687057e019ad0b71bc319d2fcb66d61",
+    "lastModified": 1764184921962
+  },
+  "/tmp/compose-test-output/generated/web/index.js": {
+    "hash": "b8d698bcd6ea71e0d7adf2bf5322f5cf96e0cb7d66d1a862ac1f110fdf0571d9",
+    "lastModified": 1764184921963
+  },
+  "/tmp/compose-test-output/generated/web/package.json": {
+    "hash": "2e5e80eaa69604993bbf11fbfd1c88794324545b6ae164e7e8ebd2ad503f94b6",
+    "lastModified": 1764186869912
+  },
+  "/tmp/compose-test-output/generated/web/README.md": {
+    "hash": "d8b8cbbec1ed15a6679650ae561b127dc879340d3b6bb2105fc68d397489cd5e",
+    "lastModified": 1764184921963
+  },
+  "/tmp/compose-test-output/generated/web/app/page.tsx": {
+    "hash": "8fc758dc4d28e02015124022a5b0636e3c4ecb1e791b1093a567afa13b07a8d6",
+    "lastModified": 1764184921965
+  },
+  "/tmp/compose-test-output/generated/web/app/layout.tsx": {
+    "hash": "429aad3bc9fbfdf66d56f0a827f13d83cbbc3a552e3476773b0c5ad5b282d51a",
+    "lastModified": 1764184921965
+  }
+}
