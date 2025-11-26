@@ -1,7 +1,8 @@
+import { describe, it, beforeEach, afterEach } from 'node:test';
+import { strict as assert } from 'node:assert';
 import fs from 'fs';
 import path from 'path';
 import { CacheManager } from '../cache-manager.js';
-
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -24,7 +25,7 @@ describe('CacheManager', () => {
         }
     });
 
-    test('should generate consistent keys', () => {
+    it('should generate consistent keys', () => {
         const manager = new CacheManager(testCacheDir);
         const prompt = 'test prompt';
         const options = { model: 'gpt-4', temperature: 0.7 };
@@ -33,22 +34,22 @@ describe('CacheManager', () => {
         const key2 = manager.generateKey(prompt, options);
         const key3 = manager.generateKey(prompt, { ...options, temperature: 0.8 });
 
-        expect(key1).toBe(key2);
-        expect(key1).not.toBe(key3);
+        assert.strictEqual(key1, key2);
+        assert.notStrictEqual(key1, key3);
     });
 
-    test('should store and retrieve values', () => {
+    it('should store and retrieve values', () => {
         const manager = new CacheManager(testCacheDir);
         const key = 'test-key';
         const value = 'test-response';
 
-        expect(manager.get(key)).toBeNull();
+        assert.strictEqual(manager.get(key), null);
 
         manager.set(key, value);
-        expect(manager.get(key)).toBe(value);
+        assert.strictEqual(manager.get(key), value);
     });
 
-    test('should persist cache to disk', () => {
+    it('should persist cache to disk', () => {
         const manager1 = new CacheManager(testCacheDir);
         const key = 'test-key';
         const value = 'test-response';
@@ -57,27 +58,27 @@ describe('CacheManager', () => {
 
         // Create new instance pointing to same directory
         const manager2 = new CacheManager(testCacheDir);
-        expect(manager2.get(key)).toBe(value);
+        assert.strictEqual(manager2.get(key), value);
     });
 
-    test('should clear cache', () => {
+    it('should clear cache', () => {
         const manager = new CacheManager(testCacheDir);
         const key = 'test-key';
         const value = 'test-response';
 
         manager.set(key, value);
-        expect(manager.get(key)).toBe(value);
+        assert.strictEqual(manager.get(key), value);
 
         manager.clear();
-        expect(manager.get(key)).toBeNull();
+        assert.strictEqual(manager.get(key), null);
 
         // Verify file is updated
         const manager2 = new CacheManager(testCacheDir);
-        expect(manager2.get(key)).toBeNull();
+        assert.strictEqual(manager2.get(key), null);
     });
 
-    test('should handle missing cache directory gracefully', () => {
+    it('should handle missing cache directory gracefully', () => {
         const manager = new CacheManager(testCacheDir);
-        expect(manager.get('non-existent')).toBeNull();
+        assert.strictEqual(manager.get('non-existent'), null);
     });
 });

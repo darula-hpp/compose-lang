@@ -47,7 +47,7 @@ export async function fetchUser(id: string): Promise<string> {
 
             assert.ok(exports.fetchUser);
             assert.strictEqual(exports.fetchUser.async, true);
-            assert.strictEqual(exports.fetchUser.returns, 'Promise');
+            assert.strictEqual(exports.fetchUser.returns, 'Promise<string>');
         });
 
         it('should extract function with optional parameters', async () => {

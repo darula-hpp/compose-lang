@@ -43,8 +43,8 @@ function normalizePath(filePath, targetDir) {
 export function mergeCode(generatedFiles, frameworkInfo, targetDir) {
     const { framework } = frameworkInfo;
 
-    // Initialize file hash cache
-    const fileHashCache = new FileHashCache();
+    // Initialize file hash cache with target-dir-specific cache directory
+    const fileHashCache = new FileHashCache(`${targetDir}/.compose/cache`);
     const stats = { written: 0, skipped: 0 };
 
     let result;

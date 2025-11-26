@@ -1,3 +1,5 @@
+import { describe, it, beforeEach, afterEach } from 'node:test';
+import { strict as assert } from 'node:assert';
 import fs from 'fs';
 import path from 'path';
 import { CacheManager } from '../cache-manager.js';
@@ -64,7 +66,7 @@ describe('Caching Integration', () => {
         }
     });
 
-    test('should cache LLM responses', async () => {
+    it('should cache LLM responses', async () => {
         const cacheManager = new CacheManager(testCacheDir);
         const client = new TestLLMClient(cacheManager);
 
@@ -73,48 +75,48 @@ describe('Caching Integration', () => {
 
         // First call - should hit "API"
         const result1 = await client.generate(systemPrompt, userPrompt);
-        expect(client.callCount).toBe(1);
-        expect(result1).toBe('Generated response for: user');
+        assert.strictEqual(client.callCount, 1);
+        assert.strictEqual(result1, 'Generated response for: user');
 
         // Second call - should hit cache
         const result2 = await client.generate(systemPrompt, userPrompt);
-        expect(client.callCount).toBe(1); // Count should not increase
-        expect(result2).toBe(result1);
+        assert.strictEqual(client.callCount, 1); // Count should not increase
+        assert.strictEqual(result2, result1);
     });
 
-    test('should miss cache with different prompts', async () => {
+    it('should miss cache with different prompts', async () => {
         const cacheManager = new CacheManager(testCacheDir);
         const client = new TestLLMClient(cacheManager);
 
         await client.generate('sys', 'prompt 1');
-        expect(client.callCount).toBe(1);
+        assert.strictEqual(client.callCount, 1);
 
         await client.generate('sys', 'prompt 2');
-        expect(client.callCount).toBe(2);
+        assert.strictEqual(client.callCount, 2);
     });
 
-    test('should miss cache with different options', async () => {
+    it('should miss cache with different options', async () => {
         const cacheManager = new CacheManager(testCacheDir);
         const client = new TestLLMClient(cacheManager);
 
         await client.generate('sys', 'prompt', { temperature: 0.5 });
-        expect(client.callCount).toBe(1);
+        assert.strictEqual(client.callCount, 1);
 
         // Different temperature should generate different key
         await client.generate('sys', 'prompt', { temperature: 0.8 });
-        expect(client.callCount).toBe(2);
+        assert.strictEqual(client.callCount, 2);
     });
 
-    test('should re-fetch after cache clear', async () => {
+    it('should re-fetch after cache clear', async () => {
         const cacheManager = new CacheManager(testCacheDir);
         const client = new TestLLMClient(cacheManager);
 
         await client.generate('sys', 'prompt');
-        expect(client.callCount).toBe(1);
+        assert.strictEqual(client.callCount, 1);
 
         cacheManager.clear();
 
         await client.generate('sys', 'prompt');
-        expect(client.callCount).toBe(2);
+        assert.strictEqual(client.callCount, 2);
     });
 });
