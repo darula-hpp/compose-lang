@@ -47,6 +47,7 @@
         "@babel/parser": "^7.28.5",
         "@babel/traverse": "^7.28.5",
         "@google/generative-ai": "^0.24.1",
-        "openai": "^6.9.1"
+        "openai": "^6.9.1",
+        "tailwind-merge": "^3.4.0"
     }
 }

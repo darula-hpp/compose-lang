@@ -4,9 +4,11 @@
  */
 
 import { createLLMClient } from './llm-client.js';
-import { createFullProjectPrompt } from './prompt-templates.js';
+import { createFullProjectPrompt, createPartialPrompt } from './prompt-templates.js';
 import { ExportMapBuilder } from './export-map-builder.js';
-import { existsSync } from 'fs';
+import { IRCache } from './ir-cache.js';
+import { DependencyTracker } from './dependency-tracker.js';
+import { existsSync, readFileSync, readdirSync } from 'fs';
 
 export class CodeEmitter {
     constructor(target, options = {}) {
@@ -27,10 +29,49 @@ export class CodeEmitter {
             this.llmClient = await createLLMClient(this.llmConfig);
         }
 
-        // In v0.2.0, we send the ENTIRE IR to the LLM at once
-        // The IR contains models (data), features (behavior), guides (hints)
-        // The LLM generates the complete application code
+        // Initialize IR cache
+        const irCache = new IRCache();
+        const previousIR = irCache.loadIR();
+        const diff = previousIR ? irCache.diff(previousIR, ir) : null;
 
+        // Save current IR for next build
+        irCache.saveIR(ir);
+
+        // Check if we can do selective regeneration
+        const canDoSelective = diff && diff.hasChanges && !this.options.forceFullBuild;
+
+        if (canDoSelective) {
+            // Get existing files from export map
+            const existingFiles = this.getExistingFiles();
+
+            // Determine affected files
+            const tracker = new DependencyTracker();
+            const affectedFiles = tracker.getAffectedFiles(diff, existingFiles);
+
+            if (affectedFiles.length === 0) {
+                console.log('🎯 No files affected by changes');
+                return { files: [], target: this.target };
+            }
+
+            // Check if selective regeneration is worthwhile
+            if (tracker.shouldUseSelectiveRegeneration(affectedFiles, existingFiles)) {
+                console.log(`🎯 Selective regeneration: ${affectedFiles.length}/${existingFiles.length} files`);
+
+                const prompt = createPartialPrompt(ir, affectedFiles, {
+                    diff,
+                    existingFiles
+                }, this.target);
+
+                const generatedCode = await this.llmClient.generate('', prompt);
+                const files = this.parseOutput(generatedCode);
+
+                await this.buildExportMap(files);
+                return { files, target: this.target };
+            }
+        }
+
+        // Fall back to full regeneration
+        console.log('🏗️  Full regeneration');
         const prompt = createFullProjectPrompt(ir, this.target);
         const generatedCode = await this.llmClient.generate('', prompt);
 
@@ -110,6 +151,26 @@ export class CodeEmitter {
         }
 
         return files;
+    }
+
+    /**
+     * Get existing files from export map
+     * @returns {Array} - List of existing file paths
+     */
+    getExistingFiles() {
+        const exportMapPath = '.compose/cache/export-map.json';
+        if (!existsSync(exportMapPath)) {
+            return [];
+        }
+
+        try {
+            const exportMapContent = readFileSync(exportMapPath, 'utf8');
+            const exportMap = JSON.parse(exportMapContent);
+            return Object.keys(exportMap);
+        } catch (error) {
+            console.warn(`⚠️  Failed to load existing files: ${error.message}`);
+            return [];
+        }
     }
 
     /**

@@ -1,0 +1,114 @@
+{
+  "generated/web/package.json": {
+    "hash": "516ecedd789b9fcf5f166a58c950ab1b6b8d386c041618ec4ab4ab97cefc7614",
+    "lastModified": 1764194567478
+  },
+  "generated/web/tsconfig.json": {
+    "hash": "54202f1d6d35ba51c3daea32bf67e8da24568ec0cb0c341fa0b5ed2ceb174f2d",
+    "lastModified": 1764194567478
+  },
+  "generated/web/next.config.mjs": {
+    "hash": "73f18ea67787ab9d40bedbf6600bc6f822dfc31347374a54677d67a36567b20b",
+    "lastModified": 1764194567478
+  },
+  "generated/web/tailwind.config.ts": {
+    "hash": "3e5860f9b18004862b5672340cc3ec74480493bf653ec4fec33ac6a6b13e2a2e",
+    "lastModified": 1764194567478
+  },
+  "generated/web/postcss.config.js": {
+    "hash": "fa650b380adfabb151a0b352f7135e107e6352345f899060f1c5c231228f94bf",
+    "lastModified": 1764194567479
+  },
+  "generated/web/app/globals.css": {
+    "hash": "8515a2012e7ec1ad7d514f8be26b6fa21f9348af9b030711e8ba9e14cf03e05f",
+    "lastModified": 1764194567480
+  },
+  "generated/web/lib/types.ts": {
+    "hash": "7187e70bb0d12a68f2bd87e78501323aae828345e20e08b00ab6f78e008b8c34",
+    "lastModified": 1764194567480
+  },
+  "generated/web/lib/pricing.ts": {
+    "hash": "684706825bfbd0583e4646adb54948cb9335fdbad03e2131e9b63c3090aebda0",
+    "lastModified": 1764195043835
+  },
+  "generated/web/lib/utils.ts": {
+    "hash": "fe1c82ab651f8dfbcbc2314f807f228c48d82fb197fe30e0ebb0d8d171ac7ee8",
+    "lastModified": 1764194567480
+  },
+  "generated/web/data/products.ts": {
+    "hash": "4771e6abee5b54d9b395761b237d0d71088c04bcc336b5dd54f714122078a1a0",
+    "lastModified": 1764194567480
+  },
+  "generated/web/data/mockUser.ts": {
+    "hash": "efd7d06056b514ef15921f483d4edaaee90f7981b52753413aac8481fcabe58a",
+    "lastModified": 1764194567480
+  },
+  "generated/web/components/ThemeProvider.tsx": {
+    "hash": "9d168584ab091b88628306f31abba2c28dfb9f652dd5152807e37607f398965c",
+    "lastModified": 1764194567480
+  },
+  "generated/web/components/DarkModeToggle.tsx": {
+    "hash": "420271e3d09a04aed376a2aa930559b89c6b9b2075a41982e0c24c036c36bfcb",
+    "lastModified": 1764194567481
+  },
+  "generated/web/components/Navbar.tsx": {
+    "hash": "3c660807f5ad3028e29599a420e1d62362c3f1baf936dc6fb0d76530fe82e27c",
+    "lastModified": 1764194567481
+  },
+  "generated/web/components/ProductCard.tsx": {
+    "hash": "84b77607ad1dcc5a9201ea7c82d7430a659677a06943a1ffdf726f5464861ef5",
+    "lastModified": 1764194567481
+  },
+  "generated/web/components/CartItem.tsx": {
+    "hash": "cb3e41bbc0b6f6c10d0f24632d5e26e85e5724c3370e438c00d185eda47f34ee",
+    "lastModified": 1764194567481
+  },
+  "generated/web/components/CheckoutSummary.tsx": {
+    "hash": "c726f43991123164d10e6d71096f12719f0c9a7ba9af7a84ba195a73d5a925c5",
+    "lastModified": 1764194567481
+  },
+  "generated/web/context/CartContext.tsx": {
+    "hash": "6f21bd957f16073591da4dfc5efb58458d8c803ada6f4ecb3c7dc36eb15fd7c7",
+    "lastModified": 1764194567481
+  },
+  "generated/web/app/layout.tsx": {
+    "hash": "87fcb7a2b18dbaf8d2136e49c8b5ad96e068472c5ba812c66d4a58590aa0f6d8",
+    "lastModified": 1764194567481
+  },
+  "generated/web/app/page.tsx": {
+    "hash": "21995e3705b90aa923646b78adeb3cc838a1d9762b266960d7e8523bba828ebe",
+    "lastModified": 1764194567481
+  },
+  "generated/web/app/cart/page.tsx": {
+    "hash": "866bce1ad504acb62c9f4309ea6b7d30821de6f76487de1cfd852d35190a75b6",
+    "lastModified": 1764194567482
+  },
+  "generated/web/app/checkout/page.tsx": {
+    "hash": "62817401b3ac923d7b7a256579c46a7a07d28d1b00982966c59ad1596bca8619",
+    "lastModified": 1764194567482
+  },
+  "generated/web/public/images/headphones.jpg": {
+    "hash": "c81f085b4088f1343b120b1e067e2cd117f751c38b341e9fec2d053ff3acd52c",
+    "lastModified": 1764194567482
+  },
+  "generated/web/public/images/smartwatch.jpg": {
+    "hash": "2f42492875a4ecec1260fbd36fc80c006675b05a3949822b96d07266e1b88057",
+    "lastModified": 1764194567482
+  },
+  "generated/web/public/images/speaker.jpg": {
+    "hash": "c54f84e35498df19497ee530a6f1e8818bc4cd8751ddce5c3527e193f29912b4",
+    "lastModified": 1764194567482
+  },
+  "generated/web/public/images/chair.jpg": {
+    "hash": "3313f8aaf124b2bbae2de2cd03b9169288b11339cfe5be2c9d05b861dff19202",
+    "lastModified": 1764194567482
+  },
+  "generated/web/public/images/monitor.jpg": {
+    "hash": "a371ec9614011371ba45b29bbd42db9aeffeb649bc9ce19c3a59dd3a9e882df6",
+    "lastModified": 1764194567483
+  },
+  "generated/web/public/images/keyboard.jpg": {
+    "hash": "eeab1a148230dc9dd73a7f3b9f90d60d0727b61540612dd159c8c63d6d2fcca4",
+    "lastModified": 1764194567483
+  }
+}

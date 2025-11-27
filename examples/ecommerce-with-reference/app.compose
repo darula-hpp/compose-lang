@@ -66,3 +66,13 @@ guide "Tax Calculation":
   - Use tax rates from @reference/pricing.py
   - Calculate on (subtotal - discount)
   - Store tax separately for reporting
+
+guide "App Name":
+  - The app is currently named NextShop, name it my shop
+
+guide "Button colors":
+  - "Add to card button background colors must be black"
+
+guide "Resolve issue":
+  - " fix issue: Error: useCart must be used within a CartProvider"
+  - "throw new Error('useCart must be used within a CartProvider');"

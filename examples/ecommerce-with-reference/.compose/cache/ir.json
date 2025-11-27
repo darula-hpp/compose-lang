@@ -1,0 +1,245 @@
+{
+  "timestamp": 1764195024488,
+  "ir": {
+    "models": [
+      {
+        "name": "Item",
+        "fields": [
+          {
+            "name": "id",
+            "type": {
+              "baseType": "number",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "name",
+            "type": {
+              "baseType": "text",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "price",
+            "type": {
+              "baseType": "number",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "quantity",
+            "type": {
+              "baseType": "number",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          }
+        ]
+      },
+      {
+        "name": "User",
+        "fields": [
+          {
+            "name": "id",
+            "type": {
+              "baseType": "number",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "email",
+            "type": {
+              "baseType": "text",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "loyaltyTier",
+            "type": {
+              "baseType": "enum",
+              "isArray": false,
+              "enumValues": [
+                "bronze",
+                "silver",
+                "gold"
+              ]
+            },
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "state",
+            "type": {
+              "baseType": "text",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          }
+        ]
+      },
+      {
+        "name": "Order",
+        "fields": [
+          {
+            "name": "id",
+            "type": {
+              "baseType": "number",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "items",
+            "type": {
+              "baseType": "Item",
+              "isArray": true,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "user",
+            "type": {
+              "baseType": "User",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "subtotal",
+            "type": {
+              "baseType": "number",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "discount",
+            "type": {
+              "baseType": "number",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "tax",
+            "type": {
+              "baseType": "number",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "total",
+            "type": {
+              "baseType": "number",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          }
+        ]
+      }
+    ],
+    "features": [
+      {
+        "name": "Shopping Cart",
+        "description": [
+          "Add items to cart",
+          "Update quantities",
+          "Remove items",
+          "View cart total"
+        ]
+      },
+      {
+        "name": "Checkout",
+        "description": [
+          "Calculate order total with discounts and tax",
+          "Apply loyalty tier discounts",
+          "Process payment",
+          "Send confirmation email"
+        ]
+      }
+    ],
+    "guides": [
+      {
+        "name": "Price Calculation",
+        "hints": [
+          "Reference implementation : @reference/pricing.py",
+          "Uses calculate_total ( ) and apply_discount ( ) functions",
+          "Translate this exact logic to target language",
+          "Preserve all business rules :"
+        ]
+      },
+      {
+        "name": "Discount Rules",
+        "hints": [
+          "Reference : @reference/pricing.py::apply_discount",
+          "Apply discounts before tax calculation",
+          "Round to 2 decimal places",
+          "Minimum order $ 10 after discounts"
+        ]
+      },
+      {
+        "name": "Tax Calculation",
+        "hints": [
+          "Use tax rates from @reference/pricing.py",
+          "Calculate on ( subtotal - discount )",
+          "Store tax separately for reporting"
+        ]
+      },
+      {
+        "name": "App Name",
+        "hints": [
+          "The app is currently named NextShop , name it my shop"
+        ]
+      },
+      {
+        "name": "Button colors",
+        "hints": [
+          "\"Add to card button background colors must be black\""
+        ]
+      },
+      {
+        "name": "Resolve issue",
+        "hints": [
+          "\" fix issue: Error: useCart must be used within a CartProvider\"",
+          "\"throw new Error('useCart must be used within a CartProvider');\""
+        ]
+      }
+    ],
+    "imports": []
+  },
+  "hash": "db0cf13db688c82fe88b386b6817e2a00ff571b27d8798b766bf3236cc892b74"
+}
