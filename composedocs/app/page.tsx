@@ -51,6 +51,9 @@ export default function Home() {
             <Link href="/docs" className="text-sm font-medium hover:text-primary">
               Docs
             </Link>
+            <Link href="/blog" className="text-sm font-medium hover:text-primary">
+              Blog
+            </Link>
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="rounded-lg p-2 hover:bg-muted"

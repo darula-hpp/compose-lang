@@ -144,48 +144,65 @@ npm run dev
 
 ## 📝 The Compose Language
 
-### Data Structures
+### Three Keywords: model, feature, guide
+
 ```compose
-define structure Todo
-  has id as number
-  has title as text
-  has completed as boolean
-```
+# 1. model - Define your data structures
+model Todo:
+  id: number
+  title: text
+  completed: boolean
+  priority: "low" | "medium" | "high"
 
-### Frontend - Pages & Components
-```compose
-frontend.page "Dashboard"
-  description: "Admin dashboard with charts and tables"
+model User:
+  name: text
+  email: text (unique)
+  role: "admin" | "member"
 
-frontend.component "TodoForm"
-  description: "Form to add new todo items"
-  accepts todo as Todo
-```
+# 2. feature - Describe what users can do  
+feature "Todo Management":
+  - Users can create new todos
+  - Users can mark todos as complete
+  - Users can filter by priority
+  - Admins can delete any todo
 
-### Backend - APIs
-```compose
-backend.create-api "CreateTodo"
-  description: "Create a new todo item"
-  accepts title as text
-  returns Todo
+feature "User Authentication":
+  - Email/password signup
+  - Password reset via email
+  - Session management
 
-backend.create-api "GetTodos"
-  description: "Get all todos"
-  returns list of Todo
+# 3. guide - Add implementation details as needed
+guide "Todo Features":
+  - Sort todos by priority and date
+  - Use optimistic UI updates
+  - Persist in localStorage
+
+guide "Security":
+  - Rate limit login: 5 attempts per 15 min
+  - Hash passwords with bcrypt cost 12
+  - Sessions expire after 24 hours
 ```
 
 ### Multi-File Projects
 ```compose
-// src/types/todo.compose
-define structure Todo
-  has id as number
-  has title as text
+// models/todo.compose
+model Todo:
+  id: number
+  title: text
+  completed: boolean
 
-// src/backend/api.compose
-import "../types/todo.compose"
+// models/user.compose
+model User:
+  name: text
+  email: text
 
-backend.create-api "GetTodos"
-  returns list of Todo
+// features/app.compose
+import "../models/todo.compose"
+import "../models/user.compose"
+
+feature "Todo App":
+  - Users can manage their todos
+  - Each user sees only their own todos
 ```
 
 See [Language Specification](language/semantics.md) for full syntax.
