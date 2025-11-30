@@ -2,15 +2,16 @@
 
 ## Philosophy
 
-Compose is a **minimal architecture specification language** with just two keywords:
+Compose is a **minimal architecture specification language** with just three keywords:
 - `model` - Define your data structures
 - `feature` - Describe what your app does
+- `guide` - Add implementation details as you develop
 
 Everything else is plain English descriptions that the LLM compiler understands.
 
 ---
 
-## The Two Keywords
+## The Three Keywords
 
 ### `model` - Data Structures
 
@@ -68,6 +69,43 @@ feature "Theme":
 - Workflows
 - Integrations
 - Anything the app does
+
+---
+
+### `guide` - Implementation Details
+
+```compose
+guide "Authentication":
+  - Use JWT for sessions
+  - Hash passwords with bcrypt cost 12
+  - Rate limit login: 5 attempts per 15 min
+  - Sessions expire after 24 hours
+
+guide "Task Features":
+  - Sort tasks by priority and date
+  - Use optimistic UI updates
+  - Debounce search input by 300ms
+  - Cache results in localStorage
+
+guide "Database":
+  - Use PostgreSQL with connection pooling
+  - Index on user_id and created_at
+  - Soft delete tasks (deleted_at column)
+```
+
+**Use `guide` for:**
+- Implementation specifics
+- Performance optimizations
+- Security requirements
+- Technical constraints
+- Best practices
+- Library/framework preferences
+
+**When to add guides:**
+- Start with just `model` and `feature`
+- Add `guide` when you need more control
+- Use for complex features or specific requirements
+- Optional - only add when needed
 
 ---
 
@@ -252,7 +290,7 @@ compose build
 ✅ **Architecture specification language**
 ✅ **Declarative** (what, not how)
 ✅ **Framework-agnostic** (compiles to anything)
-✅ **Minimal syntax** (two keywords)
+✅ **Minimal syntax** (three keywords: model, feature, guide)
 
 ❌ **NOT a programming language** (no algorithms)
 ❌ **NOT a framework** (no runtime)

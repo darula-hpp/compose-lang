@@ -100,20 +100,6 @@
 - [ ] Local models (Ollama)
 - [ ] Custom endpoints
 
-### Framework Support
-- [ ] Astro (frontend)
-- [ ] SolidJS (frontend)
-- [ ] Remix (frontend)
-- [ ] Fastify (backend)
-- [ ] NestJS (backend)
-- [ ] Hono (backend)
-
-### LLM Providers
-- [ ] Anthropic Claude
-- [ ] OpenAI o1/o3
-- [ ] Local models (Ollama)
-- [ ] Custom endpoints
-
 ---
 
 ## Phase 3: Production Ready 🔮 (Q2-Q3 2026)
