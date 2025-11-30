@@ -66,24 +66,39 @@
 
 **Goal: Make Compose a joy to use**
 
-### Language Features
-- [ ] `frontend.form` - Declarative form definitions
-- [ ] `frontend.modal` - Modal/dialog components
-- [ ] `backend.auth` - Authentication flows
-- [ ] `backend.middleware` - Express/Fastify middleware
-- [ ] `frontend.theme` - Design system definitions
-- [ ] Type aliases (`define type Email as text`)
+### Core Language Improvements
+- [ ] Enhanced type system (union types, generics)
+- [ ] Type aliases (`type Email = text`)
+- [ ] Nested models and composition
+- [ ] Enum support
+- [ ] Optional/required field modifiers
 
 ### Tooling
 - [x] VS Code extension (basic - syntax highlighting complete)
   - [ ] Intellisense/autocomplete
   - [x] Error squiggles (LSP integration done)
   - [ ] Jump to definition
+  - [ ] Refactoring support
 - [ ] Prettier plugin for `.compose` files
 - [ ] ESLint plugin for generated code
 - [ ] `compose format` command
 - [ ] Static type checking on generated code
 - [ ] Pre-commit hooks for validation
+- [ ] `compose doctor` - Health checks and diagnostics
+
+### Framework Support
+- [ ] Astro (frontend)
+- [ ] SolidJS (frontend)
+- [ ] Remix (frontend)
+- [ ] Fastify (backend)
+- [ ] NestJS (backend)
+- [ ] Hono (backend)
+
+### LLM Providers
+- [ ] Anthropic Claude
+- [ ] OpenAI o1/o3
+- [ ] Local models (Ollama)
+- [ ] Custom endpoints
 
 ### Framework Support
 - [ ] Astro (frontend)
