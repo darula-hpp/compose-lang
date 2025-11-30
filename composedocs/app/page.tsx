@@ -72,16 +72,16 @@ export default function Home() {
             </div>
 
             <h1 className="mb-6 text-5xl font-bold tracking-tight md:text-7xl">
-              Build with
+              LLM-Aware
               <br />
               <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                Natural Language
+                Build System
               </span>
             </h1>
 
             <p className="mb-10 text-lg text-muted-foreground md:text-xl">
-              Compose is an English-based programming language designed for LLM-assisted code generation.
-              Write what you want, let AI build it.
+              Version-controlled architecture specs that compile to production code via LLM.
+              Reproducible builds, dependency tracking, and export-aware code generation.
             </p>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
@@ -118,9 +118,9 @@ export default function Home() {
               <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
                 <Code2 className="size-6 text-primary" />
               </div>
-              <h3 className="mb-2 text-xl font-semibold">Natural Syntax</h3>
+              <h3 className="mb-2 text-xl font-semibold">Structured DSL</h3>
               <p className="text-muted-foreground">
-                Write code in plain English using familiar language patterns
+                Three keywords (model, feature, guide) for defining architecture specs
               </p>
             </div>
 
@@ -128,9 +128,9 @@ export default function Home() {
               <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
                 <Sparkles className="size-6 text-primary" />
               </div>
-              <h3 className="mb-2 text-xl font-semibold">AI-Powered</h3>
+              <h3 className="mb-2 text-xl font-semibold">Reproducible Builds</h3>
               <p className="text-muted-foreground">
-                Integrated with Gemini, GPT-4, and Claude for code generation
+                LLM caching and export maps ensure consistent, incremental code generation
               </p>
             </div>
 
