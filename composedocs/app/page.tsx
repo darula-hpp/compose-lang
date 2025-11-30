@@ -72,16 +72,16 @@ export default function Home() {
             </div>
 
             <h1 className="mb-6 text-5xl font-bold tracking-tight md:text-7xl">
-              LLM-Aware
+              LLM-Assisted
               <br />
               <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                Build System
+                Compiler
               </span>
             </h1>
 
             <p className="mb-10 text-lg text-muted-foreground md:text-xl">
-              Version-controlled architecture specs that compile to production code via LLM.
-              Reproducible builds, dependency tracking, and export-aware code generation.
+              Transform architecture specs into production code with reproducible builds.
+              Structured DSL, dependency tracking, and export-aware code generation.
             </p>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">

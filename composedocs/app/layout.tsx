@@ -6,8 +6,8 @@ import { ThemeProvider } from "./providers/theme-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Compose - AI-Powered Programming Language",
-  description: "English-based programming language for LLM-assisted code generation",
+  title: "Compose - LLM-Assisted Compiler",
+  description: "Transform architecture specs into production code. Structured DSL with reproducible builds, dependency tracking, and export-aware code generation.",
 };
 
 export default function RootLayout({

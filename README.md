@@ -1,10 +1,10 @@
 # Compose-Lang
 
-> **LLM-Aware Build System** — Version-controlled architecture that compiles to production code.
+> **LLM-Assisted Compiler** — Transform architecture specs into production code.
 
-Compose is a build system for LLM-generated code with dependency tracking, export maps, and reproducible builds via caching. Define your application architecture in structured specs (`.compose` files), and generate framework-specific code through LLM compilation.
+Compose is an LLM-assisted compiler for architecture specifications. Define your application in structured `.compose` files, and the compiler generates framework-specific code through LLM-powered code generation with reproducible builds via caching.
 
-**At its core:** An Intermediate Representation (IR) system that enables semantic validation, dependency analysis, and intelligent code generation. The `.compose` DSL is one way to create this IR—we're building support for OpenAPI, GraphQL, and existing codebases too.
+**At its core:** A traditional compiler frontend (Lexer → Parser → Semantic Analyzer → IR) combined with an LLM-powered backend for code generation. The `.compose` DSL is the primary input format, with support for OpenAPI, GraphQL, and existing codebases planned.
 
 ## How It Works
 
