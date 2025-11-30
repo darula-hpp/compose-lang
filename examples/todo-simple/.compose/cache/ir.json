@@ -1,0 +1,121 @@
+{
+  "timestamp": 1764342425544,
+  "ir": {
+    "models": [
+      {
+        "name": "Todo",
+        "fields": [
+          {
+            "name": "title",
+            "type": {
+              "baseType": "text",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "completed",
+            "type": {
+              "baseType": "bool",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": false,
+            "constraints": []
+          },
+          {
+            "name": "dueDate",
+            "type": {
+              "baseType": "date",
+              "isArray": false,
+              "enumValues": null
+            },
+            "optional": true,
+            "constraints": []
+          }
+        ]
+      }
+    ],
+    "features": [
+      {
+        "name": "Todo Management",
+        "description": [
+          "Create new todos with title and optional due date",
+          "Mark todos as complete / incomplete",
+          "Delete todos",
+          "Filter by all / active / completed status"
+        ]
+      },
+      {
+        "name": "Data Persistence",
+        "description": [
+          "Save todos to database",
+          "Load todos on app start"
+        ]
+      },
+      {
+        "name": "Theme",
+        "description": [
+          "Clean , minimal design",
+          "Blue / indigo color scheme",
+          "Card - based layout with subtle shadows"
+        ]
+      }
+    ],
+    "guides": [
+      {
+        "name": "Database Schema",
+        "hints": [
+          "Use UUID primary keys instead of auto - increment integers",
+          "Add createdAt and updatedAt timestamps automatically",
+          "Use soft deletes ( deletedAt field ) instead of hard deletes",
+          "Add index on userId and dueDate for query performance"
+        ]
+      },
+      {
+        "name": "Input Validation",
+        "hints": [
+          "Todo title must be 1 - 200 characters",
+          "Trim whitespace from title before saving",
+          "Due date must be today or in the future",
+          "Validate on both frontend and backend"
+        ]
+      },
+      {
+        "name": "Performance",
+        "hints": [
+          "Use debounce ( 300 ms ) for filter changes",
+          "Implement pagination ( 50 todos per page )",
+          "Cache completed todos in localStorage for offline access",
+          "Lazy load todo details on expand"
+        ]
+      },
+      {
+        "name": "Accessibility",
+        "hints": [
+          "Support keyboard navigation ( Tab , Enter , Escape )",
+          "Add ARIA labels for screen readers",
+          "Color contrast ratio must be at least 4.5 : 1",
+          "Focus indicators on all interactive elements"
+        ]
+      },
+      {
+        "name": "Performance",
+        "hints": [
+          "The app must perform like hell",
+          "Lazy load"
+        ]
+      },
+      {
+        "name": "Fetching data or posting data",
+        "hints": [
+          "avoid infinite loops when fetching data or posting data inside useEffect or similar"
+        ]
+      }
+    ],
+    "imports": []
+  },
+  "hash": "58b25f16dc8093ced58fe6e95fbe6ab3135dd0d6b73b571517c53d40d73d8215"
+}
