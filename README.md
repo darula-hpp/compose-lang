@@ -1,25 +1,25 @@
 # Compose-Lang
 
-> **Vibe Engineering Language** — Describe intent, ship code.
+> **LLM-Aware Build System** — Version-controlled architecture that compiles to production code.
 
-Compose is an architecture specification language that lets you describe what your application should do in plain English. An LLM translates your spec into production code for any framework.
+Compose is a build system for LLM-generated code with dependency tracking, export maps, and reproducible builds via caching. Define your application architecture in structured specs (`.compose` files), and generate framework-specific code through LLM compilation.
 
-**Think of it as executable documentation.** The `.compose` file is the source of truth. Generated code is just the compiled artifact.
+**At its core:** An Intermediate Representation (IR) system that enables semantic validation, dependency analysis, and intelligent code generation. The `.compose` DSL is one way to create this IR—we're building support for OpenAPI, GraphQL, and existing codebases too.
 
-## The Paradigm Shift
+## How It Works
 
-**Traditional:**
-- Code = Source of truth
-- Comments = Explanation (often outdated)
-- Developers read thousands of lines to understand the system
+**Traditional Development:**
+- Write code → Review code → Version control code
+- Architecture lives in docs (which drift from reality)
+- Teams struggle to understand big codebases
 
 **With Compose:**
-- `.compose` files = Source of truth (always current, they generate the code)
-- Generated code = Disposable artifact
-- Developers read 50 lines to understand the entire system.
-- **Framework-agnostic** — No lock-in. Regenerate for new frameworks anytime.
-- **Deterministic** — Cached builds ensure reproducibility
-- **Team-friendly** — Version control architecture, not implementation
+- Write architecture specs → LLM generates code → Version control both
+- Architecture IS the code generator (can't drift)
+- Read 50-line `.compose` file instead of 50-file codebase
+- **Reproducible** — Caching ensures same input = same output
+- **Framework-agnostic** — Regenerate for different targets
+- **Incremental** — Export maps enable smart regeneration (not everything)
 
 ## Quick Example
 
@@ -47,22 +47,66 @@ guide "Security":
 
 ---
 
-## Features
+## Key Features
 
-✅ **Three Keywords** — `model` (data), `feature` (behavior), `guide` (implementation). That's the entire language.  
-✅ **@ References** — Link to external code in any language; LLM translates to your target  
-✅ **Vibe Engineering** — Describe intent naturally, LLM handles implementation  
-✅ **Multi-Target** — Generate web, mobile, and API from one specification  
-✅ **Framework-Agnostic** — Regenerate for Next.js, Vue, Svelte, Rust anytime  
-✅ **Deterministic** — Cached LLM responses ensure reproducible builds  
-✅ **Version Controlled** — Track architectural changes in Git  
-✅ **Living Documentation** — .compose files can't be outdated (they generate the code)
+✅ **Structured DSL** — Three keywords: `model`, `feature`, `guide`  
+✅ **Export Maps** — Track all exported symbols for intelligent incremental generation  
+✅ **LLM Caching** — Reproducible builds via cached responses (commit cache to git)  
+✅ **Dependency Tracking** — Regenerate only affected files when specs change  
+✅ **@ References** — Link to external code; LLM translates to target language  
+✅ **Multi-Target** — Same spec → Next.js, React, Vue (more coming)  
+✅ **Framework-Agnostic IR** — Core system works with any input format  
+✅ **Version Controlled** — Architecture specs in git, not ad-hoc prompts
 
 ---
 
-## 🚀 Quick Start
+## ⚠️ Limitations & When NOT to Use
 
-### Installation
+**This is v0.2.0 — here's what's NOT solved yet:**
+
+### Current Gaps
+- ❌ **Drift detection** — No automated validation that new code correctly uses existing exports
+- ❌ **Model version pinning** — LLM provider updates can break reproducibility  
+- ❌ **Complex domain logic** — LLMs struggle with intricate business rules  
+- ❌ **Instruction limits** — Sweet spot is ~10-20 guides per file; beyond that, quality degrades  
+- ❌ **Perfect determinism** — Cache provides reproducibility, but LLMs are probabilistic  
+
+### When to Use Something Else
+
+**Use Cursor/Copilot instead if:**
+- Quick one-off scripts or prototypes
+- You're solo and not maintaining long-term
+- Exploring ideas rapidly
+
+**Write code manually if:**
+- Complex algorithmic logic
+- Mission-critical systems (banking, healthcare, flight control)
+- Edge-case-heavy domains
+- You need 100% control over every line
+
+**Compose is best for:**
+- ✅ Multi-developer teams maintaining apps over time
+- ✅ CRUD apps, internal tools, MVPs
+- ✅ Iterative development (adding features incrementally)
+- ✅ Framework migrations (regenerate for new tech stack)
+- ✅ Architecture documentation that can't go stale
+
+---
+
+## 📊 Comparison
+
+| Tool | Reproducibility | Version Control | Team Collab | Incremental Gen | Framework Agnostic |
+|------|----------------|-----------------|-------------|-----------------|--------------------|
+| **ChatGPT** | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Cursor/Copilot** | ❌ | Partial | ✅ | ❌ | ✅ |
+| **Compose** | ✅ (via cache) | ✅ | ✅ | ✅ | ✅ |
+| **Manual Coding** | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**Trade-off:** Compose adds structure (DSL + tooling) in exchange for reproducibility and team collaboration. If you don't need those, simpler tools are better.
+
+---
+
+## 🚀 Installation
 
 ```bash
 git clone https://github.com/darula-hpp/compose-lang.git

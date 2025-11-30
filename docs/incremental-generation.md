@@ -1,7 +1,7 @@
 # Incremental Code Generation
 
-> **Status**: Planning / RFC  
-> **Last Updated**: 2025-11-25
+> **Status**: Planning / RFC | **Critical Gap**: Drift detection not yet implemented  
+> **Last Updated**: 2025-11-30 (Reddit feedback incorporated)
 
 ## Overview
 

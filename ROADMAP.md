@@ -2,7 +2,7 @@
 
 ## Vision
 
-**Compose-Lang** will become the **universal architecture definition language** - enabling developers to describe applications in natural language and generate production-ready code for any technology stack.
+**Compose-Lang** is an **LLM-aware build system** that transforms architecture specifications into production code. At its core is the **Intermediate Representation (IR)** - a framework-agnostic format for describing application architecture. The `.compose` DSL is one way to create this IR, but not the only way. Our vision is to support multiple input formats (OpenAPI, GraphQL, existing codebases) while providing deterministic builds via caching, intelligent dependency tracking, and export-aware code generation.
 
 ---
 
@@ -20,7 +20,49 @@
 
 ---
 
-## Phase 2: Developer Experience 🚧 (Q1 2025)
+## Phase 1.5: Community Feedback & Critical Gaps 🔥 (Q4 2025 - Immediate)
+
+**Goal: Address Reddit/HN feedback and fix critical limitations**
+
+> **Note**: These items emerged from community feedback and are now top priority before expanding features.
+
+### Drift Detection & Validation (Critical)
+- [ ] **Export map validation** - Verify new code correctly imports/uses existing exports
+- [ ] **Schema validation** - Check generated code matches export map signatures
+- [ ] **CI integration** - Detect breaking changes in generated code
+- [ ] **Signature change detection** - Warn when LLM output types/signatures drift
+- [ ] `compose validate` command - Manual validation before deployment
+
+### Model Version Control (Critical)
+- [ ] **Pin model versions** in `compose.json`
+- [ ] **Detect provider updates** - Warning when model changes
+- [ ] **Lock file for LLM** - Similar to package-lock.json but for model versions
+- [ ] **Reproducibility guarantees** - Document what is/isn't deterministic
+
+### Pluggable Architecture (High Priority)
+- [ ] **IR-centric refactor** - Make IR the core, DSL optional
+- [ ] **OpenAPI → IR adapter** - Use existing OpenAPI specs as input
+- [ ] **GraphQL → IR adapter** - Support GraphQL schemas
+- [ ] **Code → IR (Compose Ingest)** - Analyze existing code, generate IR
+- [ ] **Documentation** - "Pluggable DSL" architecture guide
+
+### Error Handling & DX
+- [ ] `compose fix` command - Suggest guides for runtime errors
+- [ ] Better error messages when builds fail
+- [ ] Validation warnings before LLM calls
+- [ ] Token budget tracking and warnings
+- [ ] `compose analyze` - Show dependency graph visualization
+
+### Documentation Improvements
+- [ ] **"When NOT to use Compose"** section
+- [ ] **Honest limitations** documented upfront
+- [ ] **Comparison table** with Cursor/Copilot/ChatGPT
+- [ ] **Team workflow examples** with git integration
+- [ ] **Migration guide** - How to eject if you outgrow it
+
+---
+
+## Phase 2: Developer Experience 🚧 (Q1 2026)
 
 **Goal: Make Compose a joy to use**
 
@@ -33,14 +75,15 @@
 - [ ] Type aliases (`define type Email as text`)
 
 ### Tooling
-- [ ] VS Code extension
-  - Syntax highlighting
-  - Intellisense/autocomplete
-  - Error squiggles
-  - Jump to definition
+- [x] VS Code extension (basic - syntax highlighting complete)
+  - [ ] Intellisense/autocomplete
+  - [x] Error squiggles (LSP integration done)
+  - [ ] Jump to definition
 - [ ] Prettier plugin for `.compose` files
 - [ ] ESLint plugin for generated code
 - [ ] `compose format` command
+- [ ] Static type checking on generated code
+- [ ] Pre-commit hooks for validation
 
 ### Framework Support
 - [ ] Astro (frontend)
@@ -58,9 +101,11 @@
 
 ---
 
-## Phase 3: Production Ready 🔮 (Q2 2026)
+## Phase 3: Production Ready 🔮 (Q2-Q3 2026)
 
 **Goal: Enterprise-grade reliability**
+
+> **Note**: Many items from old Phase 3 moved to Phase 1.5 based on community feedback.
 
 ### Type System
 - [ ] Strict type checking option
@@ -75,10 +120,11 @@
 - [ ] Test coverage reports
 
 ### Performance
-- [ ] Incremental compilation
-- [ ] Parallel code generation
+- [x] Incremental compilation (export map system implemented)
+- [ ] Parallel code generation for multiple targets
 - [ ] Watch mode optimizations
 - [ ] Build caching improvements
+- [ ] Distributed caching (team-shared cache)
 
 ### Deployment
 - [ ] Docker generation
@@ -255,11 +301,17 @@ See [docs/compose-ingest.md](docs/compose-ingest.md) for detailed design.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines.
 
 **Priority areas for contributors:**
-1. Framework adapters (always needed!)
-2. LLM providers
-3. Language features
+1. **Phase 1.5 items** (drift detection, model pinning, OpenAPI adapter)
+2. Framework adapters (always needed!)
+3. LLM providers (Anthropic, local models)
 4. Documentation & examples
-5. VS Code extension
+5. Tooling improvements (VS Code, CLI)
+
+**High-impact contributions:**
+- Drift detection implementation
+- OpenAPI → IR parser
+- CI integration examples
+- Real-world use case documentation
 
 ---
 
