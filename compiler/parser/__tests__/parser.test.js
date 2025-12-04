@@ -219,9 +219,16 @@ model User:
 
         const ast = parse(input);
 
-        // Imports might be in a separate property or mixed with models
-        // Check the actual AST structure
         assert.ok(ast);
+
+        // Verify import is captured in AST
+        assert.ok(ast.imports, 'AST should have imports property');
+        assert.equal(ast.imports.length, 1, 'Should have 1 import');
+        assert.equal(ast.imports[0].path, 'shared/types.compose');
+
+        // Verify model is still parsed
+        assert.equal(ast.models.length, 1);
+        assert.equal(ast.models[0].name, 'User');
     });
 
     it('should parse multiple imports', () => {
@@ -234,8 +241,93 @@ model Order:
         const ast = parse(input);
 
         assert.ok(ast);
+
+        // Should have both imports
+        assert.ok(ast.imports, 'AST should have imports property');
+        assert.equal(ast.imports.length, 2, 'Should have 2 imports');
+
+        // Model should still be parsed
+        assert.equal(ast.models.length, 1);
+    });
+
+    it('should parse imports with relative paths', () => {
+        const input = `import "./models/user.compose"
+import "../shared/types.compose"
+
+model Product:
+  id: number`;
+
+        const ast = parse(input);
+
+        assert.ok(ast);
+        assert.equal(ast.models.length, 1);
+    });
+
+    it('should parse imports without .compose extension', () => {
+        const input = `import "shared/types"
+
+model User:
+  id: number`;
+
+        const ast = parse(input);
+
+        assert.ok(ast);
+        assert.equal(ast.models.length, 1);
+    });
+
+    it('should parse imports at the beginning of file', () => {
+        const input = `import "a.compose"
+import "b.compose"
+import "c.compose"
+
+model Test:
+  id: number`;
+
+        const ast = parse(input);
+
+        assert.ok(ast);
+        // All imports should be parsed before models
+        assert.equal(ast.models.length, 1);
+    });
+
+    it('should handle imports with various path formats', () => {
+        const input = `import "shared/models.compose"
+import "./local.compose"
+import "../parent.compose"
+import "models/user"
+
+model MyModel:
+  id: number`;
+
+        const ast = parse(input);
+
+        assert.ok(ast);
+        assert.equal(ast.models.length, 1);
+    });
+
+    it('should preserve import order in AST', () => {
+        const input = `import "first.compose"
+import "second.compose"
+import "third.compose"
+
+model Test:
+  id: number`;
+
+        const ast = parse(input);
+
+        assert.ok(ast);
+
+        // Imports should maintain order
+        assert.ok(ast.imports, 'AST should have imports property');
+        assert.equal(ast.imports.length, 3, 'Should have 3 imports');
+
+        // Verify they appear in the expected order
+        assert.equal(ast.imports[0].path, 'first.compose');
+        assert.equal(ast.imports[1].path, 'second.compose');
+        assert.equal(ast.imports[2].path, 'third.compose');
     });
 });
+
 
 describe('Parser - Comments', () => {
     it('should ignore comments', () => {
