@@ -57,9 +57,14 @@ export class CodeEmitter {
             if (tracker.shouldUseSelectiveRegeneration(affectedFiles, existingFiles)) {
                 console.log(`🎯 Selective regeneration: ${affectedFiles.length}/${existingFiles.length} files`);
 
+                // Load current export map to maintain API compatibility
+                const exportMapBuilder = new ExportMapBuilder(this.target.output);
+                const exportMap = exportMapBuilder.loadExportMap();
+
                 const prompt = createPartialPrompt(ir, affectedFiles, {
                     diff,
-                    existingFiles
+                    existingFiles,
+                    exportMap  // Include existing function signatures
                 }, this.target);
 
                 const generatedCode = await this.llmClient.generate('', prompt);

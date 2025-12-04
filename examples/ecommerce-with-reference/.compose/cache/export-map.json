@@ -72,28 +72,31 @@
   "lib/pricing.ts": {
     "path": "lib/pricing.ts",
     "exports": {
-      "calculateTotal": {
-        "kind": "function",
-        "signature": "function calculateTotal(\n  items: Item[],\n  user: User,\n  taxRate: number | null = null\n): OrderSummary {\n  // Calculate subtotal\n  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);\n\n  // Apply volume discount (10+ items = 10% off)\n  let volumeDiscount = 0;\n  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);\n  if (totalItems >= 10) {\n    volumeDiscount = subtotal * 0.10;\n  }\n\n  // Apply loyalty tier discount\n  const tierDiscounts: { [key in User['loyaltyTier']]: number } = {\n    'bronze': 0.05, // 5%\n    'silver': 0.10, // 10%\n    'gold': 0.15    // 15%\n  };\n  // Use 0 if loyaltyTier is not found in tierDiscounts (e.g., for new tiers or undefined)\n  const loyaltyDiscount = subtotal * (tierDiscounts[user.loyaltyTier] || 0);\n\n  // Total discount\n  const totalDiscount = volumeDiscount + loyaltyDiscount;\n\n  // Calculate tax\n  let effectiveTaxRate = taxRate;\n  if (effectiveTaxRate === null) {\n    // State-specific tax rates\n    effectiveTaxRate = user.state === 'CA' ? 0.08 : 0.05;\n  }\n\n  const taxableAmount = subtotal - totalDiscount;\n  const tax = taxableAmount * effectiveTaxRate;\n\n  // Final total\n  const total = subtotal - totalDiscount + tax;\n\n  return {\n    subtotal: parseFloat(subtotal.toFixed(2)),\n    discount: parseFloat(totalDiscount.toFixed(2)),\n    tax: parseFloat(tax.toFixed(2)),\n    total: parseFloat(total.toFixed(2))\n  };\n}",
-        "params": [
-          {
-            "name": "items",
-            "type": "Item[]",
-            "required": true
-          },
-          {
-            "name": "user",
-            "type": "User",
-            "required": true
-          },
-          {
-            "name": "taxRate",
-            "type": "any",
-            "required": true
-          }
-        ],
-        "returns": "OrderSummary",
-        "async": false
+      "PricedItem": {
+        "kind": "interface",
+        "signature": "interface PricedItem {\n  price: number;\n  quantity: number;\n}",
+        "properties": [
+          "price: number",
+          "quantity: number"
+        ]
+      },
+      "PricingUser": {
+        "kind": "interface",
+        "signature": "interface PricingUser {\n  loyaltyTier: \"bronze\" | \"silver\" | \"gold\";\n  state: string;\n}",
+        "properties": [
+          "loyaltyTier: \"bronze\" | \"silver\" | \"gold\"",
+          "state: string"
+        ]
+      },
+      "CalculationResult": {
+        "kind": "interface",
+        "signature": "interface CalculationResult {\n  subtotal: number;\n  discount: number;\n  tax: number;\n  total: number;\n}",
+        "properties": [
+          "subtotal: number",
+          "discount: number",
+          "tax: number",
+          "total: number"
+        ]
       },
       "applyDiscount": {
         "kind": "function",
@@ -130,9 +133,32 @@
         ],
         "returns": "boolean",
         "async": false
+      },
+      "calculateTotal": {
+        "kind": "function",
+        "signature": "function calculateTotal(\n  items: PricedItem[],\n  user: PricingUser,\n  taxRateOverride?: number\n): CalculationResult {\n  // Calculate subtotal\n  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);\n\n  // Apply volume discount (10+ items = 10% off)\n  let volumeDiscount = 0;\n  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);\n  if (totalItems >= 10) {\n    volumeDiscount = subtotal * 0.10;\n  }\n\n  // Apply loyalty tier discount\n  const tierDiscounts: Record<PricingUser['loyaltyTier'], number> = {\n    'bronze': 0.05, // 5%\n    'silver': 0.10, // 10%\n    'gold': 0.15    // 15%\n  };\n  // Use 0 if loyaltyTier is not found or undefined\n  const loyaltyDiscount = subtotal * (tierDiscounts[user.loyaltyTier] || 0);\n\n  // Total discount\n  const totalDiscount = volumeDiscount + loyaltyDiscount;\n\n  // Determine effective tax rate\n  let effectiveTaxRate: number;\n  if (taxRateOverride !== undefined && taxRateOverride !== null) {\n    effectiveTaxRate = taxRateOverride;\n  } else {\n    // State-specific tax rates\n    effectiveTaxRate = user.state === 'CA' ? 0.08 : 0.05;\n  }\n\n  // Calculate tax on the amount after discounts\n  const taxableAmount = subtotal - totalDiscount;\n  const tax = taxableAmount * effectiveTaxRate;\n\n  // Final total\n  const total = subtotal - totalDiscount + tax;\n\n  return {\n    subtotal: parseFloat(subtotal.toFixed(2)),\n    discount: parseFloat(totalDiscount.toFixed(2)),\n    tax: parseFloat(tax.toFixed(2)),\n    total: parseFloat(total.toFixed(2))\n  };\n}",
+        "params": [
+          {
+            "name": "items",
+            "type": "PricedItem[]",
+            "required": true
+          },
+          {
+            "name": "user",
+            "type": "PricingUser",
+            "required": true
+          },
+          {
+            "name": "taxRateOverride",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "returns": "CalculationResult",
+        "async": false
       }
     },
-    "lastUpdated": 1764876287894
+    "lastUpdated": 1764877566103
   },
   "lib/utils.ts": {
     "path": "lib/utils.ts",

@@ -143,14 +143,28 @@ ${formatGuides(ir.guides)}
 `);
     }
 
+    // CRITICAL: Include existing function signatures to maintain API compatibility
+    if (context.exportMap) {
+        sections.push(`**CRITICAL - Existing API Signatures:**
+
+You are updating existing files. You MUST maintain the same function signatures to avoid breaking other code that uses them.
+
+**Existing Functions You Must Preserve:**
+${formatExportMap(context.exportMap, affectedFiles)}
+
+DO NOT change parameter names, types, or return types unless explicitly told to in the changes above.
+`);
+    }
+
     // Generation instructions
     sections.push(`
 **Generation Requirements:**
 
 1. **Regenerate ONLY the listed files** - Do not create or modify other files
 2. **Maintain consistency** - Follow the same patterns and architecture as existing code
-3. **Production-ready** - Include error handling, validation, proper typing
-4. **Preserve functionality** - Don't break existing features
+3. **PRESERVE API COMPATIBILITY** - Do not change existing function signatures
+4. **Production-ready** - Include error handling, validation, proper typing
+5. **Preserve functionality** - Don't break existing features
 
 **Output Format:**
 Use the following format for each file:
@@ -266,8 +280,35 @@ function formatGuides(guides) {
 }
 
 /**
+ * Format export map for incremental prompts
+ * Shows existing function signatures to maintain API compatibility
+ */
+function formatExportMap(exportMap, affectedFiles) {
+    const signatures = [];
+
+    for (const file of affectedFiles) {
+        const fileExports = exportMap[file];
+        if (!fileExports || !fileExports.exports) continue;
+
+        signatures.push(`\n**${file}:**`);
+
+        for (const [name, exportData] of Object.entries(fileExports.exports)) {
+            if (exportData.kind === 'function') {
+                const params = exportData.params
+                    ?.map(p => `${p.name}: ${p.type}`)
+                    .join(', ') || '';
+                signatures.push(`  - ${name}(${params}): ${exportData.returns}`);
+            }
+        }
+    }
+
+    return signatures.length > 0 ? signatures.join('\n') : '(No existing functions to preserve)';
+}
+
+/**
  * Create system prompt (legacy - kept for compatibility)
  */
 export function createSystemPrompt(target) {
     return `You are an expert ${target.framework || target.language} developer generating production-ready code.`;
 }
+
