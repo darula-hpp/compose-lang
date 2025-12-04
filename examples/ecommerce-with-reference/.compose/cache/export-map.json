@@ -72,32 +72,67 @@
   "lib/pricing.ts": {
     "path": "lib/pricing.ts",
     "exports": {
+      "calculateTotal": {
+        "kind": "function",
+        "signature": "function calculateTotal(\n  items: Item[],\n  user: User,\n  taxRate: number | null = null\n): OrderSummary {\n  // Calculate subtotal\n  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);\n\n  // Apply volume discount (10+ items = 10% off)\n  let volumeDiscount = 0;\n  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);\n  if (totalItems >= 10) {\n    volumeDiscount = subtotal * 0.10;\n  }\n\n  // Apply loyalty tier discount\n  const tierDiscounts: { [key in User['loyaltyTier']]: number } = {\n    'bronze': 0.05, // 5%\n    'silver': 0.10, // 10%\n    'gold': 0.15    // 15%\n  };\n  // Use 0 if loyaltyTier is not found in tierDiscounts (e.g., for new tiers or undefined)\n  const loyaltyDiscount = subtotal * (tierDiscounts[user.loyaltyTier] || 0);\n\n  // Total discount\n  const totalDiscount = volumeDiscount + loyaltyDiscount;\n\n  // Calculate tax\n  let effectiveTaxRate = taxRate;\n  if (effectiveTaxRate === null) {\n    // State-specific tax rates\n    effectiveTaxRate = user.state === 'CA' ? 0.08 : 0.05;\n  }\n\n  const taxableAmount = subtotal - totalDiscount;\n  const tax = taxableAmount * effectiveTaxRate;\n\n  // Final total\n  const total = subtotal - totalDiscount + tax;\n\n  return {\n    subtotal: parseFloat(subtotal.toFixed(2)),\n    discount: parseFloat(totalDiscount.toFixed(2)),\n    tax: parseFloat(tax.toFixed(2)),\n    total: parseFloat(total.toFixed(2))\n  };\n}",
+        "params": [
+          {
+            "name": "items",
+            "type": "Item[]",
+            "required": true
+          },
+          {
+            "name": "user",
+            "type": "User",
+            "required": true
+          },
+          {
+            "name": "taxRate",
+            "type": "any",
+            "required": true
+          }
+        ],
+        "returns": "OrderSummary",
+        "async": false
+      },
       "applyDiscount": {
-        "kind": "variable",
-        "signature": "const applyDiscount = (subtotal: number, user: User): number => {\n  let discountRate = 0;\n\n  switch (user.loyaltyTier) {\n    case \"silver\":\n      discountRate = 0.05; // 5% discount\n      break;\n    case \"gold\":\n      discountRate = 0.10; // 10% discount\n      break;\n    case \"bronze\":\n    default:\n      discountRate = 0; // No discount for bronze or unknown tiers\n      break;\n  }\n\n  // No discount if subtotal is less than $10\n  if (subtotal < 10) {\n    return 0;\n  }\n\n  let discountAmount = subtotal * discountRate;\n\n  // Ensure the subtotal after discount is not less than $10\n  // This means the discount cannot push the subtotal below $10\n  if (subtotal - discountAmount < 10) {\n    discountAmount = subtotal - 10; // Cap the discount so remaining subtotal is exactly $10\n    if (discountAmount < 0) { // Should not happen if subtotal >= 10 and discountRate >= 0\n        discountAmount = 0;\n    }\n  }\n\n  return roundToTwoDecimals(discountAmount);\n};",
-        "type": "any",
-        "const": true
+        "kind": "function",
+        "signature": "function applyDiscount(amount: number, discountPercent: number): number {\n  const discount = amount * (discountPercent / 100);\n  return parseFloat((amount - discount).toFixed(2));\n}",
+        "params": [
+          {
+            "name": "amount",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "discountPercent",
+            "type": "number",
+            "required": true
+          }
+        ],
+        "returns": "number",
+        "async": false
       },
-      "calculateOrderTotal": {
-        "kind": "variable",
-        "signature": "const calculateOrderTotal = (items: Item[], user: User): Omit<Order, 'id' | 'items' | 'user'> => {\n  let subtotal = 0;\n  for (const item of items) {\n    subtotal += item.price * item.quantity;\n  }\n  subtotal = roundToTwoDecimals(subtotal);\n\n  const discount = applyDiscount(subtotal, user);\n\n  const subtotalAfterDiscount = subtotal - discount;\n\n  // Get tax rate for the user's state, or use default\n  const taxRate = TAX_RATES[user.state.toUpperCase()] || TAX_RATES.DEFAULT;\n\n  // Calculate tax on (subtotal - discount)\n  const tax = roundToTwoDecimals(subtotalAfterDiscount * taxRate);\n\n  const total = roundToTwoDecimals(subtotalAfterDiscount + tax);\n\n  return {\n    subtotal,\n    discount,\n    tax,\n    total,\n  };\n};",
-        "type": "any",
-        "const": true
-      },
-      "Item": {
-        "kind": "reexport",
-        "exportedName": "Item"
-      },
-      "User": {
-        "kind": "reexport",
-        "exportedName": "User"
-      },
-      "Order": {
-        "kind": "reexport",
-        "exportedName": "Order"
+      "validateOrder": {
+        "kind": "function",
+        "signature": "function validateOrder(orderTotal: number, minimum: number = 10.00): boolean {\n  return orderTotal >= minimum;\n}",
+        "params": [
+          {
+            "name": "orderTotal",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "minimum",
+            "type": "any",
+            "required": true
+          }
+        ],
+        "returns": "boolean",
+        "async": false
       }
     },
-    "lastUpdated": 1764195043834
+    "lastUpdated": 1764876287894
   },
   "lib/utils.ts": {
     "path": "lib/utils.ts",

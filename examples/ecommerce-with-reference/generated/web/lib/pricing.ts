@@ -1,4 +1,4 @@
-// Data Models (as provided in the prompt)
+// Data Models (as interfaces, assuming they are not globally available or imported from a common types file)
 interface Item {
   id: number;
   name: string;
@@ -13,110 +13,89 @@ interface User {
   state: string;
 }
 
-interface Order {
-  id?: number; // Order ID might be generated later, or passed in for existing orders
-  items: Item[];
-  user: User;
+// Return type for calculateTotal
+interface OrderSummary {
   subtotal: number;
   discount: number;
   tax: number;
   total: number;
 }
 
-// Helper for rounding to 2 decimal places
-const roundToTwoDecimals = (num: number): number => {
-  return Math.round(num * 100) / 100;
-};
-
-// Tax rates (inferred from common practice, as @reference/pricing.py is not provided)
-const TAX_RATES: { [key: string]: number } = {
-  CA: 0.0825, // California
-  NY: 0.0400, // New York
-  TX: 0.0625, // Texas
-  FL: 0.0600, // Florida
-  // Add more states as needed
-  DEFAULT: 0.0500, // Default tax rate
-};
-
 /**
- * Calculates the discount amount based on loyalty tier and subtotal.
- * Applies discounts before tax calculation.
- * Rounds to 2 decimal places.
- * Minimum order $10 after discounts: If the subtotal is less than $10, no discount is applied.
- * If the subtotal is $10 or more, apply the discount, but the final discounted amount cannot be less than $10.
+ * Calculates the order total with all business rules applied.
  *
- * @param subtotal The calculated subtotal before any discounts.
- * @param user The user object with loyalty tier.
- * @returns The calculated discount amount.
- */
-export const applyDiscount = (subtotal: number, user: User): number => {
-  let discountRate = 0;
-
-  switch (user.loyaltyTier) {
-    case "silver":
-      discountRate = 0.05; // 5% discount
-      break;
-    case "gold":
-      discountRate = 0.10; // 10% discount
-      break;
-    case "bronze":
-    default:
-      discountRate = 0; // No discount for bronze or unknown tiers
-      break;
-  }
-
-  // No discount if subtotal is less than $10
-  if (subtotal < 10) {
-    return 0;
-  }
-
-  let discountAmount = subtotal * discountRate;
-
-  // Ensure the subtotal after discount is not less than $10
-  // This means the discount cannot push the subtotal below $10
-  if (subtotal - discountAmount < 10) {
-    discountAmount = subtotal - 10; // Cap the discount so remaining subtotal is exactly $10
-    if (discountAmount < 0) { // Should not happen if subtotal >= 10 and discountRate >= 0
-        discountAmount = 0;
-    }
-  }
-
-  return roundToTwoDecimals(discountAmount);
-};
-
-/**
- * Calculates the total price for an order, including subtotal, discount, tax, and final total.
- *
- * @param items A list of items in the order.
- * @param user The user placing the order.
+ * @param items List of items with price and quantity.
+ * @param user User details including loyalty tier and state.
+ * @param taxRate Optional tax rate override.
  * @returns An object containing subtotal, discount, tax, and total.
  */
-export const calculateOrderTotal = (items: Item[], user: User): Omit<Order, 'id' | 'items' | 'user'> => {
-  let subtotal = 0;
-  for (const item of items) {
-    subtotal += item.price * item.quantity;
+export function calculateTotal(
+  items: Item[],
+  user: User,
+  taxRate: number | null = null
+): OrderSummary {
+  // Calculate subtotal
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  // Apply volume discount (10+ items = 10% off)
+  let volumeDiscount = 0;
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  if (totalItems >= 10) {
+    volumeDiscount = subtotal * 0.10;
   }
-  subtotal = roundToTwoDecimals(subtotal);
 
-  const discount = applyDiscount(subtotal, user);
+  // Apply loyalty tier discount
+  const tierDiscounts: { [key in User['loyaltyTier']]: number } = {
+    'bronze': 0.05, // 5%
+    'silver': 0.10, // 10%
+    'gold': 0.15    // 15%
+  };
+  // Use 0 if loyaltyTier is not found in tierDiscounts (e.g., for new tiers or undefined)
+  const loyaltyDiscount = subtotal * (tierDiscounts[user.loyaltyTier] || 0);
 
-  const subtotalAfterDiscount = subtotal - discount;
+  // Total discount
+  const totalDiscount = volumeDiscount + loyaltyDiscount;
 
-  // Get tax rate for the user's state, or use default
-  const taxRate = TAX_RATES[user.state.toUpperCase()] || TAX_RATES.DEFAULT;
+  // Calculate tax
+  let effectiveTaxRate = taxRate;
+  if (effectiveTaxRate === null) {
+    // State-specific tax rates
+    effectiveTaxRate = user.state === 'CA' ? 0.08 : 0.05;
+  }
 
-  // Calculate tax on (subtotal - discount)
-  const tax = roundToTwoDecimals(subtotalAfterDiscount * taxRate);
+  const taxableAmount = subtotal - totalDiscount;
+  const tax = taxableAmount * effectiveTaxRate;
 
-  const total = roundToTwoDecimals(subtotalAfterDiscount + tax);
+  // Final total
+  const total = subtotal - totalDiscount + tax;
 
   return {
-    subtotal,
-    discount,
-    tax,
-    total,
+    subtotal: parseFloat(subtotal.toFixed(2)),
+    discount: parseFloat(totalDiscount.toFixed(2)),
+    tax: parseFloat(tax.toFixed(2)),
+    total: parseFloat(total.toFixed(2))
   };
-};
+}
 
-// Export types for external use if needed
-export type { Item, User, Order };
+/**
+ * Applies a percentage discount to an amount.
+ *
+ * @param amount Original amount.
+ * @param discountPercent Discount as percentage (e.g., 10 for 10%).
+ * @returns Discounted amount rounded to 2 decimal places.
+ */
+export function applyDiscount(amount: number, discountPercent: number): number {
+  const discount = amount * (discountPercent / 100);
+  return parseFloat((amount - discount).toFixed(2));
+}
+
+/**
+ * Validates if an order meets a minimum requirement.
+ *
+ * @param orderTotal Total order amount.
+ * @param minimum Minimum order amount (default $10).
+ * @returns True if valid, False otherwise.
+ */
+export function validateOrder(orderTotal: number, minimum: number = 10.00): boolean {
+  return orderTotal >= minimum;
+}

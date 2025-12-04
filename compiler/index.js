@@ -49,7 +49,8 @@ export function compile(source, file = '<input>', options = {}) {
         // Phase 4: IR generation (optional)
         let ir = null;
         if (!skipIR && !skipAnalysis) {
-            ir = buildIR(ast, file, source);
+            // Use baseDir from options for reference file resolution
+            ir = buildIR(ast, baseDir);
         }
 
         return {

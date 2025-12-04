@@ -1,5 +1,5 @@
 {
-  "timestamp": 1764195024488,
+  "timestamp": 1764876272823,
   "ir": {
     "models": [
       {
@@ -200,6 +200,15 @@
           "Uses calculate_total ( ) and apply_discount ( ) functions",
           "Translate this exact logic to target language",
           "Preserve all business rules :"
+        ],
+        "references": [
+          {
+            "content": "# Pricing Business Logic Reference Implementation\n# This Python code defines the exact business rules for pricing\n# The LLM will translate this to your target language (JavaScript, TypeScript, Rust, etc.)\n\ndef calculate_total(items, user, tax_rate=None):\n    \"\"\"\n    Calculate order total with all business rules applied.\n    \n    Args:\n        items: List of dicts with {price: float, quantity: int}\n        user: Dict with {loyaltyTier: str, state: str}\n        tax_rate: Optional tax rate override\n    \n    Returns:\n        Dict with subtotal, discount, tax, and total\n    \"\"\"\n    # Calculate subtotal\n    subtotal = sum(item['price'] * item['quantity'] for item in items)\n    \n    # Apply volume discount (10+ items = 10% off)\n    volume_discount = 0\n    total_items = sum(item['quantity'] for item in items)\n    if total_items >= 10:\n        volume_discount = subtotal * 0.10\n    \n    # Apply loyalty tier discount\n    tier_discounts = {\n        'bronze': 0.05,  # 5%\n        'silver': 0.10,  # 10%\n        'gold': 0.15     # 15%\n    }\n    loyalty_discount = subtotal * tier_discounts.get(user['loyaltyTier'], 0)\n    \n    # Total discount\n    total_discount = volume_discount + loyalty_discount\n    \n    # Calculate tax\n    if tax_rate is None:\n        # State-specific tax rates\n        tax_rate = 0.08 if user['state'] == 'CA' else 0.05\n    \n    taxable_amount = subtotal - total_discount\n    tax = taxable_amount * tax_rate\n    \n    # Final total\n    total = subtotal - total_discount + tax\n    \n    return {\n        'subtotal': round(subtotal, 2),\n        'discount': round(total_discount, 2),\n        'tax': round(tax, 2),\n        'total': round(total, 2)\n    }\n\n\ndef apply_discount(amount, discount_percent):\n    \"\"\"\n    Apply percentage discount to amount.\n    \n    Args:\n        amount: Original amount\n        discount_percent: Discount as percentage (e.g. 10 for 10%)\n    \n    Returns:\n        Discounted amount rounded to 2 decimals\n    \"\"\"\n    discount = amount * (discount_percent / 100)\n    return round(amount - discount, 2)\n\n\ndef validate_order(order_total, minimum=10.00):\n    \"\"\"\n    Validate order meets minimum requirement.\n    \n    Args:\n        order_total: Total order amount\n        minimum: Minimum order amount (default $10)\n    \n    Returns:\n        True if valid, False otherwise\n    \"\"\"\n    return order_total >= minimum\n",
+            "language": "python",
+            "function": null,
+            "path": "pricing.py",
+            "fullPath": "/Users/olebogengmbedzi/dev/compose/compose-lang/examples/ecommerce-with-reference/reference/pricing.py"
+          }
         ]
       },
       {
@@ -209,6 +218,15 @@
           "Apply discounts before tax calculation",
           "Round to 2 decimal places",
           "Minimum order $ 10 after discounts"
+        ],
+        "references": [
+          {
+            "content": "def apply_discount(amount, discount_percent):\n    \"\"\"\n    Apply percentage discount to amount.\n    \n    Args:\n        amount: Original amount\n        discount_percent: Discount as percentage (e.g. 10 for 10%)\n    \n    Returns:\n        Discounted amount rounded to 2 decimals\n    \"\"\"\n    discount = amount * (discount_percent / 100)\n    return round(amount - discount, 2)\n\n",
+            "language": "python",
+            "function": "apply_discount",
+            "path": "pricing.py",
+            "fullPath": "/Users/olebogengmbedzi/dev/compose/compose-lang/examples/ecommerce-with-reference/reference/pricing.py"
+          }
         ]
       },
       {
@@ -217,29 +235,41 @@
           "Use tax rates from @reference/pricing.py",
           "Calculate on ( subtotal - discount )",
           "Store tax separately for reporting"
+        ],
+        "references": [
+          {
+            "content": "# Pricing Business Logic Reference Implementation\n# This Python code defines the exact business rules for pricing\n# The LLM will translate this to your target language (JavaScript, TypeScript, Rust, etc.)\n\ndef calculate_total(items, user, tax_rate=None):\n    \"\"\"\n    Calculate order total with all business rules applied.\n    \n    Args:\n        items: List of dicts with {price: float, quantity: int}\n        user: Dict with {loyaltyTier: str, state: str}\n        tax_rate: Optional tax rate override\n    \n    Returns:\n        Dict with subtotal, discount, tax, and total\n    \"\"\"\n    # Calculate subtotal\n    subtotal = sum(item['price'] * item['quantity'] for item in items)\n    \n    # Apply volume discount (10+ items = 10% off)\n    volume_discount = 0\n    total_items = sum(item['quantity'] for item in items)\n    if total_items >= 10:\n        volume_discount = subtotal * 0.10\n    \n    # Apply loyalty tier discount\n    tier_discounts = {\n        'bronze': 0.05,  # 5%\n        'silver': 0.10,  # 10%\n        'gold': 0.15     # 15%\n    }\n    loyalty_discount = subtotal * tier_discounts.get(user['loyaltyTier'], 0)\n    \n    # Total discount\n    total_discount = volume_discount + loyalty_discount\n    \n    # Calculate tax\n    if tax_rate is None:\n        # State-specific tax rates\n        tax_rate = 0.08 if user['state'] == 'CA' else 0.05\n    \n    taxable_amount = subtotal - total_discount\n    tax = taxable_amount * tax_rate\n    \n    # Final total\n    total = subtotal - total_discount + tax\n    \n    return {\n        'subtotal': round(subtotal, 2),\n        'discount': round(total_discount, 2),\n        'tax': round(tax, 2),\n        'total': round(total, 2)\n    }\n\n\ndef apply_discount(amount, discount_percent):\n    \"\"\"\n    Apply percentage discount to amount.\n    \n    Args:\n        amount: Original amount\n        discount_percent: Discount as percentage (e.g. 10 for 10%)\n    \n    Returns:\n        Discounted amount rounded to 2 decimals\n    \"\"\"\n    discount = amount * (discount_percent / 100)\n    return round(amount - discount, 2)\n\n\ndef validate_order(order_total, minimum=10.00):\n    \"\"\"\n    Validate order meets minimum requirement.\n    \n    Args:\n        order_total: Total order amount\n        minimum: Minimum order amount (default $10)\n    \n    Returns:\n        True if valid, False otherwise\n    \"\"\"\n    return order_total >= minimum\n",
+            "language": "python",
+            "function": null,
+            "path": "pricing.py",
+            "fullPath": "/Users/olebogengmbedzi/dev/compose/compose-lang/examples/ecommerce-with-reference/reference/pricing.py"
+          }
         ]
       },
       {
         "name": "App Name",
         "hints": [
           "The app is currently named NextShop , name it my shop"
-        ]
+        ],
+        "references": []
       },
       {
         "name": "Button colors",
         "hints": [
           "\"Add to card button background colors must be black\""
-        ]
+        ],
+        "references": []
       },
       {
         "name": "Resolve issue",
         "hints": [
           "\" fix issue: Error: useCart must be used within a CartProvider\"",
           "\"throw new Error('useCart must be used within a CartProvider');\""
-        ]
+        ],
+        "references": []
       }
     ],
     "imports": []
   },
-  "hash": "db0cf13db688c82fe88b386b6817e2a00ff571b27d8798b766bf3236cc892b74"
+  "hash": "d538cefb8a3516129987a09b9f45acba963d2abe8edfd7a2912a2ec4c7179ec0"
 }

@@ -242,11 +242,26 @@ function formatFeatures(features) {
 
 /**
  * Format guides for prompt
+ * Includes reference code if present
  */
 function formatGuides(guides) {
     return guides.map(guide => {
+        const sections = [];
+
+        // Guide name and hints
         const hints = guide.hints.map(hint => `  - ${hint}`).join('\n');
-        return `${guide.name}:\n${hints}`;
+        sections.push(`${guide.name}:\n${hints}`);
+
+        // Include reference code if present
+        if (guide.references && guide.references.length > 0) {
+            sections.push('\n  Reference Implementations:');
+
+            for (const ref of guide.references) {
+                sections.push(`\n  **${ref.path}${ref.function ? `::${ref.function}` : ''}** (${ref.language}):\n  \`\`\`${ref.language}\n${ref.content.split('\n').map(line => '  ' + line).join('\n')}\n  \`\`\`\n  \n  ➜ Translate this ${ref.language} code to the target language\n  ➜ Preserve the exact logic and business rules\n  ➜ Adapt to target language idioms and best practices`);
+            }
+        }
+
+        return sections.join('\n');
     }).join('\n\n');
 }
 

@@ -57,12 +57,19 @@ export class FeatureIR {
 }
 
 /**
- * Guide IR (implementation hints)
+ * Guide IR
+ * Represents implementation guidelines
  */
 export class GuideIR {
-    constructor(name, hints) {
+    /**
+     * @param {string} name - Guide name
+     * @param {Array<string>} hints - Implementation hints
+     * @param {Array<object>} references - Loaded reference code (optional)
+     */
+    constructor(name, hints, references = []) {
         this.name = name;
-        this.hints = hints; // Array of strings (implementation details)
+        this.hints = hints;
+        this.references = references; // Array of {content, language, function, path}
     }
 }
 
