@@ -1,6 +1,6 @@
 {
     "name": "compose-lang",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "description": "An English-based, structured programming language designed for LLM-assisted code generation",
     "type": "module",
     "main": "compiler/index.js",
